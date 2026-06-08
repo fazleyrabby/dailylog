@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\OwnedByUser;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +12,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 #[Fillable(['user_id', 'name', 'slug', 'description', 'status', 'color', 'last_activity_at', 'archived_at'])]
 class Project extends Model
 {
+    use HasFactory, OwnedByUser;
+
     protected function casts(): array
     {
         return [

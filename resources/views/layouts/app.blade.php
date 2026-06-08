@@ -80,6 +80,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="DailyLOG - Personal Life OS monolith">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') | DailyLOG</title>
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -137,7 +138,7 @@
                         Dashboard
                     </x-ui.sidebar-item>
 
-                    <x-ui.sidebar-item href="/tasks" :active="request()->is('tasks*')" badge="12">
+                    <x-ui.sidebar-item href="/tasks" :active="request()->is('tasks*')" :badge="$sidebarCounts['tasks'] ?: null">
                         <x-slot name="icon">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         </x-slot>
@@ -168,14 +169,14 @@
                         Bookmarks
                     </x-ui.sidebar-item>
 
-                    <x-ui.sidebar-item href="/learning" :active="request()->is('learning*')" badge="3">
+                    <x-ui.sidebar-item href="/learning" :active="request()->is('learning*')" :badge="$sidebarCounts['learning'] ?: null">
                         <x-slot name="icon">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>
                         </x-slot>
                         Learning
                     </x-ui.sidebar-item>
 
-                    <x-ui.sidebar-item href="/projects" :active="request()->is('projects*')" badge="5">
+                    <x-ui.sidebar-item href="/projects" :active="request()->is('projects*')" :badge="$sidebarCounts['projects'] ?: null">
                         <x-slot name="icon">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6.878V6a2.25 2.25 0 012.25-2.25h7.5A2.25 2.25 0 0118 6v.878m-12 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128m-12 0A2.25 2.25 0 004.5 9v.878m13.5-3A2.25 2.25 0 0119.5 9v.878m-15 0a2.25 2.25 0 00-2.25 2.25v6.75A2.25 2.25 0 004.5 21h15a2.25 2.25 0 002.25-2.25V12.128a2.25 2.25 0 00-2.25-2.25m-15 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128" /></svg>
                         </x-slot>
@@ -213,7 +214,7 @@
                     <div class="h-px bg-border my-2"></div>
 
                     <!-- System Modules -->
-                    <x-ui.sidebar-item href="/slipping" :active="request()->is('slipping*')" badge="7">
+                    <x-ui.sidebar-item href="/slipping" :active="request()->is('slipping*')" :badge="$sidebarCounts['slipping'] ?: null">
                         <x-slot name="icon">
                             <svg class="h-4 w-4 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
                         </x-slot>
@@ -237,11 +238,11 @@
                         class="w-full flex items-center space-x-2.5 p-1.5 hover:bg-surface border border-transparent hover:border-border rounded-sm text-left focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer"
                     >
                         <div class="h-6 w-6 rounded-full bg-accent text-white flex items-center justify-center font-bold text-xs select-none">
-                            R
+                            {{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr(auth()->user()?->name ?? '?', 0, 1)) }}
                         </div>
                         <div class="truncate text-xs flex-grow" x-show="!sidebarCollapsed">
-                            <div class="font-semibold text-text-main">Developer User</div>
-                            <div class="text-[10px] text-text-subtle">developer@local.net</div>
+                            <div class="font-semibold text-text-main">{{ auth()->user()?->name }}</div>
+                            <div class="text-[10px] text-text-subtle">{{ auth()->user()?->email }}</div>
                         </div>
                         <svg x-show="!sidebarCollapsed" class="h-3 w-3 text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
@@ -255,12 +256,16 @@
                         class="absolute bottom-10 left-0 z-30 w-52 bg-surface border border-border rounded-sm shadow-xl py-1 text-xs text-text-main"
                         style="display: none;"
                     >
-                        <a href="/settings" class="block px-4 py-2 hover:bg-surface-2">⚙ Settings & Preferences</a>
+                        <a href="{{ route('settings.profile') }}" class="block px-4 py-2 hover:bg-surface-2">⚙ Settings & Preferences</a>
                         <button @click="setTheme(theme === 'dark' ? 'light' : 'dark')" class="w-full text-left block px-4 py-2 hover:bg-surface-2">
                             🌓 Switch Theme (<span x-text="theme"></span>)
                         </button>
                         <div class="h-px bg-border my-1"></div>
-                        <a href="/settings" class="block px-4 py-2 text-text-muted hover:bg-surface-2">📥 Export JSON / Markdown</a>
+                        <a href="{{ route('settings.profile') }}" class="block px-4 py-2 text-text-muted hover:bg-surface-2">📥 Export JSON / Markdown</a>
+                        <form method="POST" action="{{ route('auth.logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full text-left block px-4 py-2 text-text-muted hover:bg-surface-2">⎋ Log out</button>
+                        </form>
                     </div>
                 </div>
             </div>

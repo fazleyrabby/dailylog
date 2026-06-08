@@ -2,6 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\BodyFormat;
+use App\Enums\EntryType;
+use App\Models\Concerns\OwnedByUser;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,14 +14,18 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 
 #[Fillable([
-    'user_id', 'type', 'title', 'body', 'body_format', 'status', 
-    'project_id', 'pinned', 'occurred_on', 'last_activity_at', 'archived_at'
+    'user_id', 'type', 'title', 'body', 'body_format', 'status',
+    'project_id', 'pinned', 'captured_via', 'occurred_on', 'last_activity_at', 'archived_at',
 ])]
 class Entry extends Model
 {
+    use HasFactory, OwnedByUser;
+
     protected function casts(): array
     {
         return [
+            'type' => \App\Enums\EntryType::class,
+            'body_format' => BodyFormat::class,
             'pinned' => 'boolean',
             'occurred_on' => 'date',
             'last_activity_at' => 'datetime',

@@ -270,14 +270,13 @@ window.commandPaletteComponent = function() {
             let items = [];
             let parsed = this.parsedGrammar;
             
-            if (['task', 'note', 'journal', 'bookmark', 'project', 'learning'].includes(parsed.verb)) {
+            if (['task', 'note', 'journal', 'bookmark', 'project', 'learning', 'quote', 'idea', 'resource'].includes(parsed.verb)) {
                 items.push({
                     type: 'capture',
                     title: 'Capture ' + parsed.verb.toUpperCase(),
                     desc: 'Creates: ' + parsed.title,
                     action: () => {
-                        this.triggerToast(parsed.verb, parsed.title);
-                        this.close();
+                        this.sendCapture(this.input);
                     }
                 });
             }
@@ -310,8 +309,7 @@ window.commandPaletteComponent = function() {
                     title: 'Quick Capture Task: ' + this.input,
                     desc: 'Press Enter to save to Inbox',
                     action: () => {
-                        this.triggerToast('task', this.input);
-                        this.close();
+                        this.sendCapture('task ' + this.input);
                     }
                 });
                 items.unshift({
@@ -319,8 +317,7 @@ window.commandPaletteComponent = function() {
                     title: 'Quick Capture Note: ' + this.input,
                     desc: 'Press Enter to save to Inbox',
                     action: () => {
-                        this.triggerToast('note', this.input);
-                        this.close();
+                        this.sendCapture('note ' + this.input);
                     }
                 });
             }
@@ -328,13 +325,42 @@ window.commandPaletteComponent = function() {
             return items;
         },
 
-        triggerToast(type, title) {
-            window.dispatchEvent(new CustomEvent('show-toast', { 
-                detail: { 
-                    message: type.toUpperCase() + ' created: ' + (title.length > 25 ? title.substring(0,25) + '...' : title), 
-                    action: 'Undo' 
-                } 
-            }));
+        async sendCapture(raw) {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrf = csrfMeta ? csrfMeta.getAttribute('content') : '';
+            try {
+                const res = await fetch('/capture', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ input: raw }),
+                    credentials: 'same-origin',
+                });
+                if (!res.ok) {
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { message: 'Capture failed (' + res.status + ')', action: null }
+                    }));
+                    return;
+                }
+                const data = await res.json();
+                const title = data.title || raw;
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: {
+                        message: (data.type || 'entry').toUpperCase() + ' captured: ' + (title.length > 30 ? title.substring(0,30) + '…' : title),
+                        action: null,
+                    }
+                }));
+                this.input = '';
+                this.close();
+            } catch (e) {
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: { message: 'Capture error: ' + e.message, action: null }
+                }));
+            }
         },
 
         selectNext() {
