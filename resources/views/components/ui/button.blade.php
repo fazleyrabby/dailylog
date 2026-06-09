@@ -5,13 +5,13 @@
 ])
 
 @php
-    $baseClasses = 'inline-flex items-center justify-center font-medium rounded-sm border transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-bg disabled:opacity-50 disabled:pointer-events-none cursor-pointer';
+    $baseClasses = 'inline-flex items-center justify-center font-bold rounded-md border border-b-[3px] transition-all hover:-translate-y-[0.5px] hover:border-b-[4px] hover:brightness-105 active:translate-y-[1px] active:border-b-[1px] active:brightness-95 focus:outline-none disabled:opacity-50 disabled:pointer-events-none cursor-pointer';
     
     $variants = [
-        'primary' => 'bg-accent border-accent text-white hover:bg-accent-hover hover:border-accent-hover',
-        'secondary' => 'bg-surface border-border text-text-main hover:bg-surface-2 hover:border-border-strong',
-        'ghost' => 'bg-transparent border-transparent text-text-muted hover:bg-surface-2 hover:text-text-main',
-        'danger' => 'bg-surface border-danger text-danger hover:bg-danger/10',
+        'primary' => 'bg-accent border-accent border-b-[color-mix(in_srgb,var(--color-accent-app)_85%,black)] text-white',
+        'secondary' => 'bg-surface border-border border-b-[color-mix(in_srgb,var(--color-border-app)_85%,black)] text-text-main',
+        'ghost' => 'bg-transparent border-transparent text-text-muted hover:bg-surface-2 hover:text-text-main hover:-translate-y-0 hover:border-b-0 active:translate-y-0 active:border-b-0',
+        'danger' => 'bg-surface border-danger border-b-[color-mix(in_srgb,var(--color-danger-app)_85%,black)] text-danger',
     ];
     
     $sizes = [

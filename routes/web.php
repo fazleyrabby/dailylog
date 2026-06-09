@@ -4,9 +4,12 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CaptureController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\InboxController;
+use App\Http\Controllers\JournalController;
+use App\Http\Controllers\NotesController;
 use App\Http\Controllers\Partials\SearchSuggestController;
 use App\Http\Controllers\Partials\TagAutocompleteController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\TasksController;
 use App\Support\MockData;
 use Illuminate\Support\Facades\Route;
 
@@ -33,9 +36,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/inbox', [InboxController::class, 'index'])->name('inbox.index');
     Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 
-    Route::get('/tasks', fn () => view('pages.tasks', ['data' => MockData::all()]))->name('tasks.index');
-    Route::get('/notes', fn () => view('pages.notes', ['data' => MockData::all()]))->name('notes.index');
-    Route::get('/journal', fn () => view('pages.journal', ['data' => MockData::all()]))->name('journal.index');
+    Route::get('/tasks', [TasksController::class, 'index'])->name('tasks.index');
+    Route::post('/tasks', [TasksController::class, 'store'])->name('tasks.store');
+    Route::patch('/tasks/{entry}/toggle', [TasksController::class, 'toggle'])->name('tasks.toggle');
+    Route::put('/tasks/{entry}', [TasksController::class, 'update'])->name('tasks.update');
+    Route::delete('/tasks/{entry}', [TasksController::class, 'destroy'])->name('tasks.destroy');
+
+    Route::get('/notes', [NotesController::class, 'index'])->name('notes.index');
+    Route::post('/notes', [NotesController::class, 'store'])->name('notes.store');
+    Route::put('/notes/{entry}', [NotesController::class, 'update'])->name('notes.update');
+    Route::delete('/notes/{entry}', [NotesController::class, 'destroy'])->name('notes.destroy');
+
+    Route::get('/journal', [JournalController::class, 'index'])->name('journal.index');
+    Route::post('/journal', [JournalController::class, 'store'])->name('journal.store');
+    Route::put('/journal/{entry}', [JournalController::class, 'update'])->name('journal.update');
     Route::get('/bookmarks', fn () => view('pages.bookmarks', ['data' => MockData::all()]))->name('bookmarks.index');
     Route::get('/learning', fn () => view('pages.learning', ['data' => MockData::all()]))->name('learning.index');
     Route::get('/projects', fn () => view('pages.projects', ['data' => MockData::all()]))->name('projects.index');

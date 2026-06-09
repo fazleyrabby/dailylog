@@ -1,11 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
 @import 'tailwindcss';
+@variant dark (.dark &);
+@plugin '@tailwindcss/typography';
 @import './design-system.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
 @theme {
-    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
     --font-serif: 'Newsreader', Georgia, serif;
     --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
@@ -14,20 +17,21 @@
     --color-surface-2: var(--color-surface-2-app);
     --color-border: var(--color-border-app);
     --color-border-strong: var(--color-border-strong-app);
+    --color-text: var(--color-text-app);
     --color-text-main: var(--color-text-app);
     --color-text-muted: var(--color-text-muted-app);
     --color-text-subtle: var(--color-text-subtle-app);
-    
+
     --color-accent: var(--color-accent-app);
     --color-accent-hover: var(--color-accent-hover-app);
     --color-accent-subtle-bg: var(--color-accent-subtle-bg-app);
     --color-accent-fg: var(--color-accent-fg-app);
-    
+
     --color-success: var(--color-success-app);
     --color-warning: var(--color-warning-app);
     --color-danger: var(--color-danger-app);
     --color-info: var(--color-info-app);
-    
+
     --color-type-task: var(--color-type-task);
     --color-type-note: var(--color-type-note);
     --color-type-journal: var(--color-type-journal);

@@ -191,7 +191,7 @@
                             @click="open = !open; localStorage.setItem('library-expanded', open)" 
                             class="w-full flex items-center justify-between px-3 py-1.5 text-xxs uppercase tracking-wider text-text-subtle hover:text-text-main font-semibold cursor-pointer focus:outline-none"
                         >
-                            <span x-show="!sidebarCollapsed">Reference Library</span>
+                            <span x-show="!sidebarCollapsed" class="text-xs">Reference Library</span>
                             <span x-show="sidebarCollapsed">LIB</span>
                             <svg :class="open ? 'rotate-90' : ''" class="h-3 w-3 transition-transform text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />

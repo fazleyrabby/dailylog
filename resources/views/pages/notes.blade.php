@@ -5,11 +5,15 @@
 
 @section('content')
 <div 
-    x-data="notesComponent()"
-    class="h-[calc(100vh-100px)] flex overflow-hidden border border-border rounded-sm bg-surface"
+    x-data="notesComponent({{ json_encode($notes) }})"
+    class="h-[calc(100vh-100px)] flex overflow-hidden border border-border rounded-sm bg-surface select-none"
+    :class="resizing ? 'cursor-col-resize' : ''"
 >
-    <!-- LEFT SIDEBAR: Lists & Search (Width 320px) -->
-    <div class="w-80 flex-shrink-0 border-r border-border flex flex-col bg-surface-2/10">
+    <!-- LEFT SIDEBAR: Lists & Search -->
+    <div 
+        :style="'width: ' + sidebarWidth + 'px'" 
+        class="flex-shrink-0 flex flex-col bg-surface-2/10 select-text"
+    >
         <!-- Search bar -->
         <div class="p-3 border-b border-border bg-surface flex items-center space-x-2">
             <div class="flex-grow">
@@ -29,7 +33,7 @@
             >
                 All
             </button>
-            <template x-for="tag in ['laravel', 'postgres', 'redis', 'docker', 'security']">
+            <template x-for="tag in allTags" :key="tag">
                 <button 
                     @click="selectedTag = tag" 
                     :class="selectedTag === tag ? 'bg-accent/15 border-accent/20 text-accent font-semibold' : 'bg-surface border-border text-text-muted hover:text-text-main'"
@@ -52,9 +56,9 @@
                         <span class="font-bold text-xs uppercase tracking-wide text-text-main" x-text="note.title"></span>
                         <span class="text-[10px] text-text-subtle font-mono" x-text="note.updated"></span>
                     </div>
-                    <p class="text-xxs text-text-muted mt-1 truncate" x-text="note.body.replace(/[#*`]/g, '')"></p>
+                    <p class="text-xxs text-text-muted mt-1 truncate" x-text="note.body ? note.body.replace(/[#*`]/g, '') : ''"></p>
                     <div class="flex items-center space-x-1 mt-2 flex-wrap">
-                        <template x-for="t in note.tags">
+                        <template x-for="t in note.tags" :key="t">
                             <span class="bg-surface-2 border border-border text-[9px] px-1 rounded-sm text-text-subtle">#<span x-text="t"></span></span>
                         </template>
                     </div>
@@ -63,17 +67,32 @@
         </div>
     </div>
 
+    <!-- DRAG HANDLE RESIZER -->
+    <div 
+        @mousedown="startResizing($event)"
+        class="w-[3px] hover:w-[5px] active:w-[5px] bg-border hover:bg-accent active:bg-accent cursor-col-resize transition-all h-full z-10 flex-shrink-0"
+    ></div>
+
     <!-- RIGHT SECTION: Editor / Read Mode (Fluid width) -->
-    <div class="flex-grow flex flex-col h-full bg-surface overflow-hidden">
+    <div class="flex-grow flex flex-col h-full bg-surface overflow-hidden select-text">
         
         <!-- Editor Controls Header -->
         <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between">
             <div class="flex items-center space-x-2">
                 <span class="text-[10px] font-mono bg-surface border border-border text-text-muted px-1.5 py-0.5 rounded-sm" x-text="'@' + activeNote.project"></span>
-                <span class="text-xxs text-text-subtle">Auto-saved</span>
+                <span class="text-xxs text-text-subtle" x-show="activeNote.id">Saved</span>
             </div>
             
             <div class="flex items-center space-x-2">
+                <template x-if="activeNote.id">
+                    <button 
+                        @click="deleteNote(activeNote.id)"
+                        class="h-7 px-2.5 bg-surface border border-danger hover:bg-danger/10 text-danger text-xxs font-medium rounded-sm flex items-center space-x-1 cursor-pointer select-none"
+                    >
+                        Delete
+                    </button>
+                </template>
+
                 <!-- Mode Toggle -->
                 <button 
                     @click="editMode = !editMode"
@@ -82,7 +101,7 @@
                     <span x-text="editMode ? '👁 Preview' : '✎ Edit'"></span>
                 </button>
                 
-                <template x-if="editMode">
+                <template x-if="editMode && activeNote.id">
                     <x-ui.button variant="primary" size="sm" @click="saveNote()" class="font-semibold cursor-pointer">
                         Save
                     </x-ui.button>
@@ -108,29 +127,31 @@
             </div>
 
             <!-- PREVIEW MODE (Editorial read mode) -->
-            <div x-show="!editMode" class="flex-grow p-6 overflow-y-auto font-serif-reading max-w-2xl mx-auto w-full leading-relaxed select-text">
-                <h1 class="text-2xl font-bold font-sans-ui text-text-main border-b border-border pb-3 mb-4" x-text="activeNote.title"></h1>
-                
-                <div class="text-sm md:text-base text-text-main space-y-4">
-                    <p class="italic text-xs text-text-subtle font-mono">Last updated: <span x-text="activeNote.updated"></span></p>
-                    <div class="prose dark:prose-invert max-w-none text-xs font-mono bg-surface-2 p-3 border border-border rounded-sm select-text whitespace-pre-line" x-text="activeNote.body"></div>
-                </div>
-                
-                <!-- BACKLINKS DRAWER PANEL -->
-                <div class="mt-8 border-t border-border pt-4 select-none">
-                    <h4 class="text-xxs font-bold text-text-subtle uppercase tracking-wider mb-2.5">Linked Backlinks</h4>
-                    <template x-if="activeNote.backlinks && activeNote.backlinks.length > 0">
-                        <div class="flex flex-wrap gap-2">
-                            <template x-for="backlink in activeNote.backlinks">
-                                <a href="/notes" class="inline-flex items-center px-2 py-1 rounded-sm border border-border bg-surface-2/40 text-xxs font-mono text-accent hover:bg-surface-2 hover:border-accent/40 transition-colors">
-                                    <span class="mr-1">🔗</span><span x-text="backlink"></span>
-                                </a>
-                            </template>
-                        </div>
-                    </template>
-                    <template x-if="!activeNote.backlinks || activeNote.backlinks.length === 0">
-                        <p class="text-xxs text-text-subtle italic">No backlinks reference this note.</p>
-                    </template>
+            <div x-show="!editMode" class="flex-grow overflow-y-auto w-full select-text">
+                <div class="max-w-2xl mx-auto p-6 font-serif-reading leading-relaxed">
+                    <h1 class="text-2xl font-bold font-sans-ui text-text-main border-b border-border pb-3 mb-4" x-text="activeNote.title"></h1>
+                    
+                    <div class="text-sm md:text-base text-text-main space-y-4">
+                        <p class="italic text-xs text-text-subtle font-mono">Last updated: <span x-text="activeNote.updated"></span></p>
+                        <div class="prose dark:prose-invert max-w-none font-sans-ui text-text-main select-text" x-html="window.marked.parse(activeNote.body || '')"></div>
+                    </div>
+                    
+                    <!-- BACKLINKS DRAWER PANEL -->
+                    <div class="mt-8 border-t border-border pt-4 select-none">
+                        <h4 class="text-xxs font-bold text-text-subtle uppercase tracking-wider mb-2.5">Linked Backlinks</h4>
+                        <template x-if="activeNote.backlinks && activeNote.backlinks.length > 0">
+                            <div class="flex flex-wrap gap-2">
+                                <template x-for="backlink in activeNote.backlinks" :key="backlink">
+                                    <a href="/notes" class="inline-flex items-center px-2 py-1 rounded-sm border border-border bg-surface-2/40 text-xxs font-mono text-accent hover:bg-surface-2 hover:border-accent/40 transition-colors">
+                                        <span class="mr-1">🔗</span><span x-text="backlink"></span>
+                                    </a>
+                                </template>
+                            </div>
+                        </template>
+                        <template x-if="!activeNote.backlinks || activeNote.backlinks.length === 0">
+                            <p class="text-xxs text-text-subtle italic">No backlinks reference this note.</p>
+                        </template>
+                    </div>
                 </div>
             </div>
         </div>
@@ -138,86 +159,137 @@
 </div>
 
 <script>
-window.notesComponent = function() {
+window.notesComponent = function(initialNotes) {
     return {
         searchQuery: '',
         selectedTag: '',
-        selectedNoteId: 10,
+        selectedNoteId: initialNotes.length > 0 ? initialNotes[0].id : null,
         editMode: false,
+        resizing: false,
+        sidebarWidth: 320,
+
+        startResizing(event) {
+            this.resizing = true;
+            const startX = event.clientX;
+            const startWidth = this.sidebarWidth;
+            
+            const doDrag = (e) => {
+                if (!this.resizing) return;
+                this.sidebarWidth = Math.max(240, Math.min(600, startWidth + (e.clientX - startX)));
+            };
+            
+            const stopDrag = () => {
+                this.resizing = false;
+                document.removeEventListener('mousemove', doDrag);
+                document.removeEventListener('mouseup', stopDrag);
+            };
+            
+            document.addEventListener('mousemove', doDrag);
+            document.addEventListener('mouseup', stopDrag);
+        },
         
-        notes: [
-            {
-                id: 10, 
-                title: 'Laravel Optimization Notes', 
-                body: '## Production Configs\n\nOptimizing Laravel 12 monoliths at personal scale. Ensure the following configurations are set:\n\n- Enable **OPcache** in `php.ini`.\n- Run `php artisan config:cache`, `route:cache`, and `view:cache`.\n- Configure **Redis** as cache and session driver.\n- Use **Octane** with FrankenPHP for maximum response efficiency.',
-                tags: ['laravel', 'performance'], 
-                project: 'DailyLOG', 
-                updated: '2 hours ago',
-                backlinks: ['Dashboard widget', 'Redis Streams Research']
-            },
-            {
-                id: 11, 
-                title: 'PostgreSQL Full Text Search Configuration', 
-                body: '## Postgres FTS setup\n\nUsing Postgres instead of Elasticsearch for simple local projects:\n\n- Map a tsvector column for matching keywords.\n- Build a custom database trigger to refresh vectors on save.\n- Run matches with dynamic `tsquery` input variables.',
-                tags: ['postgres', 'db', 'search'], 
-                project: 'DailyLOG', 
-                updated: 'Yesterday',
-                backlinks: ['AWS ECS Learning Path']
-            },
-            {
-                id: 12, 
-                title: 'Redis Streams Pub/Sub Architecture', 
-                body: 'Detailed research on how Redis Streams can act as a message broker for async jobs without overhead. Discuss consumer group logic, stream trimming, and XACK acknowledge logic.',
-                tags: ['redis', 'architecture'], 
-                project: 'DailyLOG', 
-                updated: '5 hours ago',
-                backlinks: ['Laravel Optimization Notes']
-            },
-            {
-                id: 13, 
-                title: 'Docker Container Security Checklist', 
-                body: 'Security guidelines for production containers:\n- Use non-root user execution\n- Read-only file system configurations\n- Block port scans using strict firewalls.',
-                tags: ['docker', 'security'], 
-                project: 'DevOps', 
-                updated: '3 days ago',
-                backlinks: []
-            }
-        ],
+        notes: initialNotes,
+
+        get allTags() {
+            const tags = new Set();
+            this.notes.forEach(n => {
+                if (n.tags) n.tags.forEach(t => tags.add(t));
+            });
+            return Array.from(tags);
+        },
 
         get filteredNotes() {
             return this.notes.filter(n => {
                 let matchesSearch = n.title.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
-                                    n.body.toLowerCase().includes(this.searchQuery.toLowerCase());
-                let matchesTag = this.selectedTag === '' || n.tags.includes(this.selectedTag);
+                                    (n.body && n.body.toLowerCase().includes(this.searchQuery.toLowerCase()));
+                let matchesTag = this.selectedTag === '' || (n.tags && n.tags.includes(this.selectedTag));
                 return matchesSearch && matchesTag;
             });
         },
 
         get activeNote() {
-            return this.notes.find(n => n.id === this.selectedNoteId) || this.notes[0];
+            return this.notes.find(n => n.id === this.selectedNoteId) || {
+                id: null,
+                title: 'No note selected',
+                body: 'Start creating notes...',
+                tags: [],
+                project: 'None',
+                updated: '',
+                backlinks: []
+            };
         },
 
         saveNote() {
-            window.dispatchEvent(new CustomEvent('show-toast', { 
-                detail: { message: 'Note auto-saved successfully', action: 'Dismiss' }
-            }));
-            this.editMode = false;
+            if (!this.activeNote.id) return;
+            
+            fetch(`/notes/${this.activeNote.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    title: this.activeNote.title,
+                    body: this.activeNote.body
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.note) {
+                    let index = this.notes.findIndex(n => n.id === data.note.id);
+                    if (index !== -1) {
+                        this.notes[index] = data.note;
+                    }
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: 'Note saved successfully' }
+                    }));
+                    this.editMode = false;
+                }
+            });
         },
 
         createNote() {
-            let id = Date.now();
-            let newNote = {
-                id: id,
-                title: 'Untitled Note',
-                body: '# Untitled Note\n\nStart writing notes in markdown here...',
-                tags: ['draft'],
-                project: 'DailyLOG',
-                updated: 'Just now',
-                backlinks: []
-            };
-            this.notes.unshift(newNote);
-            this.selectedNoteId = id;
-            this.editMode = true;
+            fetch('/notes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.note) {
+                    this.notes.unshift(data.note);
+                    this.selectedNoteId = data.note.id;
+                    this.editMode = true;
+                }
+            });
+        },
+
+        deleteNote(id) {
+            if (!confirm('Are you sure you want to archive this note?')) return;
+
+            fetch(`/notes/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    this.notes = this.notes.filter(n => n.id !== id);
+                    this.selectedNoteId = this.notes.length > 0 ? this.notes[0].id : null;
+                    this.editMode = false;
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: 'Note archived successfully' }
+                    }));
+                }
+            });
         }
     };
 };

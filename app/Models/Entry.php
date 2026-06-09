@@ -74,14 +74,12 @@ class Entry extends Model
     public function links(): BelongsToMany
     {
         return $this->belongsToMany(Entry::class, 'entry_links', 'source_id', 'target_id')
-                    ->withPivot('relation')
-                    ->withTimestamps();
+                    ->withPivot('relation');
     }
 
     public function backlinks(): BelongsToMany
     {
         return $this->belongsToMany(Entry::class, 'entry_links', 'target_id', 'source_id')
-                    ->withPivot('relation')
-                    ->withTimestamps();
+                    ->withPivot('relation');
     }
 }
