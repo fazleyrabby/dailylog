@@ -2,7 +2,7 @@
 
 > **DailyLOG** is a personal Life OS and single source of truth dashboard. It provides high-density, high-productivity modules to track tasks, notes, journal reflections, bookmarks, learning paths, and project progress.
 
-![alt text](<CleanShot 2026-06-09 at 11.32.49@2x.png>)
+<img width="2470" height="1808" alt="CleanShot 2026-06-09 at 12 07 44@2x" src="https://github.com/user-attachments/assets/ec392aca-174e-4554-899c-98dffc6fadd5" />
 ---
 
 ## 🛠️ Tech Stack & Architecture
