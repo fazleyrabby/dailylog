@@ -61,7 +61,7 @@
             <template x-for="entry in sortedEntries" :key="entry.id">
                 <div 
                     @click="selectDateFromString(entry.occurred_on)"
-                    :class="selectedDate === entry.occurred_on ? 'bg-accent-subtle-bg/30 border-l-2 border-accent' : 'hover:bg-surface-2/30 border-l-2 border-transparent'"
+                    :class="selectedDate === entry.occurred_on ? 'bg-accent-subtle-bg/30 border-l-2 border-l-accent' : 'hover:bg-surface-2/30 border-l-2 border-l-transparent'"
                     class="p-3 cursor-pointer transition-colors"
                 >
                     <div class="font-semibold text-xs text-text-main" x-text="entry.date"></div>
@@ -102,30 +102,30 @@
         </div>
 
         <!-- Editor canvas -->
-        <div class="flex-grow p-6 overflow-y-auto max-w-2xl mx-auto w-full leading-relaxed select-text">
+        <div class="flex-grow p-6 overflow-y-auto max-w-2xl mx-auto w-full leading-relaxed select-text font-serif-reading">
             <!-- READ MODE -->
             <div x-show="!editing" class="space-y-6">
                 
                 <template x-if="activeEntry">
-                    <div class="space-y-5">
+                    <div class="space-y-6">
                         <div>
-                            <h3 class="text-xs font-bold uppercase tracking-wider text-text-subtle border-b border-border pb-1 mb-2">What I Learned Today</h3>
-                            <div class="text-xs text-text-main font-mono bg-surface-2 p-3 border border-border rounded-sm whitespace-pre-line select-text min-h-[3.5rem]" x-text="activeEntry.learned || 'Nothing captured.'"></div>
+                            <h3 class="text-[10px] font-bold uppercase tracking-wider text-text-subtle font-sans border-b border-border pb-1 mb-2.5">// What I Learned Today</h3>
+                            <div class="text-base text-text-main font-serif-reading bg-surface-2/40 p-4 border border-border rounded-xs whitespace-pre-line select-text min-h-[4rem] leading-relaxed" x-text="activeEntry.learned || 'Nothing captured.'"></div>
                         </div>
 
                         <div>
-                            <h3 class="text-xs font-bold uppercase tracking-wider text-text-subtle border-b border-border pb-1 mb-2">What I Worked On Today</h3>
-                            <div class="text-xs text-text-main font-mono bg-surface-2 p-3 border border-border rounded-sm whitespace-pre-line select-text min-h-[3.5rem]" x-text="activeEntry.worked || 'Nothing captured.'"></div>
+                            <h3 class="text-[10px] font-bold uppercase tracking-wider text-text-subtle font-sans border-b border-border pb-1 mb-2.5">// What I Worked On Today</h3>
+                            <div class="text-base text-text-main font-serif-reading bg-surface-2/40 p-4 border border-border rounded-xs whitespace-pre-line select-text min-h-[4rem] leading-relaxed" x-text="activeEntry.worked || 'Nothing captured.'"></div>
                         </div>
 
                         <div>
-                            <h3 class="text-xs font-bold uppercase tracking-wider text-text-subtle border-b border-border pb-1 mb-2">Wins & Milestones</h3>
-                            <div class="text-xs text-text-main font-mono bg-surface-2 p-3 border border-border rounded-sm whitespace-pre-line select-text min-h-[3.5rem]" x-text="activeEntry.wins || 'Nothing captured.'"></div>
+                            <h3 class="text-[10px] font-bold uppercase tracking-wider text-text-subtle font-sans border-b border-border pb-1 mb-2.5">// Wins & Milestones</h3>
+                            <div class="text-base text-text-main font-serif-reading bg-surface-2/40 p-4 border border-border rounded-xs whitespace-pre-line select-text min-h-[4rem] leading-relaxed" x-text="activeEntry.wins || 'Nothing captured.'"></div>
                         </div>
 
                         <div>
-                            <h3 class="text-xs font-bold uppercase tracking-wider text-text-subtle border-b border-border pb-1 mb-2">Ideas Captured</h3>
-                            <div class="text-xs text-text-main font-mono bg-surface-2 p-3 border border-border rounded-sm whitespace-pre-line select-text min-h-[3.5rem]" x-text="activeEntry.ideas || 'Nothing captured.'"></div>
+                            <h3 class="text-[10px] font-bold uppercase tracking-wider text-text-subtle font-sans border-b border-border pb-1 mb-2.5">// Ideas Captured</h3>
+                            <div class="text-base text-text-main font-serif-reading bg-surface-2/40 p-4 border border-border rounded-xs whitespace-pre-line select-text min-h-[3.5rem] leading-relaxed" x-text="activeEntry.ideas || 'Nothing captured.'"></div>
                         </div>
                     </div>
                 </template>
@@ -141,24 +141,24 @@
             </div>
 
             <!-- EDIT MODE -->
-            <div x-show="editing" class="space-y-4">
+            <div x-show="editing" class="space-y-5">
                 <template x-if="activeEntry">
-                    <div class="space-y-4">
+                    <div class="space-y-5">
                         <div>
-                            <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-1">What I Learned Today</label>
-                            <x-ui.textarea x-model="activeEntry.learned" rows="3"></x-ui.textarea>
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-text-subtle block mb-1.5 font-sans">// What I Learned Today</label>
+                            <x-ui.textarea x-model="activeEntry.learned" rows="3" class="font-serif-reading text-base leading-relaxed p-3"></x-ui.textarea>
                         </div>
                         <div>
-                            <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-1">What I Worked On Today</label>
-                            <x-ui.textarea x-model="activeEntry.worked" rows="3"></x-ui.textarea>
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-text-subtle block mb-1.5 font-sans">// What I Worked On Today</label>
+                            <x-ui.textarea x-model="activeEntry.worked" rows="3" class="font-serif-reading text-base leading-relaxed p-3"></x-ui.textarea>
                         </div>
                         <div>
-                            <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-1">Wins & Milestones</label>
-                            <x-ui.textarea x-model="activeEntry.wins" rows="3"></x-ui.textarea>
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-text-subtle block mb-1.5 font-sans">// Wins & Milestones</label>
+                            <x-ui.textarea x-model="activeEntry.wins" rows="3" class="font-serif-reading text-base leading-relaxed p-3"></x-ui.textarea>
                         </div>
                         <div>
-                            <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-1">Ideas Captured</label>
-                            <x-ui.textarea x-model="activeEntry.ideas" rows="2"></x-ui.textarea>
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-text-subtle block mb-1.5 font-sans">// Ideas Captured</label>
+                            <x-ui.textarea x-model="activeEntry.ideas" rows="2" class="font-serif-reading text-base leading-relaxed p-3"></x-ui.textarea>
                         </div>
                     </div>
                 </template>

@@ -76,15 +76,15 @@ html.dark {
 
 /* Custom classes for typography selection */
 .font-sans-ui {
-    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 .font-serif-reading {
-    font-family: 'Newsreader', Georgia, serif;
+    font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 .font-mono-code {
-    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 /* text-xxs utility — fixed 11px, does not scale with rem base */

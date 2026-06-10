@@ -65,8 +65,8 @@
             <template x-for="task in filteredTasks" :key="task.id">
                 <div 
                     @click="selectedTaskId = task.id"
-                    :class="selectedTaskId === task.id ? 'bg-accent-subtle-bg/30 text-text-main' : 'text-text-muted hover:bg-surface-2/30'"
-                    class="p-3 cursor-pointer flex flex-col transition-all"
+                    :class="selectedTaskId === task.id ? 'bg-accent-subtle-bg/30 text-text-main border-l-2 border-l-accent' : 'text-text-muted hover:bg-surface-2/30 border-l-2 border-l-transparent'"
+                    class="pl-2.5 pr-3 py-3 cursor-pointer flex flex-col transition-all border-b border-border/40"
                 >
                     <div class="flex items-start justify-between space-x-2">
                         <div class="flex items-start space-x-2.5 min-w-0">

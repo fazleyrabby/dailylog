@@ -12,6 +12,7 @@ enum EntryType: string
     case Resource = 'resource';
     case Learning = 'learning';
     case Idea = 'idea';
+    case Lab = 'lab';
 
     public function label(): string
     {
@@ -24,6 +25,7 @@ enum EntryType: string
             self::Resource => 'Resource',
             self::Learning => 'Learning',
             self::Idea => 'Idea',
+            self::Lab => 'Lab',
         };
     }
 
@@ -38,6 +40,7 @@ enum EntryType: string
             self::Resource => 'to_consume',
             self::Learning => 'active',
             self::Idea => 'spark',
+            self::Lab => 'active',
         };
     }
 

@@ -150,104 +150,135 @@
                 </div>
 
                 <!-- Navigation Groups -->
-                <nav class="p-2 space-y-1 overflow-y-auto max-h-[calc(100vh-180px)]">
-                    <!-- Daily Drivers -->
-                    <x-ui.sidebar-item href="/dashboard" :active="request()->is('dashboard', '/')">
-                        <x-slot name="icon">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
-                        </x-slot>
-                        Dashboard
-                    </x-ui.sidebar-item>
-
-                    <x-ui.sidebar-item href="/tasks" :active="request()->is('tasks*')" :badge="$sidebarCounts['tasks'] ?: null">
-                        <x-slot name="icon">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        </x-slot>
-                        Tasks
-                    </x-ui.sidebar-item>
-
-                    <x-ui.sidebar-item href="/notes" :active="request()->is('notes*')">
-                        <x-slot name="icon">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
-                        </x-slot>
-                        Notes
-                    </x-ui.sidebar-item>
-
-                    <x-ui.sidebar-item href="/journal" :active="request()->is('journal*')">
-                        <x-slot name="icon">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" /></svg>
-                        </x-slot>
-                        Journal
-                    </x-ui.sidebar-item>
-
-                    <div class="h-px bg-border my-2"></div>
-
-                    <!-- Frequent -->
-                    <x-ui.sidebar-item href="/bookmarks" :active="request()->is('bookmarks*')">
-                        <x-slot name="icon">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
-                        </x-slot>
-                        Bookmarks
-                    </x-ui.sidebar-item>
-
-                    <x-ui.sidebar-item href="/learning" :active="request()->is('learning*')" :badge="$sidebarCounts['learning'] ?: null">
-                        <x-slot name="icon">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>
-                        </x-slot>
-                        Learning
-                    </x-ui.sidebar-item>
-
-                    <x-ui.sidebar-item href="/projects" :active="request()->is('projects*')" :badge="$sidebarCounts['projects'] ?: null">
-                        <x-slot name="icon">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6.878V6a2.25 2.25 0 012.25-2.25h7.5A2.25 2.25 0 0118 6v.878m-12 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128m-12 0A2.25 2.25 0 004.5 9v.878m13.5-3A2.25 2.25 0 0119.5 9v.878m-15 0a2.25 2.25 0 00-2.25 2.25v6.75A2.25 2.25 0 004.5 21h15a2.25 2.25 0 002.25-2.25V12.128a2.25 2.25 0 00-2.25-2.25m-15 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128" /></svg>
-                        </x-slot>
-                        Projects
-                    </x-ui.sidebar-item>
-
-                    <div class="h-px bg-border my-2"></div>
-
-                    <!-- Collapsible Library Group -->
-                    <div x-data="{ open: localStorage.getItem('library-expanded') !== 'false' }">
-                        <button 
-                            @click="open = !open; localStorage.setItem('library-expanded', open)" 
-                            class="w-full flex items-center justify-between px-3 py-1.5 text-xxs uppercase tracking-wider text-text-subtle hover:text-text-main font-semibold cursor-pointer focus:outline-none"
-                        >
-                            <span x-show="!sidebarCollapsed || isMobile" class="text-xs">Reference Library</span>
-                            <span x-show="sidebarCollapsed && !isMobile">LIB</span>
-                            <svg :class="open ? 'rotate-90' : ''" class="h-3 w-3 transition-transform text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </button>
-                        
-                        <div x-show="open" class="mt-1 space-y-1">
-                            <x-ui.sidebar-item href="/quotes" :active="request()->is('quotes*')">
-                                <x-slot name="icon">❝</x-slot>
-                                Quotes
-                            </x-ui.sidebar-item>
-                            
-                            <x-ui.sidebar-item href="/resources" :active="request()->is('resources*')">
-                                <x-slot name="icon">◫</x-slot>
-                                Resources
+                <nav class="p-2 space-y-3 overflow-y-auto max-h-[calc(100vh-180px)]">
+                    <!-- Today Group -->
+                    <div>
+                        <div x-show="!sidebarCollapsed" class="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-text-subtle/70 font-mono">Today</div>
+                        <div class="space-y-0.5">
+                            <x-ui.sidebar-item href="/dashboard" :active="request()->is('dashboard', '/')">
+                                <x-slot name="icon">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
+                                </x-slot>
+                                Today
                             </x-ui.sidebar-item>
                         </div>
                     </div>
 
-                    <div class="h-px bg-border my-2"></div>
+                    <!-- Workspace Group -->
+                    <div>
+                        <div x-show="!sidebarCollapsed" class="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-text-subtle/70 font-mono">Workspace</div>
+                        <div class="space-y-0.5">
+                            <x-ui.sidebar-item href="/tasks" :active="request()->is('tasks*')" :badge="$sidebarCounts['tasks'] ?: null">
+                                <x-slot name="icon">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </x-slot>
+                                Tasks
+                            </x-ui.sidebar-item>
 
-                    <!-- System Modules -->
-                    <x-ui.sidebar-item href="/slipping" :active="request()->is('slipping*')" :badge="$sidebarCounts['slipping'] ?: null">
-                        <x-slot name="icon">
-                            <svg class="h-4 w-4 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
-                        </x-slot>
-                        Slipping
-                    </x-ui.sidebar-item>
+                            <x-ui.sidebar-item href="/notes" :active="request()->is('notes*')">
+                                <x-slot name="icon">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                                </x-slot>
+                                Notes
+                            </x-ui.sidebar-item>
 
-                    <x-ui.sidebar-item href="/inbox" :active="request()->is('inbox*')">
-                        <x-slot name="icon">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.008 1.24l.885 1.77a2.25 2.25 0 002.007 1.24h1.98a2.25 2.25 0 002.007-1.24l.885-1.77a2.25 2.25 0 012.007-1.24h3.86m-18 0h18" /></svg>
-                        </x-slot>
-                        Inbox
-                    </x-ui.sidebar-item>
+                            <x-ui.sidebar-item href="/journal" :active="request()->is('journal*')">
+                                <x-slot name="icon">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" /></svg>
+                                </x-slot>
+                                Journal
+                            </x-ui.sidebar-item>
+
+                            <x-ui.sidebar-item href="/projects" :active="request()->is('projects*')" :badge="$sidebarCounts['projects'] ?: null">
+                                <x-slot name="icon">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6.878V6a2.25 2.25 0 012.25-2.25h7.5A2.25 2.25 0 0118 6v.878m-12 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128m-12 0A2.25 2.25 0 004.5 9v.878m13.5-3A2.25 2.25 0 0119.5 9v.878m-15 0a2.25 2.25 0 00-2.25 2.25v6.75A2.25 2.25 0 004.5 21h15a2.25 2.25 0 002.25-2.25V12.128a2.25 2.25 0 00-2.25-2.25m-15 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128" /></svg>
+                                </x-slot>
+                                Projects
+                            </x-ui.sidebar-item>
+
+                            <x-ui.sidebar-item href="/lab" :active="request()->is('lab*')">
+                                <x-slot name="icon">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v1.244c0 .506-.201 1-.56 1.358-.756.756-2.075 2.085-2.075 3.794a5 5 0 005 5h0a5 5 0 005-5c0-1.709-1.319-3.038-2.075-3.794-.359-.358-.56-.852-.56-1.358V3.104m-5.25 0h10.5" />
+                                    </svg>
+                                </x-slot>
+                                Lab
+                            </x-ui.sidebar-item>
+                        </div>
+                    </div>
+
+                    <!-- Knowledge Group -->
+                    <div>
+                        <div x-show="!sidebarCollapsed" class="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-text-subtle/70 font-mono">Knowledge</div>
+                        <div class="space-y-0.5">
+                            <x-ui.sidebar-item href="/learning" :active="request()->is('learning*')" :badge="$sidebarCounts['learning'] ?: null">
+                                <x-slot name="icon">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>
+                                </x-slot>
+                                Learning
+                            </x-ui.sidebar-item>
+
+                            <x-ui.sidebar-item href="/bookmarks" :active="request()->is('bookmarks*')">
+                                <x-slot name="icon">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                                </x-slot>
+                                Bookmarks
+                            </x-ui.sidebar-item>
+
+                            <!-- Collapsible Library Group -->
+                            <div x-data="{ open: localStorage.getItem('library-expanded') !== 'false' }" class="py-1">
+                                <button 
+                                    @click="open = !open; localStorage.setItem('library-expanded', open)" 
+                                    class="w-full flex items-center justify-between px-2 py-1 text-[10px] uppercase tracking-wider text-text-subtle/80 hover:text-text-main font-semibold cursor-pointer focus:outline-none"
+                                >
+                                    <span x-show="!sidebarCollapsed" class="text-[10px] tracking-wide">Reference Library</span>
+                                    <span x-show="sidebarCollapsed">LIB</span>
+                                    <svg :class="open ? 'rotate-90' : ''" class="h-3 w-3 transition-transform text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+                                
+                                <div x-show="open" class="mt-1 space-y-0.5">
+                                    <x-ui.sidebar-item href="/quotes" :active="request()->is('quotes*')">
+                                        <x-slot name="icon">❝</x-slot>
+                                        Quotes
+                                    </x-ui.sidebar-item>
+                                    
+                                    <x-ui.sidebar-item href="/resources" :active="request()->is('resources*')">
+                                        <x-slot name="icon">◫</x-slot>
+                                        Resources
+                                    </x-ui.sidebar-item>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Group -->
+                    <div>
+                        <div x-show="!sidebarCollapsed" class="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-text-subtle/70 font-mono">System</div>
+                        <div class="space-y-0.5">
+                            <x-ui.sidebar-item href="#" @click.prevent="$dispatch('open-palette')" :active="false">
+                                <x-slot name="icon">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                </x-slot>
+                                Search (⌘K)
+                            </x-ui.sidebar-item>
+
+                            <x-ui.sidebar-item href="/inbox" :active="request()->is('inbox*')">
+                                <x-slot name="icon">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.008 1.24l.885 1.77a2.25 2.25 0 002.007 1.24h1.98a2.25 2.25 0 002.007-1.24l.885-1.77a2.25 2.25 0 012.007-1.24h3.86m-18 0h18" /></svg>
+                                </x-slot>
+                                Inbox
+                            </x-ui.sidebar-item>
+
+                            <x-ui.sidebar-item href="/slipping" :active="request()->is('slipping*')" :badge="$sidebarCounts['slipping'] ?: null">
+                                <x-slot name="icon">
+                                    <svg class="h-4 w-4 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+                                </x-slot>
+                                Slipping
+                            </x-ui.sidebar-item>
+                        </div>
+                    </div>
                 </nav>
             </div>
 
