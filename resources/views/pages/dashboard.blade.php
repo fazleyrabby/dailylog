@@ -4,13 +4,13 @@
 @section('header_breadcrumbs', 'DAILYLOG // DASHBOARD')
 
 @section('content')
-<div x-data="dashboardComponent()" class="max-w-6xl mx-auto space-y-6">
+<div x-data="dashboardComponent({{ json_encode($focusItems) }}, {{ json_encode($activeTasks) }}, {{ json_encode($upcomingTasks) }})" class="max-w-6xl mx-auto space-y-6">
 
     <!-- Dashboard Greeting Row -->
     <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-border">
         <div>
             <h1 class="text-xl font-bold tracking-tight text-text-main">Good morning, Developer.</h1>
-            <p class="text-xs text-text-muted mt-1">Monday, June 8 · 12 tasks due today · 7 items slipping</p>
+            <p class="text-xs text-text-muted mt-1">{{ $greetingDate }} · {{ $todayTasksCount }} tasks due today · {{ $slippingCount }} items slipping</p>
         </div>
         <div class="mt-3 md:mt-0 flex space-x-2">
             <x-ui.button variant="primary" @click="$dispatch('open-palette')">
@@ -53,7 +53,7 @@
                             </div>
                             <div class="flex items-center space-x-2">
                                 <span class="text-[10px] font-mono text-text-muted" x-text="'@' + item.project"></span>
-                                <button @click="unfocus(idx)" class="text-text-subtle hover:text-danger focus:outline-none cursor-pointer" title="Remove focus">
+                                <button @click="unfocus(idx)" class="text-text-subtle hover:text-danger focus:outline-none cursor-pointer text-sm font-bold" title="Remove focus">
                                     &times;
                                 </button>
                             </div>
@@ -84,6 +84,11 @@
 
                 <!-- Task list rows -->
                 <div class="space-y-1.5">
+                    <template x-if="activeTasks.length === 0">
+                        <div class="py-4 text-center text-xs text-text-muted border border-dashed border-border rounded-sm">
+                            No tasks scheduled for today. Take it easy!
+                        </div>
+                    </template>
                     <template x-for="task in activeTasks" :key="task.id">
                         <div class="flex items-center justify-between p-2 hover:bg-surface-2/40 border-b border-border last:border-b-0 text-xs">
                             <div class="flex items-center space-x-3 min-w-0">
@@ -111,6 +116,11 @@
             <!-- UPCOMING -->
             <x-ui.card title="Upcoming Horizon (7 Days)">
                 <div class="space-y-3">
+                    <template x-if="upcomingTasks.length === 0">
+                        <div class="py-4 text-center text-xs text-text-muted border border-dashed border-border rounded-sm">
+                            No upcoming tasks due in the next 7 days.
+                        </div>
+                    </template>
                     <template x-for="task in upcomingTasks" :key="task.id">
                         <div class="flex items-center justify-between p-2 hover:bg-surface-2/40 border border-border/60 rounded-sm text-xs">
                             <div class="flex items-center space-x-3">
@@ -136,13 +146,18 @@
                 <x-slot name="header">
                     <div class="flex items-center space-x-1.5">
                         <span class="text-warning">⚠</span>
-                        <h4 class="font-bold text-xs uppercase tracking-wider text-text-main">Slipping (7)</h4>
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-text-main">Slipping ({{ count($slipping) }})</h4>
                     </div>
                     <a href="/slipping" class="text-xxs text-warning hover:underline">Review all &rarr;</a>
                 </x-slot>
 
                 <div class="space-y-2.5">
-                    @foreach($data['slipping'] as $slip)
+                    @if(count($slipping) === 0)
+                        <div class="py-4 text-center text-xs text-text-muted border border-dashed border-border rounded-sm bg-surface">
+                            All items are active. Nothing is slipping!
+                        </div>
+                    @endif
+                    @foreach($slipping as $slip)
                         <div class="p-2 border border-border hover:border-warning/30 bg-surface rounded-sm text-xs flex items-center justify-between group transition-all">
                             <div class="min-w-0">
                                 <div class="font-semibold text-text-main truncate text-[11px]">{{ $slip['title'] }}</div>
@@ -167,7 +182,12 @@
                 </x-slot>
 
                 <div class="space-y-2">
-                    @foreach($data['projects'] as $proj)
+                    @if(count($projects) === 0)
+                        <div class="py-4 text-center text-xs text-text-muted border border-dashed border-border rounded-sm bg-surface">
+                            No active projects.
+                        </div>
+                    @endif
+                    @foreach($projects as $proj)
                         <a href="/projects" class="block p-2 border border-border bg-surface-2/10 hover:bg-surface-2/40 rounded-sm text-xs transition-colors">
                             <div class="flex items-center justify-between">
                                 <span class="font-bold text-text-main flex items-center">
@@ -185,7 +205,12 @@
             <!-- RECENTLY TOUCHED -->
             <x-ui.card title="Recent Activity">
                 <div class="space-y-2">
-                    @foreach($data['notes']['recent'] as $n)
+                    @if(count($recentNotes) === 0)
+                        <div class="py-4 text-center text-xs text-text-muted border border-dashed border-border rounded-sm bg-surface">
+                            No recent activity.
+                        </div>
+                    @endif
+                    @foreach($recentNotes as $n)
                         <div class="p-2 border-b border-border last:border-b-0 text-xs">
                             <div class="flex items-center justify-between">
                                 <a href="/notes" class="font-semibold text-accent hover:underline truncate">{{ $n['title'] }}</a>
@@ -204,42 +229,59 @@
 </div>
 
 <script>
-window.dashboardComponent = function() {
+window.dashboardComponent = function(initialFocus, initialTasks, initialUpcoming) {
     return {
-        focusItems: [
-            { id: 10, title: 'Laravel Optimization Notes', type: 'note', project: 'DailyLOG' },
-            { id: 3, title: 'Review pull request for auth service rewrite', type: 'task', project: 'DailyLOG' }
-        ],
-        activeTasks: [
-            { id: 3, title: 'Review pull request for auth service rewrite', priority: 'high', project: 'DailyLOG', due: 'Today', completed: false },
-            { id: 4, title: 'Setup Redis cluster local configurations', priority: 'high', project: 'DailyLOG', due: 'Today', completed: false }
-        ],
-        upcomingTasks: [
-            { id: 6, title: 'Optimize PostgreSQL full text search tsvector indexes', priority: 'medium', project: 'DailyLOG', due: 'Tomorrow' },
-            { id: 7, title: 'Deploy staging app onto AWS ECS Cluster', priority: 'high', project: 'DevOps', due: 'In 3 days' }
-        ],
+        focusItems: initialFocus,
+        activeTasks: initialTasks,
+        upcomingTasks: initialUpcoming,
         
         unfocus(idx) {
-            let title = this.focusItems[idx].title;
-            this.focusItems.splice(idx, 1);
-            window.dispatchEvent(new CustomEvent('show-toast', { 
-                detail: { message: 'Unpinned from Daily Focus: ' + title.substring(0, 20) + '...', action: 'Undo' }
-            }));
+            let item = this.focusItems[idx];
+            fetch(`/entries/${item.id}/toggle-pin`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    this.focusItems.splice(idx, 1);
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: 'Unpinned from Daily Focus: ' + item.title.substring(0, 20) + '...' }
+                    }));
+                }
+            });
         },
         
         toggleTask(id) {
-            let t = this.activeTasks.find(x => x.id === id);
-            if (t) {
-                t.completed = !t.completed;
-                window.dispatchEvent(new CustomEvent('show-toast', { 
-                    detail: { message: t.completed ? 'Task completed' : 'Task marked active', action: 'Undo' }
-                }));
-                if (t.completed) {
-                    setTimeout(() => {
-                        this.activeTasks = this.activeTasks.filter(x => x.id !== id);
-                    }, 1000);
+            fetch(`/tasks/${id}/toggle`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
                 }
-            }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.task) {
+                    let t = this.activeTasks.find(x => x.id === id);
+                    if (t) {
+                        t.completed = data.task.completed;
+                        window.dispatchEvent(new CustomEvent('show-toast', { 
+                            detail: { message: t.completed ? 'Task completed' : 'Task marked active' }
+                        }));
+                        if (t.completed) {
+                            setTimeout(() => {
+                                this.activeTasks = this.activeTasks.filter(x => x.id !== id);
+                            }, 1000);
+                        }
+                    }
+                }
+            });
         }
     };
 };

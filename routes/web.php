@@ -1,13 +1,17 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\BookmarksController;
 use App\Http\Controllers\CaptureController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\JournalController;
+use App\Http\Controllers\LearningController;
 use App\Http\Controllers\NotesController;
 use App\Http\Controllers\Partials\SearchSuggestController;
 use App\Http\Controllers\Partials\TagAutocompleteController;
+use App\Http\Controllers\ProjectsController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\TasksController;
 use App\Support\MockData;
@@ -32,7 +36,8 @@ Route::middleware('auth')->group(function () {
     // Mocked-prototype pass-through. Real controllers replace these per Build Order.
     Route::get('/', fn () => redirect()->route('dashboard.index'));
 
-    Route::get('/dashboard', fn () => view('pages.dashboard', ['data' => MockData::all()]))->name('dashboard.index');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+    Route::patch('/entries/{entry}/toggle-pin', [DashboardController::class, 'togglePin'])->name('entries.toggle-pin');
     Route::get('/inbox', [InboxController::class, 'index'])->name('inbox.index');
     Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 
@@ -50,9 +55,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/journal', [JournalController::class, 'index'])->name('journal.index');
     Route::post('/journal', [JournalController::class, 'store'])->name('journal.store');
     Route::put('/journal/{entry}', [JournalController::class, 'update'])->name('journal.update');
-    Route::get('/bookmarks', fn () => view('pages.bookmarks', ['data' => MockData::all()]))->name('bookmarks.index');
-    Route::get('/learning', fn () => view('pages.learning', ['data' => MockData::all()]))->name('learning.index');
-    Route::get('/projects', fn () => view('pages.projects', ['data' => MockData::all()]))->name('projects.index');
+
+    Route::get('/bookmarks', [BookmarksController::class, 'index'])->name('bookmarks.index');
+    Route::post('/bookmarks', [BookmarksController::class, 'store'])->name('bookmarks.store');
+    Route::patch('/bookmarks/{entry}/reviewed', [BookmarksController::class, 'markReviewed'])->name('bookmarks.reviewed');
+    Route::delete('/bookmarks/{entry}', [BookmarksController::class, 'destroy'])->name('bookmarks.destroy');
+
+    Route::get('/learning', [LearningController::class, 'index'])->name('learning.index');
+    Route::patch('/learning/{entry}/complete-unit', [LearningController::class, 'completeUnit'])->name('learning.complete-unit');
+    Route::get('/projects', [ProjectsController::class, 'index'])->name('projects.index');
     Route::get('/quotes', fn () => view('pages.quotes', ['data' => MockData::all()]))->name('quotes.index');
     Route::get('/resources', fn () => view('pages.resources', ['data' => MockData::all()]))->name('resources.index');
     Route::get('/slipping', fn () => view('pages.slipping', ['data' => MockData::all()]))->name('slipping.index');

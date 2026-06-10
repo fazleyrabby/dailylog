@@ -109,6 +109,7 @@ class CaptureService
                     'review_state' => 'unread',
                     'raw_meta' => null,
                 ]);
+                \App\Jobs\EnrichBookmarkJob::dispatch($entry);
                 break;
 
             case EntryType::Resource:
