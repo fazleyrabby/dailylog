@@ -15,7 +15,6 @@
         </x-slot:badge>
     </x-ui.section-header>
 
-    <!-- Add Bookmark Inline Form -->
     <div class="bg-surface border border-border rounded-sm p-4 text-xs">
         <h4 class="text-xxs font-bold text-text-subtle uppercase tracking-wider mb-2.5">Capture New Bookmark</h4>
         <div class="flex flex-col sm:flex-row gap-2">
@@ -25,7 +24,11 @@
                     x-model="newUrl"
                     placeholder="https://example.com/blog-post"
                     class="w-full bg-transparent border border-border px-3 py-1.5 rounded-sm focus:outline-none focus:border-accent text-text-main"
+                    :class="errors.url ? 'border-danger focus:border-danger' : 'border-border'"
                 />
+                <template x-if="errors.url">
+                    <p class="text-danger text-[10px] mt-1 font-mono" x-text="errors.url[0]"></p>
+                </template>
             </div>
             <div class="w-full sm:w-1/3">
                 <input
@@ -70,49 +73,37 @@
         </template>
         
         <template x-for="b in currentBookmarks" :key="b.id">
-            <div class="bg-surface border border-border rounded-sm p-4 text-xs flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-accent/30 transition-colors">
-                <!-- Main details and optional thumbnail -->
-                <div class="flex items-start space-x-3.5 min-w-0 flex-grow">
-                    <!-- Thumbnail preview -->
-                    <template x-if="b.image">
-                        <div class="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-sm overflow-hidden border border-border bg-surface-2/40 hidden sm:block">
-                            <img :src="b.image" class="w-full h-full object-cover" x-on:error="b.image = ''" />
-                        </div>
-                    </template>
-
-                    <div class="space-y-1.5 min-w-0 flex-grow">
-                        <div class="flex items-center space-x-2">
-                            <!-- Favicon with fallback -->
-                            <img x-show="b.favicon" :src="b.favicon" x-on:error="b.favicon = ''" class="h-4 w-4 rounded-sm object-contain flex-shrink-0" />
-                            <span x-show="!b.favicon" class="text-type-bookmark flex-shrink-0">⚲</span>
-                            
-                            <a :href="b.url" target="_blank" class="font-bold text-accent hover:underline text-sm truncate" x-text="b.title"></a>
-                        </div>
-                        <a :href="b.url" target="_blank" class="text-text-subtle hover:text-text-main font-mono text-[10px] block" x-text="b.site"></a>
-                        <p class="text-text-muted select-text leading-normal" x-text="b.desc || 'No description fetched yet'"></p>
-                        
-                        <div class="flex items-center space-x-2.5 pt-1 flex-wrap gap-y-1">
-                            <template x-for="tag in b.tags">
-                                <span class="bg-surface-2 border border-border px-1.5 py-0.2 rounded-full text-[9px] text-text-subtle font-mono font-medium">#<span x-text="tag"></span></span>
-                            </template>
-                            <span class="text-[10px] text-text-subtle font-mono" x-text="'Added: ' + b.added"></span>
-                        </div>
+            <div class="bg-surface border border-border rounded-sm p-4 text-xs flex flex-col sm:flex-row sm:justify-between gap-3 sm:space-x-4 hover:border-accent/30 transition-colors">
+                <div class="space-y-1.5 min-w-0 flex-grow">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-type-bookmark">⚲</span>
+                        <a :href="b.url" target="_blank" class="font-bold text-accent hover:underline text-sm truncate" x-text="b.title"></a>
+                    </div>
+                    <a :href="b.url" target="_blank" class="text-text-subtle hover:text-text-main font-mono text-[10px] block" x-text="b.site"></a>
+                    <p class="text-text-muted select-text leading-normal" x-text="b.desc"></p>
+                    
+                    <div class="flex items-center space-x-2.5 pt-1 flex-wrap gap-y-1">
+                        <template x-for="tag in b.tags">
+                            <a :href="'/search?tag[]=' + encodeURIComponent(tag)" class="bg-surface-2 hover:bg-surface border border-border px-1.5 py-0.2 rounded-full text-[9px] text-accent font-mono transition-colors">#<span x-text="tag"></span></a>
+                        </template>
+                        <span class="text-[10px] text-text-subtle font-mono" x-text="'Added: ' + b.added"></span>
                     </div>
                 </div>
                 
-                <!-- Action Buttons -->
-                <div class="flex-shrink-0 flex md:flex-col md:items-end justify-start gap-2">
-                    <template x-if="b.state === 'unread'">
-                        <x-ui.button variant="secondary" size="sm" @click="markReviewed(b.id)">
-                            Mark Reviewed
+                <div class="flex-shrink-0 flex flex-col sm:items-end items-start space-y-2">
+                    <div class="flex items-center space-x-1.5">
+                        <template x-if="b.state === 'unread'">
+                            <x-ui.button variant="secondary" size="sm" @click="markReviewed(b.id)">
+                                Mark Reviewed
+                            </x-ui.button>
+                        </template>
+                        <template x-if="b.state === 'reviewed'">
+                            <span class="bg-success/5 text-success border border-success/20 text-[9px] font-mono font-bold px-2 py-0.5 rounded-full uppercase">Reviewed</span>
+                        </template>
+                        <x-ui.button variant="danger" size="sm" @click="deleteBookmark(b.id)">
+                            Delete
                         </x-ui.button>
-                    </template>
-                    <template x-if="b.state === 'reviewed'">
-                        <span class="bg-success/5 text-success border border-success/20 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">Reviewed</span>
-                    </template>
-                    <x-ui.button variant="danger" size="sm" @click="deleteBookmark(b.id)">
-                        Delete
-                    </x-ui.button>
+                    </div>
                 </div>
             </div>
         </template>
@@ -126,6 +117,7 @@ window.bookmarksComponent = function(initialBookmarks) {
         bookmarks: initialBookmarks,
         newUrl: '',
         newTags: '',
+        errors: {},
 
         get currentBookmarks() {
             return this.bookmarks.filter(b => b.state === this.activeTab);
@@ -181,8 +173,7 @@ window.bookmarksComponent = function(initialBookmarks) {
         },
 
         addBookmark() {
-            if (!this.newUrl) return;
-
+            this.errors = {};
             let tagsArr = this.newTags.split(',').map(t => t.trim()).filter(t => t.length > 0);
 
             fetch('/bookmarks', {
@@ -197,7 +188,15 @@ window.bookmarksComponent = function(initialBookmarks) {
                     tags: tagsArr
                 })
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) {
+                    return res.json().then(errData => {
+                        this.errors = errData.errors || {};
+                        throw new Error('Validation failed');
+                    });
+                }
+                return res.json();
+            })
             .then(data => {
                 if (data.bookmark) {
                     this.bookmarks.unshift(data.bookmark);
@@ -207,6 +206,9 @@ window.bookmarksComponent = function(initialBookmarks) {
                         detail: { message: 'Bookmark added! Fetching metadata...' }
                     }));
                 }
+            })
+            .catch(err => {
+                // Thrown error is handled locally by modifying errors object
             });
         }
     };

@@ -6,7 +6,7 @@
 
 @php
     $classes = $active
-        ? 'flex items-center justify-between px-3 py-2 text-xs font-medium rounded-sm bg-surface-2 text-text-main transition-all duration-75'
+        ? 'flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-sm bg-accent-subtle-bg/40 text-text-main transition-all duration-75'
         : 'flex items-center justify-between px-3 py-2 text-xs font-medium rounded-sm text-text-muted hover:bg-surface-2 hover:text-text-main transition-all duration-75';
 @endphp
 

@@ -42,6 +42,7 @@ class Entry extends Model
     public function scopeResources(Builder $query): Builder { return $query->where('type', 'resource'); }
     public function scopeLearnings(Builder $query): Builder { return $query->where('type', 'learning'); }
     public function scopeIdeas(Builder $query): Builder { return $query->where('type', 'idea'); }
+    public function scopeLabs(Builder $query): Builder { return $query->where('type', 'lab'); }
 
     // Scopes for status filtering
     public function scopeActive(Builder $query): Builder { return $query->whereNull('archived_at'); }
@@ -69,6 +70,11 @@ class Entry extends Model
     public function resourceDetails(): HasOne { return $this->hasOne(ResourceDetails::class, 'entry_id'); }
     public function learningDetails(): HasOne { return $this->hasOne(LearningDetails::class, 'entry_id'); }
     public function quoteDetails(): HasOne { return $this->hasOne(QuoteDetails::class, 'entry_id'); }
+    
+    public function labItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(LabItem::class, 'entry_id');
+    }
 
     // Self-referential graph links
     public function links(): BelongsToMany

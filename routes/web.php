@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\JournalController;
+use App\Http\Controllers\LabController;
 use App\Http\Controllers\LearningController;
 use App\Http\Controllers\NotesController;
 use App\Http\Controllers\Partials\SearchSuggestController;
@@ -77,4 +78,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/slipping/{snapshot}/snooze', [SlippingController::class, 'snooze'])->name('slipping.snooze');
     Route::post('/slipping/{snapshot}/let-go', [SlippingController::class, 'letGo'])->name('slipping.let-go');
     Route::get('/settings', fn () => view('pages.settings', ['data' => MockData::all()]))->name('settings.profile');
+
+    // Lab Routes
+    Route::get('/lab', [LabController::class, 'index'])->name('lab.index');
+    Route::post('/lab', [LabController::class, 'store'])->name('lab.store');
+    Route::get('/lab/{entry}', [LabController::class, 'show'])->name('lab.show');
+    Route::patch('/lab/{entry}', [LabController::class, 'update'])->name('lab.update');
+    Route::delete('/lab/{entry}', [LabController::class, 'destroy'])->name('lab.destroy');
+    Route::patch('/lab/{entry}/items', [LabController::class, 'updateItems'])->name('lab.items.update');
+    Route::post('/lab/items/{item}/graduate', [LabController::class, 'graduate'])->name('lab.items.graduate');
 });

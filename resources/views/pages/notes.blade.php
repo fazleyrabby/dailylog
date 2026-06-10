@@ -109,41 +109,41 @@
         <!-- Note Canvas -->
         <div class="flex-grow flex flex-col overflow-hidden">
             <!-- EDIT MODE (Plain Markdown textarea) -->
-            <div x-show="editMode" class="flex-grow p-5 flex flex-col">
+            <div x-show="editMode" class="flex-grow p-6 flex flex-col">
                 <input 
                     type="text" 
                     x-model="activeNote.title" 
-                    class="w-full text-base font-bold bg-transparent border-0 border-b border-border pb-2 focus:ring-0 focus:border-accent focus:outline-none mb-3 text-text-main"
+                    class="w-full text-xl font-bold bg-transparent border-0 border-b border-border pb-2 focus:ring-0 focus:border-accent focus:outline-none mb-3 text-text-main font-serif-reading"
                     placeholder="Note title"
                 />
                 <textarea 
                     x-model="activeNote.body" 
-                    class="w-full flex-grow bg-transparent border-0 text-sm font-mono focus:ring-0 focus:outline-none resize-none text-text-main"
+                    class="w-full flex-grow bg-transparent border-0 text-base font-serif-reading leading-relaxed focus:ring-0 focus:outline-none resize-none text-text-main"
                     placeholder="Write in markdown... [[link-note]] or #tag"
                 ></textarea>
             </div>
 
             <!-- PREVIEW MODE (Editorial read mode) -->
             <div x-show="!editMode" class="flex-grow overflow-y-auto w-full select-text">
-                <div class="max-w-2xl mx-auto px-6 py-5 font-sans-ui">
-                    <h1 class="text-lg font-bold text-text-main border-b border-border pb-3 mb-1" x-text="activeNote.title"></h1>
-                    <p class="text-xxs text-text-subtle font-mono mb-4">Last updated: <span x-text="activeNote.updated"></span></p>
-                    <div class="prose prose-sm dark:prose-invert max-w-none font-sans-ui text-text-main select-text
-                                prose-headings:font-semibold prose-headings:text-text-main
-                                prose-h1:text-base prose-h2:text-sm prose-h3:text-sm
-                                prose-p:text-sm prose-p:leading-relaxed
-                                prose-li:text-sm prose-li:leading-relaxed
-                                prose-code:text-xs prose-pre:text-xs
+                <div class="max-w-2xl mx-auto px-6 py-6 font-serif-reading">
+                    <h1 class="text-2xl font-bold text-text-main border-b border-border pb-3 mb-1 font-serif-reading" x-text="activeNote.title"></h1>
+                    <p class="text-xxs text-text-subtle font-mono mb-4 mt-2">Last updated: <span x-text="activeNote.updated"></span></p>
+                    <div class="prose prose-sm dark:prose-invert max-w-none font-serif-reading text-text-main select-text
+                                prose-headings:font-bold prose-headings:text-text-main
+                                prose-h1:text-xl prose-h2:text-lg prose-h3:text-base
+                                prose-p:text-base prose-p:leading-relaxed
+                                prose-li:text-base prose-li:leading-relaxed
+                                prose-code:font-mono prose-code:text-xs prose-pre:text-xs
                                 prose-a:text-accent" 
                          x-html="window.marked.parse(activeNote.body || '')"></div>
                     
                     <!-- BACKLINKS DRAWER PANEL -->
-                    <div class="mt-8 border-t border-border pt-4 select-none">
+                    <div class="mt-8 border-t border-border pt-4 select-none font-sans">
                         <h4 class="text-xxs font-bold text-text-subtle uppercase tracking-wider mb-2.5">Linked Backlinks</h4>
                         <template x-if="activeNote.backlinks && activeNote.backlinks.length > 0">
                             <div class="flex flex-wrap gap-2">
                                 <template x-for="backlink in activeNote.backlinks" :key="backlink">
-                                    <a href="/notes" class="inline-flex items-center px-2 py-1 rounded-sm border border-border bg-surface-2/40 text-xxs font-mono text-accent hover:bg-surface-2 hover:border-accent/40 transition-colors">
+                                    <a :href="'/search?q=' + encodeURIComponent(backlink)" class="inline-flex items-center px-2 py-1 rounded-xs border border-border bg-surface-2/40 text-xxs font-mono text-accent hover:bg-surface-2 hover:border-accent/40 transition-colors">
                                         <span class="mr-1">🔗</span><span x-text="backlink"></span>
                                     </a>
                                 </template>
