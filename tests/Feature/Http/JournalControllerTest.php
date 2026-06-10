@@ -83,6 +83,7 @@ class JournalControllerTest extends TestCase
                 'worked' => '',
                 'wins' => '',
                 'ideas' => '',
+                'mood' => '',
             ]),
         ]);
 
@@ -92,17 +93,20 @@ class JournalControllerTest extends TestCase
                 'worked' => 'Wired up controllers',
                 'wins' => '100% tests passed',
                 'ideas' => 'Automate everything',
+                'mood' => 'focused',
             ])
             ->assertOk()
             ->assertJsonPath('entry.learned', 'Learned Laravel 12')
             ->assertJsonPath('entry.worked', 'Wired up controllers')
             ->assertJsonPath('entry.wins', '100% tests passed')
-            ->assertJsonPath('entry.ideas', 'Automate everything');
+            ->assertJsonPath('entry.ideas', 'Automate everything')
+            ->assertJsonPath('entry.mood', 'focused');
 
         $decodedBody = json_decode($entry->fresh()->body, true);
         $this->assertEquals('Learned Laravel 12', $decodedBody['learned']);
         $this->assertEquals('Wired up controllers', $decodedBody['worked']);
         $this->assertEquals('100% tests passed', $decodedBody['wins']);
         $this->assertEquals('Automate everything', $decodedBody['ideas']);
+        $this->assertEquals('focused', $decodedBody['mood']);
     }
 }

@@ -48,6 +48,7 @@ class JournalController extends Controller
                 'worked' => '',
                 'wins' => '',
                 'ideas' => '',
+                'mood' => '',
             ]),
             'status' => 'active',
             'last_activity_at' => now(),
@@ -65,6 +66,7 @@ class JournalController extends Controller
             'worked' => ['nullable', 'string'],
             'wins' => ['nullable', 'string'],
             'ideas' => ['nullable', 'string'],
+            'mood' => ['nullable', 'string'],
         ]);
 
         $bodyJson = json_encode([
@@ -72,6 +74,7 @@ class JournalController extends Controller
             'worked' => $validated['worked'] ?? '',
             'wins' => $validated['wins'] ?? '',
             'ideas' => $validated['ideas'] ?? '',
+            'mood' => $validated['mood'] ?? '',
         ]);
 
         $entry = $this->updateEntry->execute($entry, [
@@ -94,6 +97,7 @@ class JournalController extends Controller
             'worked' => $body['worked'] ?? '',
             'wins' => $body['wins'] ?? '',
             'ideas' => $body['ideas'] ?? '',
+            'mood' => $body['mood'] ?? '',
         ];
     }
 }

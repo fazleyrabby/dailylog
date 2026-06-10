@@ -108,6 +108,20 @@
                 
                 <template x-if="activeEntry">
                     <div class="space-y-5">
+                        <!-- Mood Display Section -->
+                        <div class="flex items-center space-x-2 border-b border-border pb-3">
+                            <span class="text-xs font-bold uppercase tracking-wider text-text-subtle">Today's Mood:</span>
+                            <template x-if="activeEntry.mood">
+                                <span class="px-2.5 py-1 text-xs border border-accent/20 bg-accent/10 text-text-main rounded-full font-semibold flex items-center">
+                                    <span class="mr-1.5" x-text="getMoodEmoji(activeEntry.mood)"></span>
+                                    <span class="capitalize font-mono" x-text="activeEntry.mood"></span>
+                                </span>
+                            </template>
+                            <template x-if="!activeEntry.mood">
+                                <span class="text-xs text-text-subtle italic">Not recorded</span>
+                            </template>
+                        </div>
+
                         <div>
                             <h3 class="text-xs font-bold uppercase tracking-wider text-text-subtle border-b border-border pb-1 mb-2">What I Learned Today</h3>
                             <div class="text-xs text-text-main font-mono bg-surface-2 p-3 border border-border rounded-sm whitespace-pre-line select-text min-h-[3.5rem]" x-text="activeEntry.learned || 'Nothing captured.'"></div>
@@ -144,6 +158,23 @@
             <div x-show="editing" class="space-y-4">
                 <template x-if="activeEntry">
                     <div class="space-y-4">
+                        <!-- Mood Select Component -->
+                        <div class="border-b border-border pb-4">
+                            <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-1.5">Select Today's Mood</label>
+                            <div class="flex flex-wrap gap-2">
+                                <template x-for="m in ['happy', 'focused', 'neutral', 'down', 'tired']">
+                                    <button 
+                                        @click="activeEntry.mood = m"
+                                        :class="activeEntry.mood === m ? 'bg-accent/15 border-accent/30 font-bold text-accent' : 'bg-surface border-border text-text-muted hover:text-text-main'"
+                                        class="px-3 py-1 text-xs border rounded-sm cursor-pointer select-none transition-all flex items-center space-x-1"
+                                    >
+                                        <span x-text="getMoodEmoji(m)"></span>
+                                        <span class="capitalize" x-text="m"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+
                         <div>
                             <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-1">What I Learned Today</label>
                             <x-ui.textarea x-model="activeEntry.learned" rows="3"></x-ui.textarea>
@@ -276,6 +307,17 @@ window.journalComponent = function(initialEntries) {
             return 'Journal Entry Details';
         },
 
+        getMoodEmoji(mood) {
+            const moods = {
+                happy: '😊',
+                focused: '🔥',
+                neutral: '😐',
+                down: '😔',
+                tired: '😴'
+            };
+            return moods[mood] || '';
+        },
+
         saveEntry() {
             if (!this.activeEntry) return;
 
@@ -290,7 +332,8 @@ window.journalComponent = function(initialEntries) {
                     learned: this.activeEntry.learned,
                     worked: this.activeEntry.worked,
                     wins: this.activeEntry.wins,
-                    ideas: this.activeEntry.ideas
+                    ideas: this.activeEntry.ideas,
+                    mood: this.activeEntry.mood || ''
                 })
             })
             .then(res => res.json())
