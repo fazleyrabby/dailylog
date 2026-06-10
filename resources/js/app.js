@@ -38,23 +38,17 @@ window.panelResizer = function (opts = {}) {
             window.addEventListener('resize', this._onResize);
         },
 
-        /** Applied as :style on the left panel element */
-        get panelStyle() {
-            if (this.isMobile) return '';
-            return `width:${this.panelWidth}px;min-width:${this.panelMin}px;max-width:${this.panelMax}px`;
-        },
-
         /**
          * Mouse-based drag resize.
-         * Also sets document cursor during drag so the cursor stays correct
-         * even when the mouse leaves the handle.
+         * Sets document cursor during drag so cursor stays correct
+         * even when mouse leaves the handle quickly.
          */
         startPanelResize(event) {
             if (this.isMobile) return;
             event.preventDefault();
 
             this.resizing = true;
-            document.body.style.cursor   = 'col-resize';
+            document.body.style.cursor    = 'col-resize';
             document.body.style.userSelect = 'none';
 
             const startX     = event.clientX;

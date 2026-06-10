@@ -11,7 +11,7 @@
     :class="resizing ? 'cursor-col-resize' : ''"
 >
     <!-- LEFT COLUMN: Learning list -->
-    <div :style="panelStyle" class="w-full md:flex-shrink-0 border-b md:border-b-0 md:border-r border-border flex flex-col bg-surface-2/10 max-h-[45vh] md:max-h-full">
+    <div :style="isMobile ? '' : 'width:' + panelWidth + 'px'" class="w-full md:flex-shrink-0 border-b md:border-b-0 md:border-r border-border flex flex-col bg-surface-2/10 max-h-[45vh] md:max-h-full">
         <div class="p-3 border-b border-border bg-surface">
             <h3 class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Active Paths</h3>
         </div>

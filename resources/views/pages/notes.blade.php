@@ -12,7 +12,7 @@
 >
     <!-- LEFT SIDEBAR: Lists & Search -->
     <div
-        :style="panelStyle"
+        :style="isMobile ? '' : 'width:' + panelWidth + 'px'"
         class="w-full md:flex-shrink-0 flex flex-col bg-surface-2/10 select-text border-b md:border-b-0 md:border-r border-border max-h-[45vh] md:max-h-full"
     >
         <!-- Search bar -->

@@ -11,7 +11,7 @@
     :class="resizing ? 'cursor-col-resize' : ''"
 >
     <!-- LEFT SIDEBAR: Calendar & History -->
-    <div :style="panelStyle" class="w-full md:flex-shrink-0 border-b md:border-b-0 md:border-r border-border flex flex-col bg-surface-2/10 max-h-[45vh] md:max-h-full">
+    <div :style="isMobile ? '' : 'width:' + panelWidth + 'px'" class="w-full md:flex-shrink-0 border-b md:border-b-0 md:border-r border-border flex flex-col bg-surface-2/10 max-h-[45vh] md:max-h-full">
         <!-- Calendar Grid Header -->
         <div class="p-3 border-b border-border bg-surface">
             <div class="flex items-center justify-between mb-3">

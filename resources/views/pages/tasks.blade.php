@@ -12,7 +12,7 @@
 >
     <!-- MIDDLE COLUMN: Tasks List & Search (Pane 2) -->
     <div
-        :style="panelStyle"
+        :style="isMobile ? '' : 'width:' + panelWidth + 'px'"
         class="w-full md:flex-shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-border bg-surface-2/10 select-text max-h-[40vh] md:max-h-full"
     >
         <!-- Search & Quick Add Header -->
