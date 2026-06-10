@@ -122,6 +122,8 @@ class BookmarksController extends Controller
             'tags' => $entry->tags->pluck('name')->toArray(),
             'added' => $entry->created_at ? $entry->created_at->diffForHumans() : 'Just now',
             'state' => $details?->review_state ?? 'unread',
+            'favicon' => $details?->favicon_url ?? '',
+            'image' => $details?->image_url ?? '',
         ];
     }
 }
