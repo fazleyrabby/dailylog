@@ -52,7 +52,7 @@
             <template x-for="p in filteredProjects" :key="p.id">
                 <div 
                     @click="selectedProjId = p.id"
-                    :class="selectedProjId === p.id ? 'bg-accent-subtle-bg/30 text-text-main border-l-2 border-accent' : 'text-text-muted hover:bg-surface-2/30 border-l-2 border-transparent'"
+                    :class="selectedProjId === p.id ? 'bg-accent-subtle-bg/30 text-text-main border-l-2 border-l-accent' : 'text-text-muted hover:bg-surface-2/30 border-l-2 border-l-transparent'"
                     class="p-3.5 cursor-pointer flex flex-col transition-all"
                 >
                     <div class="flex items-center justify-between">

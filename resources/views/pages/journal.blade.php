@@ -61,7 +61,7 @@
             <template x-for="entry in sortedEntries" :key="entry.id">
                 <div 
                     @click="selectDateFromString(entry.occurred_on)"
-                    :class="selectedDate === entry.occurred_on ? 'bg-accent-subtle-bg/30 border-l-2 border-accent' : 'hover:bg-surface-2/30 border-l-2 border-transparent'"
+                    :class="selectedDate === entry.occurred_on ? 'bg-accent-subtle-bg/30 border-l-2 border-l-accent' : 'hover:bg-surface-2/30 border-l-2 border-l-transparent'"
                     class="p-3 cursor-pointer transition-colors"
                 >
                     <div class="font-semibold text-xs text-text-main" x-text="entry.date"></div>
