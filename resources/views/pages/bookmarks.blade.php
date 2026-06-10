@@ -90,19 +90,16 @@
                 <div class="flex-shrink-0 flex flex-col justify-between items-end space-y-2">
                     <div class="flex space-x-1.5">
                         <template x-if="b.state === 'unread'">
-                            <x-ui.button variant="secondary" @click="markReviewed(b.id)" class="font-bold cursor-pointer select-none">
+                            <x-ui.button variant="secondary" size="sm" @click="markReviewed(b.id)">
                                 Mark Reviewed
                             </x-ui.button>
                         </template>
                         <template x-if="b.state === 'reviewed'">
                             <span class="bg-success/5 text-success border border-success/20 text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full uppercase">Reviewed</span>
                         </template>
-                        <button 
-                            @click="deleteBookmark(b.id)"
-                            class="h-7 px-2.5 bg-surface border border-danger hover:bg-danger/10 text-danger text-xxs font-medium rounded-sm flex items-center justify-center cursor-pointer select-none"
-                        >
+                        <x-ui.button variant="danger" size="sm" @click="deleteBookmark(b.id)">
                             Delete
-                        </button>
+                        </x-ui.button>
                     </div>
                 </div>
             </div>

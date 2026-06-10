@@ -85,24 +85,18 @@
             
             <div class="flex items-center space-x-2">
                 <template x-if="activeNote.id">
-                    <button 
-                        @click="deleteNote(activeNote.id)"
-                        class="h-7 px-2.5 bg-surface border border-danger hover:bg-danger/10 text-danger text-xxs font-medium rounded-sm flex items-center space-x-1 cursor-pointer select-none"
-                    >
+                    <x-ui.button variant="danger" size="sm" @click="deleteNote(activeNote.id)">
                         Delete
-                    </button>
+                    </x-ui.button>
                 </template>
-
+ 
                 <!-- Mode Toggle -->
-                <button 
-                    @click="editMode = !editMode"
-                    class="h-7 px-2.5 bg-surface border border-border hover:bg-surface-2 text-xxs font-medium rounded-sm flex items-center space-x-1 cursor-pointer select-none text-text-main"
-                >
+                <x-ui.button variant="secondary" size="sm" @click="editMode = !editMode">
                     <span x-text="editMode ? '👁 Preview' : '✎ Edit'"></span>
-                </button>
+                </x-ui.button>
                 
                 <template x-if="editMode && activeNote.id">
-                    <x-ui.button variant="primary" size="sm" @click="saveNote()" class="font-semibold cursor-pointer">
+                    <x-ui.button variant="primary" size="sm" @click="saveNote()">
                         Save
                     </x-ui.button>
                 </template>

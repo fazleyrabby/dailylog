@@ -117,17 +117,14 @@
                 <!-- Header Actions -->
                 <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between flex-shrink-0">
                     <div class="flex items-center space-x-2">
+                        <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-text-subtle">Task Details</span>
                         <span class="text-[10px] font-mono bg-surface border border-border text-text-muted px-1.5 py-0.5 rounded-sm" x-text="activeTask.project ? '@' + activeTask.project : '@None'"></span>
-                        <span class="text-xxs text-text-subtle">Task details</span>
                     </div>
                     
                     <div class="flex items-center space-x-2">
-                        <button 
-                            @click="deleteTask(activeTask.id)"
-                            class="h-7 px-2.5 bg-surface border border-danger hover:bg-danger/10 text-danger text-xxs font-medium rounded-sm flex items-center space-x-1 cursor-pointer select-none"
-                        >
+                        <x-ui.button variant="danger" size="sm" @click="deleteTask(activeTask.id)">
                             Archive Task
-                        </button>
+                        </x-ui.button>
                     </div>
                 </div>
 

@@ -75,19 +75,16 @@
         <!-- Controls Header -->
         <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between">
             <div class="flex items-center space-x-2">
-                <span class="text-xs font-semibold text-text-main" x-text="getFormattedDateHeader()"></span>
+                <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-text-subtle" x-text="getFormattedDateHeader()"></span>
             </div>
             <div class="flex items-center space-x-2">
                 <template x-if="activeEntry">
-                    <button 
-                        @click="editing = !editing"
-                        class="h-7 px-2.5 bg-surface border border-border hover:bg-surface-2 text-xxs font-medium rounded-sm flex items-center space-x-1 cursor-pointer select-none text-text-main"
-                    >
+                    <x-ui.button variant="secondary" size="sm" @click="editing = !editing">
                         <span x-text="editing ? '👁 Read Mode' : '✎ Edit Reflection'"></span>
-                    </button>
+                    </x-ui.button>
                 </template>
                 <template x-if="editing && activeEntry">
-                    <x-ui.button variant="primary" size="sm" @click="saveEntry()" class="font-semibold cursor-pointer">
+                    <x-ui.button variant="primary" size="sm" @click="saveEntry()">
                         Save Entry
                     </x-ui.button>
                 </template>

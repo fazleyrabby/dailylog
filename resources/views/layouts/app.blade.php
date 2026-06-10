@@ -283,10 +283,10 @@
             <!-- TOP NAVIGATION HEADER -->
             <header class="h-12 border-b border-border bg-surface flex items-center justify-between px-6 z-10">
                 <div class="flex items-center space-x-4">
-                    <span class="text-xs font-semibold text-text-muted font-mono tracking-tight flex items-center space-x-1.5">
+                    <span class="text-[10px] font-bold text-text-muted font-mono tracking-widest uppercase flex items-center space-x-1.5">
                         <span class="text-accent/80">~</span>
                         <span class="text-text-subtle font-normal">/</span>
-                        <span class="text-text-main">@yield('header_breadcrumbs', 'dailylog/workspace')</span>
+                        <span class="text-text-main">@yield('header_breadcrumbs', 'DAILYLOG // WORKSPACE')</span>
                     </span>
                 </div>
                 
