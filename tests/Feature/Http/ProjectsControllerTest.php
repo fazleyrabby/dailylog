@@ -68,4 +68,75 @@ class ProjectsControllerTest extends TestCase
                     count($projects[0]['activity']) === 2; // 1 note added + 1 task completed
             });
     }
+
+    public function test_store_creates_project(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson(route('projects.store'), [
+                'name' => 'New Project Title',
+                'description' => 'New Description details',
+                'color' => 'emerald',
+            ])
+            ->assertStatus(201)
+            ->assertJsonPath('project.name', 'New Project Title')
+            ->assertJsonPath('project.color', 'emerald');
+
+        $this->assertDatabaseHas('projects', [
+            'user_id' => $user->id,
+            'name' => 'New Project Title',
+            'color' => 'emerald',
+            'status' => 'active',
+        ]);
+    }
+
+    public function test_update_modifies_project_details(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::create([
+            'user_id' => $user->id,
+            'name' => 'Old Name',
+            'slug' => 'old-name',
+            'description' => 'Old description',
+            'status' => 'active',
+            'color' => 'orange',
+        ]);
+
+        $this->actingAs($user)
+            ->putJson(route('projects.update', $project), [
+                'name' => 'Updated Name',
+                'description' => 'Updated description',
+                'status' => 'paused',
+                'color' => 'blue',
+            ])
+            ->assertOk()
+            ->assertJsonPath('project.name', 'Updated Name')
+            ->assertJsonPath('project.status', 'paused');
+
+        $fresh = $project->fresh();
+        $this->assertEquals('Updated Name', $fresh->name);
+        $this->assertEquals('paused', $fresh->status);
+        $this->assertEquals('blue', $fresh->color);
+    }
+
+    public function test_destroy_archives_project(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::create([
+            'user_id' => $user->id,
+            'name' => 'To Archive',
+            'slug' => 'to-archive',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($user)
+            ->deleteJson(route('projects.destroy', $project))
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $fresh = $project->fresh();
+        $this->assertEquals('paused', $fresh->status);
+        $this->assertNotNull($fresh->archived_at);
+    }
 }

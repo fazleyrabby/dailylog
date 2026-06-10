@@ -1,27 +1,18 @@
 :root {
-    /* Theme values for light mode - Warm Stone palette */
-    --color-bg-app: #FAFAF9;
-    /* stone-50 */
+    /* Theme values for light mode - Linear-inspired Slate/Indigo */
+    --color-bg-app: #F8F9FA;
     --color-surface-app: #FFFFFF;
-    --color-surface-2-app: #F5F5F4;
-    /* stone-100 */
-    --color-border-app: #E7E5E4;
-    /* stone-200 */
-    --color-border-strong-app: #D6D3D1;
-    /* stone-300 */
-    --color-text-app: #1C1917;
-    /* stone-900 */
-    --color-text-muted-app: #78716C;
-    /* stone-500 */
-    --color-text-subtle-app: #A8A29E;
-    /* stone-400 */
+    --color-surface-2-app: #F1F3F5;
+    --color-border-app: #E9ECEF;
+    --color-border-strong-app: #DEE2E6;
+    --color-text-app: #121416;
+    --color-text-muted-app: #495057;
+    --color-text-subtle-app: #ADB5BD;
 
-    --color-accent-app: #EA580C;
-    /* orange-600 */
-    --color-accent-hover-app: #C2410C;
-    /* orange-700 */
-    --color-accent-subtle-bg-app: #FFF7ED;
-    /* orange-50 */
+    --color-accent-app: #5E6AD2;
+    /* Linear Indigo */
+    --color-accent-hover-app: #4D5BC2;
+    --color-accent-subtle-bg-app: #F0F1FA;
     --color-accent-fg-app: #FFFFFF;
 
     /* Semantic / status colors */
@@ -57,29 +48,21 @@
 
 /* Dark theme definition */
 html.dark {
-    --color-bg-app: #0C0A09;
-    /* stone-950 */
-    --color-surface-app: #1C1917;
-    /* stone-900 */
-    --color-surface-2-app: #292524;
-    /* stone-800 */
-    --color-border-app: #292524;
-    /* stone-800 */
-    --color-border-strong-app: #44403C;
-    /* stone-700 */
-    --color-text-app: #F5F5F4;
-    /* stone-100 */
-    --color-text-muted-app: #A8A29E;
-    /* stone-400 */
-    --color-text-subtle-app: #78716C;
-    /* stone-500 */
+    --color-bg-app: #0B0B0C;
+    /* Linear Dark Background */
+    --color-surface-app: #121214;
+    --color-surface-2-app: #1C1C1F;
+    --color-border-app: #222226;
+    --color-border-strong-app: #2C2C32;
+    --color-text-app: #F3F4F6;
+    --color-text-muted-app: #A1A1AA;
+    --color-text-subtle-app: #52525B;
 
-    --color-accent-app: #FB923C;
-    /* orange-400 */
-    --color-accent-hover-app: #FDBA74;
-    /* orange-300 */
-    --color-accent-subtle-bg-app: rgba(251, 146, 60, 0.12);
-    --color-accent-fg-app: #1C1917;
+    --color-accent-app: #5E6AD2;
+    /* Linear Indigo Accent */
+    --color-accent-hover-app: #737FE4;
+    --color-accent-subtle-bg-app: rgba(94, 106, 210, 0.12);
+    --color-accent-fg-app: #FFFFFF;
 
     --color-success-app: #4ADE80;
     /* green-400 */

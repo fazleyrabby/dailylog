@@ -64,6 +64,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/learning', [LearningController::class, 'index'])->name('learning.index');
     Route::patch('/learning/{entry}/complete-unit', [LearningController::class, 'completeUnit'])->name('learning.complete-unit');
     Route::get('/projects', [ProjectsController::class, 'index'])->name('projects.index');
+    Route::post('/projects', [ProjectsController::class, 'store'])->name('projects.store');
+    Route::put('/projects/{project}', [ProjectsController::class, 'update'])->name('projects.update');
+    Route::delete('/projects/{project}', [ProjectsController::class, 'destroy'])->name('projects.destroy');
     Route::get('/quotes', fn () => view('pages.quotes', ['data' => MockData::all()]))->name('quotes.index');
     Route::get('/resources', fn () => view('pages.resources', ['data' => MockData::all()]))->name('resources.index');
     Route::get('/slipping', fn () => view('pages.slipping', ['data' => MockData::all()]))->name('slipping.index');

@@ -5,95 +5,7 @@
 
 @section('content')
 <div 
-    x-data="{
-        activeTab: 'unread',
-        bookmarks: {{ json_encode($bookmarks) }},
-        newUrl: '',
-        newTags: '',
-
-        get currentBookmarks() {
-            return this.bookmarks.filter(b => b.state === this.activeTab);
-        },
-
-        get unreadCount() {
-            return this.bookmarks.filter(b => b.state === 'unread').length;
-        },
-
-        markReviewed(id) {
-            fetch(`/bookmarks/${id}/reviewed`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    let b = this.bookmarks.find(x => x.id === id);
-                    if (b) {
-                        b.state = 'reviewed';
-                    }
-                    window.dispatchEvent(new CustomEvent('show-toast', { 
-                        detail: { message: 'Bookmark marked reviewed' }
-                    }));
-                }
-            });
-        },
-
-        deleteBookmark(id) {
-            if (!confirm('Are you sure you want to archive this bookmark?')) return;
-
-            fetch(`/bookmarks/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    this.bookmarks = this.bookmarks.filter(b => b.id !== id);
-                    window.dispatchEvent(new CustomEvent('show-toast', { 
-                        detail: { message: 'Bookmark archived successfully' }
-                    }));
-                }
-            });
-        },
-
-        addBookmark() {
-            if (!this.newUrl) return;
-
-            let tagsArr = this.newTags.split(',').map(t => t.trim()).filter(t => t.length > 0);
-
-            fetch('/bookmarks', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    url: this.newUrl,
-                    tags: tagsArr
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.bookmark) {
-                    this.bookmarks.unshift(data.bookmark);
-                    this.newUrl = '';
-                    this.newTags = '';
-                    window.dispatchEvent(new CustomEvent('show-toast', { 
-                        detail: { message: 'Bookmark added! Fetching metadata...' }
-                    }));
-                }
-            });
-        }
-    }"
+    x-data="bookmarksComponent({{ json_encode($bookmarks) }})"
     class="max-w-4xl mx-auto space-y-6"
 >
     <!-- Header -->
@@ -197,4 +109,98 @@
         </template>
     </div>
 </div>
+
+<script>
+window.bookmarksComponent = function(initialBookmarks) {
+    return {
+        activeTab: 'unread',
+        bookmarks: initialBookmarks,
+        newUrl: '',
+        newTags: '',
+
+        get currentBookmarks() {
+            return this.bookmarks.filter(b => b.state === this.activeTab);
+        },
+
+        get unreadCount() {
+            return this.bookmarks.filter(b => b.state === 'unread').length;
+        },
+
+        markReviewed(id) {
+            fetch(`/bookmarks/${id}/reviewed`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    let b = this.bookmarks.find(x => x.id === id);
+                    if (b) {
+                        b.state = 'reviewed';
+                    }
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: 'Bookmark marked reviewed' }
+                    }));
+                }
+            });
+        },
+
+        deleteBookmark(id) {
+            if (!confirm('Are you sure you want to archive this bookmark?')) return;
+
+            fetch(`/bookmarks/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    this.bookmarks = this.bookmarks.filter(b => b.id !== id);
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: 'Bookmark archived successfully' }
+                    }));
+                }
+            });
+        },
+
+        addBookmark() {
+            if (!this.newUrl) return;
+
+            let tagsArr = this.newTags.split(',').map(t => t.trim()).filter(t => t.length > 0);
+
+            fetch('/bookmarks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    url: this.newUrl,
+                    tags: tagsArr
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.bookmark) {
+                    this.bookmarks.unshift(data.bookmark);
+                    this.newUrl = '';
+                    this.newTags = '';
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: 'Bookmark added! Fetching metadata...' }
+                    }));
+                }
+            });
+        }
+    };
+};
+</script>
 @endsection

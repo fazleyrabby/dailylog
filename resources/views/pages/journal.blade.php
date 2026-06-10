@@ -12,13 +12,32 @@
     <div class="w-1/3 border-r border-border flex flex-col bg-surface-2/10">
         <!-- Calendar Grid Header -->
         <div class="p-3 border-b border-border bg-surface">
-            <h3 class="text-xs font-semibold text-text-main uppercase tracking-wider mb-2">Calendar Navigation (June 2026)</h3>
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-semibold text-text-main uppercase tracking-wider">Calendar</h3>
+                <div class="flex items-center space-x-1">
+                    <button @click="prevMonth()" class="p-1 hover:bg-surface-2 border border-border rounded-sm cursor-pointer select-none text-[10px] font-mono leading-none">&lt;</button>
+                    <span class="text-xs font-bold text-text-main font-mono px-2" x-text="monthYearLabel()"></span>
+                    <button @click="nextMonth()" class="p-1 hover:bg-surface-2 border border-border rounded-sm cursor-pointer select-none text-[10px] font-mono leading-none">&gt;</button>
+                </div>
+            </div>
             
-            <!-- Simple 30-day grid representing current month -->
+            <!-- Simple grid representing current month -->
             <div class="grid grid-cols-7 gap-1 text-center font-mono text-[10px]">
-                <span class="text-text-subtle">M</span><span class="text-text-subtle">T</span><span class="text-text-subtle">W</span><span class="text-text-subtle">T</span><span class="text-text-subtle">F</span><span class="text-text-subtle">S</span><span class="text-text-subtle">S</span>
+                <span class="text-text-subtle font-semibold">M</span>
+                <span class="text-text-subtle font-semibold">T</span>
+                <span class="text-text-subtle font-semibold">W</span>
+                <span class="text-text-subtle font-semibold">T</span>
+                <span class="text-text-subtle font-semibold">F</span>
+                <span class="text-text-subtle font-semibold">S</span>
+                <span class="text-text-subtle font-semibold">S</span>
                 
-                <template x-for="day in daysInMonth" :key="day">
+                <!-- Blank padding slots -->
+                <template x-for="blank in daysGrid.blankDays">
+                    <span class="h-6 w-full flex items-center justify-center text-text-subtle/20 select-none">-</span>
+                </template>
+
+                <!-- Month days -->
+                <template x-for="day in daysGrid.days" :key="day">
                     <button 
                         @click="selectDate(day)"
                         :class="getDateClass(day)"
@@ -39,7 +58,7 @@
             
             <template x-for="entry in sortedEntries" :key="entry.id">
                 <div 
-                    @click="selectedDate = entry.occurred_on; editing = false;"
+                    @click="selectDateFromString(entry.occurred_on)"
                     :class="selectedDate === entry.occurred_on ? 'bg-accent-subtle-bg/30' : 'hover:bg-surface-2/30'"
                     class="p-3 cursor-pointer transition-colors"
                 >
@@ -145,9 +164,15 @@
 window.journalComponent = function(initialEntries) {
     return {
         selectedDate: '2026-06-09',
+        currentYear: 2026,
+        currentMonth: 5, // June is index 5
         editing: false,
         entries: initialEntries,
-        daysInMonth: Array.from({length: 30}, (_, i) => i + 1),
+
+        monthNames: [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ],
 
         get sortedEntries() {
             return Object.values(this.entries).sort((a, b) => b.occurred_on.localeCompare(a.occurred_on));
@@ -157,18 +182,72 @@ window.journalComponent = function(initialEntries) {
             return this.entries[this.selectedDate] || null;
         },
 
-        hasEntry(day) {
-            let dateStr = '2026-06-' + String(day).padStart(2, '0');
-            return !!this.entries[dateStr];
+        monthYearLabel() {
+            return this.monthNames[this.currentMonth] + ' ' + this.currentYear;
         },
 
-        selectDate(day) {
-            this.selectedDate = '2026-06-' + String(day).padStart(2, '0');
+        prevMonth() {
+            if (this.currentMonth === 0) {
+                this.currentMonth = 11;
+                this.currentYear--;
+            } else {
+                this.currentMonth--;
+            }
             this.editing = false;
         },
 
+        nextMonth() {
+            if (this.currentMonth === 11) {
+                this.currentMonth = 0;
+                this.currentYear++;
+            } else {
+                this.currentMonth++;
+            }
+            this.editing = false;
+        },
+
+        get daysGrid() {
+            let year = this.currentYear;
+            let month = this.currentMonth;
+            
+            let firstDay = new Date(year, month, 1).getDay();
+            let blankDaysCount = firstDay === 0 ? 6 : firstDay - 1;
+            let totalDays = new Date(year, month + 1, 0).getDate();
+            
+            return {
+                blankDays: Array.from({length: blankDaysCount}, (_, i) => i),
+                days: Array.from({length: totalDays}, (_, i) => i + 1)
+            };
+        },
+
+        getDateString(day) {
+            let monthStr = String(this.currentMonth + 1).padStart(2, '0');
+            let dayStr = String(day).padStart(2, '0');
+            return `${this.currentYear}-${monthStr}-${dayStr}`;
+        },
+
+        hasEntry(day) {
+            return !!this.entries[this.getDateString(day)];
+        },
+
+        selectDate(day) {
+            this.selectedDate = this.getDateString(day);
+            this.editing = false;
+        },
+
+        selectDateFromString(occurredOn) {
+            this.selectedDate = occurredOn;
+            this.editing = false;
+            
+            let parts = occurredOn.split('-');
+            if (parts.length === 3) {
+                this.currentYear = parseInt(parts[0]);
+                this.currentMonth = parseInt(parts[1]) - 1;
+            }
+        },
+
         getDateClass(day) {
-            let dateStr = '2026-06-' + String(day).padStart(2, '0');
+            let dateStr = this.getDateString(day);
             if (this.selectedDate === dateStr) {
                 return 'bg-accent text-white font-bold';
             }

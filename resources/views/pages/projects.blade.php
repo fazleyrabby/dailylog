@@ -13,13 +13,18 @@
         <x-slot:badge>
             <span x-text="projects.length"></span>
         </x-slot:badge>
+        <x-slot:actions>
+            <x-ui.button variant="primary" @click="openCreateModal()" class="font-bold cursor-pointer select-none">
+                + New Project
+            </x-ui.button>
+        </x-slot:actions>
     </x-ui.section-header>
 
     <!-- Project Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <template x-if="projects.length === 0">
             <div class="md:col-span-3 py-12 text-center text-xs text-text-muted border border-dashed border-border rounded-sm bg-surface">
-                No active projects found.
+                No active projects found. Click "+ New Project" to create one.
             </div>
         </template>
         <template x-for="p in projects" :key="p.id">
@@ -31,7 +36,7 @@
                 <div>
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-xs uppercase tracking-wider text-text-main flex items-center">
-                            <span class="h-2 w-2 rounded-full mr-2" style="background-color: var(--color-accent)"></span>
+                            <span class="h-2 w-2 rounded-full mr-2" :style="'background-color: ' + getThemeColor(p.color)"></span>
                             <span x-text="p.name"></span>
                         </span>
                         
@@ -68,6 +73,10 @@
                     </h3>
                     <p class="text-xxs text-text-muted mt-1" x-text="activeProj.desc"></p>
                 </div>
+                
+                <x-ui.button variant="secondary" @click="openEditModal()" class="font-bold cursor-pointer">
+                    Configure Project
+                </x-ui.button>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -123,6 +132,80 @@
             </div>
         </div>
     </template>
+
+    <!-- Configure Project Modal -->
+    <x-ui.modal name="project-modal" maxWidth="md">
+        <x-slot:title>
+            <span x-text="modalMode === 'create' ? 'Create Project' : 'Configure Project'"></span>
+        </x-slot:title>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-1">Project Name</label>
+                <input 
+                    type="text" 
+                    x-model="modalData.name" 
+                    class="w-full bg-transparent border border-border px-3 py-1.5 rounded-sm focus:outline-none focus:border-accent text-text-main text-xs"
+                    placeholder="e.g. DailyLOG"
+                />
+            </div>
+            <div>
+                <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-1">Description</label>
+                <textarea 
+                    x-model="modalData.description" 
+                    rows="2"
+                    class="w-full bg-transparent border border-border px-3 py-1.5 rounded-sm focus:outline-none focus:border-accent text-text-main text-xs resize-none"
+                    placeholder="Brief description of project goals"
+                ></textarea>
+            </div>
+            <div>
+                <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-1">Theme Color</label>
+                <select 
+                    x-model="modalData.color" 
+                    class="w-full bg-surface border border-border px-3 py-1.5 rounded-sm focus:outline-none focus:border-accent text-text-main text-xs"
+                >
+                    <option value="orange">Orange</option>
+                    <option value="blue">Blue</option>
+                    <option value="emerald">Emerald</option>
+                    <option value="violet">Violet</option>
+                    <option value="stone">Stone</option>
+                    <option value="rose">Rose</option>
+                    <option value="cyan">Cyan</option>
+                    <option value="amber">Amber</option>
+                </select>
+            </div>
+            <template x-if="modalMode === 'edit'">
+                <div>
+                    <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-1">Status</label>
+                    <select 
+                        x-model="modalData.status" 
+                        class="w-full bg-surface border border-border px-3 py-1.5 rounded-sm focus:outline-none focus:border-accent text-text-main text-xs"
+                    >
+                        <option value="active">Active</option>
+                        <option value="paused">Paused</option>
+                    </select>
+                </div>
+            </template>
+        </div>
+
+        <x-slot:footer>
+            <template x-if="modalMode === 'edit'">
+                <button 
+                    @click="deleteActiveProject()" 
+                    class="h-8 px-3.5 bg-surface border border-danger hover:bg-danger/10 text-danger text-xxs font-bold rounded-sm flex items-center space-x-1 cursor-pointer select-none"
+                >
+                    Archive Project
+                </button>
+            </template>
+            <div class="flex-grow"></div>
+            <x-ui.button variant="secondary" @click="closeModal()" class="font-bold cursor-pointer">
+                Cancel
+            </x-ui.button>
+            <x-ui.button variant="primary" @click="saveProject()" class="font-bold cursor-pointer">
+                Save
+            </x-ui.button>
+        </x-slot:footer>
+    </x-ui.modal>
 </div>
 
 <script>
@@ -130,6 +213,14 @@ window.projectsComponent = function(initialProjects) {
     return {
         selectedProjId: initialProjects.length > 0 ? initialProjects[0].id : null,
         projects: initialProjects,
+        modalMode: 'create',
+        modalData: {
+            id: null,
+            name: '',
+            description: '',
+            color: 'orange',
+            status: 'active'
+        },
 
         get activeProj() {
             return this.projects.find(p => p.id === this.selectedProjId) || {
@@ -143,6 +234,113 @@ window.projectsComponent = function(initialProjects) {
                 notes: [],
                 activity: []
             };
+        },
+
+        getThemeColor(color) {
+            const colors = {
+                orange: 'var(--color-accent)',
+                blue: '#3b82f6',
+                emerald: '#10b981',
+                violet: '#8b5cf6',
+                stone: '#78716c',
+                rose: '#f43f5e',
+                cyan: '#06b6d4',
+                amber: '#f59e0b'
+            };
+            return colors[color] || colors.orange;
+        },
+
+        openCreateModal() {
+            this.modalMode = 'create';
+            this.modalData = {
+                id: null,
+                name: '',
+                description: '',
+                color: 'orange',
+                status: 'active'
+            };
+            this.$dispatch('open-modal', { name: 'project-modal' });
+        },
+
+        openEditModal() {
+            this.modalMode = 'edit';
+            this.modalData = {
+                id: this.activeProj.id,
+                name: this.activeProj.name,
+                description: this.activeProj.desc,
+                color: this.activeProj.color,
+                status: this.activeProj.status
+            };
+            this.$dispatch('open-modal', { name: 'project-modal' });
+        },
+
+        closeModal() {
+            this.$dispatch('close-modal', { name: 'project-modal' });
+        },
+
+        saveProject() {
+            if (!this.modalData.name) return;
+
+            let method = this.modalMode === 'create' ? 'POST' : 'PUT';
+            let url = this.modalMode === 'create' ? '/projects' : `/projects/${this.modalData.id}`;
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: this.modalData.name,
+                    description: this.modalData.description,
+                    color: this.modalData.color,
+                    status: this.modalData.status
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.project) {
+                    if (this.modalMode === 'create') {
+                        this.projects.push(data.project);
+                        this.selectedProjId = data.project.id;
+                    } else {
+                        let idx = this.projects.findIndex(p => p.id === data.project.id);
+                        if (idx !== -1) {
+                            this.projects[idx] = data.project;
+                        }
+                    }
+                    this.closeModal();
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: this.modalMode === 'create' ? 'Project created successfully' : 'Project configured successfully' }
+                    }));
+                }
+            });
+        },
+
+        deleteActiveProject() {
+            if (!confirm('Are you sure you want to archive this project?')) return;
+
+            fetch(`/projects/${this.modalData.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    let id = this.modalData.id;
+                    this.projects = this.projects.filter(p => p.id !== id);
+                    this.selectedProjId = this.projects.length > 0 ? this.projects[0].id : null;
+                    this.closeModal();
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: 'Project archived successfully' }
+                    }));
+                }
+            });
         }
     };
 };
