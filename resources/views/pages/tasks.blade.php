@@ -128,8 +128,8 @@
                 <!-- Header Actions -->
                 <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between flex-shrink-0">
                     <div class="flex items-center space-x-2">
-                        <span class="text-xxs font-mono font-bold uppercase tracking-wider text-text-subtle">Task Details</span>
-                        <span class="text-xxs font-mono bg-surface border border-border text-text-muted px-1.5 py-0.5 rounded-sm" x-text="activeTask.project ? '@' + activeTask.project : '@None'"></span>
+                        <span class="text-xs font-mono font-bold uppercase tracking-wider text-text-subtle">Task Details</span>
+                        <span class="text-xs font-mono bg-surface border border-border text-text-muted px-1.5 py-0.5 rounded-sm" x-text="activeTask.project ? '@' + activeTask.project : '@None'"></span>
                     </div>
                     
                     <div class="flex items-center space-x-2">
@@ -143,7 +143,7 @@
                 <div class="flex-grow p-6 overflow-y-auto space-y-6 max-w-xl">
                     <!-- Title Input Area -->
                     <div class="space-y-1.5">
-                        <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block">Task Title</label>
+                        <label class="text-xs font-semibold uppercase tracking-wider text-text-subtle block">Task Title</label>
                         <input 
                             type="text" 
                             x-model="activeTask.title" 
@@ -158,8 +158,8 @@
                     <!-- Quick Attributes Grid -->
                     <div class="grid grid-cols-2 gap-4 pt-2">
                         <div>
-                            <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-1">Priority</label>
-                            <div class="flex space-x-1">
+                            <label class="text-xs font-semibold uppercase tracking-wider text-text-subtle block mb-1.5">Priority</label>
+                            <div class="flex space-x-1.5">
                                 <template x-for="p in ['low', 'medium', 'high']">
                                     <button 
                                         @click="setTaskPriority(activeTask, p)"
@@ -169,7 +169,7 @@
                                             'bg-success/15 text-success border-success/30 font-bold': activeTask.priority === p && p === 'low',
                                             'bg-surface border-border text-text-muted hover:text-text-main': activeTask.priority !== p
                                         }"
-                                        class="px-2.5 py-1 text-xxs border rounded-sm cursor-pointer select-none transition-all"
+                                        class="px-3 py-1 text-xs border rounded-sm cursor-pointer select-none transition-all"
                                         x-text="p"
                                     ></button>
                                 </template>
@@ -177,26 +177,26 @@
                         </div>
 
                         <div>
-                            <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-1">Due Date</label>
-                            <span class="inline-block px-2.5 py-1 text-xxs border border-border bg-surface-2/40 text-text-main rounded-sm font-mono" x-text="activeTask.due || 'No due date'"></span>
+                            <label class="text-xs font-semibold uppercase tracking-wider text-text-subtle block mb-1.5">Due Date</label>
+                            <span class="inline-block px-3 py-1 text-xs border border-border bg-surface-2/40 text-text-main rounded-sm font-mono" x-text="activeTask.due || 'No due date'"></span>
                         </div>
                     </div>
 
                     <!-- Associated Project & Tags -->
                     <div class="grid grid-cols-2 gap-4 border-t border-border pt-4">
                         <div>
-                            <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-1">Project Container</label>
-                            <span class="inline-block px-2.5 py-1 text-xxs border border-border bg-surface-2/40 text-text-main rounded-sm font-mono" x-text="activeTask.project"></span>
+                            <label class="text-xs font-semibold uppercase tracking-wider text-text-subtle block mb-1.5">Project</label>
+                            <span class="inline-block px-3 py-1 text-xs border border-border bg-surface-2/40 text-text-main rounded-sm font-mono" x-text="activeTask.project"></span>
                         </div>
 
                         <div>
-                            <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-1">Tags</label>
+                            <label class="text-xs font-semibold uppercase tracking-wider text-text-subtle block mb-1.5">Tags</label>
                             <div class="flex flex-wrap gap-1">
                                 <template x-if="!activeTask.tags || activeTask.tags.length === 0">
-                                    <span class="text-xxs text-text-subtle">No tags</span>
+                                    <span class="text-xs text-text-subtle">No tags</span>
                                 </template>
                                 <template x-for="tag in activeTask.tags" :key="tag">
-                                    <span class="bg-surface-2 border border-border text-[9px] px-2 py-0.5 rounded-sm text-text-subtle font-mono">#<span x-text="tag"></span></span>
+                                    <span class="bg-surface-2 border border-border text-xxs px-2 py-0.5 rounded-sm text-text-subtle font-mono">#<span x-text="tag"></span></span>
                                 </template>
                             </div>
                         </div>
@@ -204,11 +204,11 @@
 
                     <!-- Status Display -->
                     <div class="border-t border-border pt-4">
-                        <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-2">Status</label>
+                        <label class="text-xs font-semibold uppercase tracking-wider text-text-subtle block mb-2">Status</label>
                         <button 
                             @click="toggleTask(activeTask.id)"
                             :class="activeTask.completed ? 'bg-success/10 border-success/30 text-success' : 'bg-surface border-border text-text-main'"
-                            class="flex items-center space-x-2 px-3 py-1.5 border rounded-sm text-xxs font-semibold cursor-pointer select-none transition-colors"
+                            class="flex items-center space-x-2 px-3 py-1.5 border rounded-sm text-xs font-semibold cursor-pointer select-none transition-colors"
                         >
                             <span x-text="activeTask.completed ? '✓ Completed' : '☐ Active'"></span>
                         </button>

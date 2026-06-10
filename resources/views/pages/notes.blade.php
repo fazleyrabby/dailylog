@@ -125,13 +125,17 @@
 
             <!-- PREVIEW MODE (Editorial read mode) -->
             <div x-show="!editMode" class="flex-grow overflow-y-auto w-full select-text">
-                <div class="max-w-2xl mx-auto p-6 font-sans-ui leading-relaxed">
-                    <h1 class="text-2xl font-bold text-text-main border-b border-border pb-3 mb-4" x-text="activeNote.title"></h1>
-                    
-                    <div class="text-sm md:text-base text-text-main space-y-4">
-                        <p class="italic text-xs text-text-subtle font-mono">Last updated: <span x-text="activeNote.updated"></span></p>
-                        <div class="prose dark:prose-invert max-w-none font-sans-ui text-text-main select-text" x-html="window.marked.parse(activeNote.body || '')"></div>
-                    </div>
+                <div class="max-w-2xl mx-auto px-6 py-5 font-sans-ui">
+                    <h1 class="text-lg font-bold text-text-main border-b border-border pb-3 mb-1" x-text="activeNote.title"></h1>
+                    <p class="text-xxs text-text-subtle font-mono mb-4">Last updated: <span x-text="activeNote.updated"></span></p>
+                    <div class="prose prose-sm dark:prose-invert max-w-none font-sans-ui text-text-main select-text
+                                prose-headings:font-semibold prose-headings:text-text-main
+                                prose-h1:text-base prose-h2:text-sm prose-h3:text-sm
+                                prose-p:text-sm prose-p:leading-relaxed
+                                prose-li:text-sm prose-li:leading-relaxed
+                                prose-code:text-xs prose-pre:text-xs
+                                prose-a:text-accent" 
+                         x-html="window.marked.parse(activeNote.body || '')"></div>
                     
                     <!-- BACKLINKS DRAWER PANEL -->
                     <div class="mt-8 border-t border-border pt-4 select-none">
@@ -146,7 +150,7 @@
                             </div>
                         </template>
                         <template x-if="!activeNote.backlinks || activeNote.backlinks.length === 0">
-                            <p class="text-xxs text-text-subtle italic">No backlinks reference this note.</p>
+                            <p class="text-xxs text-text-subtle">No backlinks reference this note.</p>
                         </template>
                     </div>
                 </div>
