@@ -4,15 +4,16 @@
 @section('header_breadcrumbs', 'DAILYLOG // NOTES')
 
 @section('content')
-<div 
-    x-data="notesComponent({{ json_encode($notes) }})"
-    class="h-[calc(100vh-100px)] flex overflow-hidden border border-border rounded-sm bg-surface select-none"
+<div
+    x-data="Object.assign(notesComponent({{ json_encode($notes) }}), panelResizer({key:'notes', initial:320, min:240, max:600}))"
+    x-init="initPanelResizer()"
+    class="h-[calc(100vh-100px)] flex flex-col md:flex-row overflow-hidden border border-border rounded-sm bg-surface select-none"
     :class="resizing ? 'cursor-col-resize' : ''"
 >
     <!-- LEFT SIDEBAR: Lists & Search -->
-    <div 
-        :style="'width: ' + sidebarWidth + 'px'" 
-        class="flex-shrink-0 flex flex-col bg-surface-2/10 select-text"
+    <div
+        :style="panelStyle"
+        class="w-full md:flex-shrink-0 flex flex-col bg-surface-2/10 select-text border-b md:border-b-0 md:border-r border-border max-h-[45vh] md:max-h-full"
     >
         <!-- Search bar -->
         <div class="p-3 border-b border-border bg-surface flex items-center space-x-2">
@@ -68,13 +69,13 @@
     </div>
 
     <!-- DRAG HANDLE RESIZER -->
-    <div 
-        @mousedown="startResizing($event)"
-        class="w-[2px] bg-border hover:bg-accent active:bg-accent cursor-col-resize transition-all h-full z-10 flex-shrink-0"
+    <div
+        @mousedown="startPanelResize($event)"
+        class="hidden md:block w-[2px] bg-border hover:bg-accent active:bg-accent cursor-col-resize transition-all h-full z-10 flex-shrink-0"
     ></div>
 
     <!-- RIGHT SECTION: Editor / Read Mode (Fluid width) -->
-    <div class="flex-grow flex flex-col h-full bg-surface overflow-hidden select-text">
+    <div class="flex-grow flex flex-col h-full bg-surface overflow-hidden select-text min-w-0">
         
         <!-- Editor Controls Header -->
         <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between">

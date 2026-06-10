@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" 
-      x-data="{ 
+      x-data="{
           sidebarCollapsed: localStorage.getItem('sidebar-collapsed') === 'true',
+          mobileMenuOpen: false,
+          isMobile: window.innerWidth < 768,
           theme: localStorage.getItem('theme') || 'dark',
           toasts: [],
           
@@ -40,6 +42,7 @@
       }"
       x-init="
           initTheme();
+          window.addEventListener('resize', () => { isMobile = window.innerWidth < 768; if (!isMobile) mobileMenuOpen = false; });
           // Global shortcut listener
           window.addEventListener('keydown', e => {
               if (e.key === '?' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA' && !document.activeElement.hasAttribute('contenteditable')) {
@@ -88,27 +91,39 @@
 <body class="h-full bg-bg text-text-main font-sans antialiased overflow-hidden flex flex-col">
 
     <!-- Global App Wrapper -->
-    <div class="flex h-full overflow-hidden">
-        
+    <div class="flex h-full overflow-hidden relative">
+
+        <!-- MOBILE BACKDROP -->
+        <div
+            x-show="mobileMenuOpen"
+            x-transition.opacity
+            @click="mobileMenuOpen = false"
+            class="fixed inset-0 bg-black/50 z-30 md:hidden"
+            style="display:none;"
+        ></div>
+
         <!-- SIDEBAR -->
-        <aside 
-            :class="sidebarCollapsed ? 'w-16' : 'w-60'" 
-            class="flex-shrink-0 bg-surface border-r border-border flex flex-col justify-between transition-all duration-150 z-20"
+        <aside
+            :class="[
+                sidebarCollapsed ? 'md:w-16' : 'md:w-60',
+                mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+            ]"
+            class="fixed md:relative inset-y-0 left-0 w-60 flex-shrink-0 bg-surface border-r border-border flex flex-col justify-between transition-all duration-200 z-40 transform"
         >
             <!-- Sidebar Header & Toggle -->
             <div>
                 <div class="h-12 border-b border-border flex items-center justify-between px-3">
                     <div class="flex items-center space-x-3">
-                        <div class="flex items-center space-x-1.5" x-show="!sidebarCollapsed">
+                        <div class="flex items-center space-x-1.5" x-show="!sidebarCollapsed || isMobile">
                             <span class="w-3 h-3 rounded-full bg-[#FF5F56] border border-[#E0443E]/50"></span>
                             <span class="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]/50"></span>
                             <span class="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]/50"></span>
                         </div>
-                        <a href="/dashboard" class="flex items-center space-x-1.5 font-bold text-accent tracking-wider" x-show="!sidebarCollapsed">
+                        <a href="/dashboard" class="flex items-center space-x-1.5 font-bold text-accent tracking-wider" x-show="!sidebarCollapsed || isMobile">
                             <span class="text-xs">Daily<span class="text-text-main">LOG</span></span>
                         </a>
                     </div>
-                    <div class="mx-auto" x-show="sidebarCollapsed">
+                    <div class="mx-auto" x-show="sidebarCollapsed && !isMobile">
                         <span class="text-accent text-sm font-bold">D</span>
                     </div>
                     <button @click="toggleSidebar()" class="text-text-subtle hover:text-text-main cursor-pointer focus:outline-none" aria-label="Toggle Sidebar">
@@ -128,9 +143,9 @@
                             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
-                            <span x-show="!sidebarCollapsed">Search (⌘K)</span>
+                            <span x-show="!sidebarCollapsed || isMobile">Search (⌘K)</span>
                         </span>
-                        <kbd x-show="!sidebarCollapsed" class="text-[9px] font-mono border border-border bg-surface px-1 py-0.2 rounded-xs">⌘K</kbd>
+                        <kbd x-show="!sidebarCollapsed || isMobile" class="text-[9px] font-mono border border-border bg-surface px-1 py-0.2 rounded-xs">⌘K</kbd>
                     </button>
                 </div>
 
@@ -197,8 +212,8 @@
                             @click="open = !open; localStorage.setItem('library-expanded', open)" 
                             class="w-full flex items-center justify-between px-3 py-1.5 text-xxs uppercase tracking-wider text-text-subtle hover:text-text-main font-semibold cursor-pointer focus:outline-none"
                         >
-                            <span x-show="!sidebarCollapsed" class="text-xs">Reference Library</span>
-                            <span x-show="sidebarCollapsed">LIB</span>
+                            <span x-show="!sidebarCollapsed || isMobile" class="text-xs">Reference Library</span>
+                            <span x-show="sidebarCollapsed && !isMobile">LIB</span>
                             <svg :class="open ? 'rotate-90' : ''" class="h-3 w-3 transition-transform text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                             </svg>
@@ -246,11 +261,11 @@
                         <div class="h-6 w-6 rounded-full bg-accent text-white flex items-center justify-center font-bold text-xs select-none">
                             {{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr(auth()->user()?->name ?? '?', 0, 1)) }}
                         </div>
-                        <div class="truncate text-xs flex-grow" x-show="!sidebarCollapsed">
+                        <div class="truncate text-xs flex-grow" x-show="!sidebarCollapsed || isMobile">
                             <div class="font-semibold text-text-main">{{ auth()->user()?->name }}</div>
                             <div class="text-[10px] text-text-subtle">{{ auth()->user()?->email }}</div>
                         </div>
-                        <svg x-show="!sidebarCollapsed" class="h-3 w-3 text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <svg x-show="!sidebarCollapsed || isMobile" class="h-3 w-3 text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
@@ -278,15 +293,18 @@
         </aside>
 
         <!-- MAIN WINDOW -->
-        <main class="flex-grow flex flex-col h-full bg-bg relative">
-            
+        <main class="flex-grow flex flex-col h-full bg-bg relative min-w-0 w-full">
+
             <!-- TOP NAVIGATION HEADER -->
-            <header class="h-12 border-b border-border bg-surface flex items-center justify-between px-6 z-10">
-                <div class="flex items-center space-x-4">
-                    <span class="text-[10px] font-bold text-text-muted font-mono tracking-widest uppercase flex items-center space-x-1.5">
+            <header class="h-12 border-b border-border bg-surface flex items-center justify-between px-3 md:px-6 z-10 gap-2">
+                <div class="flex items-center space-x-2 md:space-x-4 min-w-0">
+                    <button @click="mobileMenuOpen = true" class="md:hidden p-1 text-text-subtle hover:text-text-main focus:outline-none flex-shrink-0" aria-label="Open menu">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+                    </button>
+                    <span class="text-[10px] font-bold text-text-muted font-mono tracking-widest uppercase flex items-center space-x-1.5 truncate">
                         <span class="text-accent/80">~</span>
                         <span class="text-text-subtle font-normal">/</span>
-                        <span class="text-text-main">@yield('header_breadcrumbs', 'DAILYLOG // WORKSPACE')</span>
+                        <span class="text-text-main truncate">@yield('header_breadcrumbs', 'DAILYLOG // WORKSPACE')</span>
                     </span>
                 </div>
                 
@@ -314,7 +332,7 @@
             </header>
             
             <!-- PAGE CONTENT CONTAINER -->
-            <div class="flex-grow overflow-y-auto p-6 relative">
+            <div class="flex-grow overflow-y-auto p-3 md:p-6 relative">
                 @yield('content')
             </div>
             

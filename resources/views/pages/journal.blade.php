@@ -4,12 +4,14 @@
 @section('header_breadcrumbs', 'DAILYLOG // JOURNAL')
 
 @section('content')
-<div 
-    x-data="journalComponent({{ json_encode($journalEntries) }})"
-    class="h-[calc(100vh-100px)] flex overflow-hidden border border-border rounded-sm bg-surface"
+<div
+    x-data="Object.assign(journalComponent({{ json_encode($journalEntries) }}), panelResizer({key:'journal', initial:360, min:280, max:560}))"
+    x-init="initPanelResizer()"
+    class="h-[calc(100vh-100px)] flex flex-col md:flex-row overflow-hidden border border-border rounded-sm bg-surface"
+    :class="resizing ? 'cursor-col-resize' : ''"
 >
     <!-- LEFT SIDEBAR: Calendar & History -->
-    <div class="w-[360px] flex-shrink-0 border-r border-border flex flex-col bg-surface-2/10">
+    <div :style="panelStyle" class="w-full md:flex-shrink-0 border-b md:border-b-0 md:border-r border-border flex flex-col bg-surface-2/10 max-h-[45vh] md:max-h-full">
         <!-- Calendar Grid Header -->
         <div class="p-3 border-b border-border bg-surface">
             <div class="flex items-center justify-between mb-3">
@@ -69,8 +71,14 @@
         </div>
     </div>
 
+    <!-- DRAG HANDLE RESIZER -->
+    <div
+        @mousedown="startPanelResize($event)"
+        class="hidden md:block w-[2px] bg-border hover:bg-accent active:bg-accent cursor-col-resize transition-all h-full z-10 flex-shrink-0"
+    ></div>
+
     <!-- RIGHT SECTION: Journal Content Editor -->
-    <div class="flex-grow flex flex-col h-full bg-surface">
+    <div class="flex-grow flex flex-col h-full bg-surface min-w-0">
         
         <!-- Controls Header -->
         <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between">

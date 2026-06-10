@@ -4,12 +4,14 @@
 @section('header_breadcrumbs', 'DAILYLOG // LEARNING')
 
 @section('content')
-<div 
-    x-data="learningComponent({{ json_encode($learningPaths) }})"
-    class="h-[calc(100vh-100px)] flex overflow-hidden border border-border rounded-sm bg-surface"
+<div
+    x-data="Object.assign(learningComponent({{ json_encode($learningPaths) }}), panelResizer({key:'learning', initial:380, min:280, max:600}))"
+    x-init="initPanelResizer()"
+    class="h-[calc(100vh-100px)] flex flex-col md:flex-row overflow-hidden border border-border rounded-sm bg-surface"
+    :class="resizing ? 'cursor-col-resize' : ''"
 >
-    <!-- LEFT COLUMN: Learning list (Width 2/5) -->
-    <div class="w-2/5 border-r border-border flex flex-col bg-surface-2/10">
+    <!-- LEFT COLUMN: Learning list -->
+    <div :style="panelStyle" class="w-full md:flex-shrink-0 border-b md:border-b-0 md:border-r border-border flex flex-col bg-surface-2/10 max-h-[45vh] md:max-h-full">
         <div class="p-3 border-b border-border bg-surface">
             <h3 class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Active Paths</h3>
         </div>
@@ -47,8 +49,14 @@
         </div>
     </div>
  
-    <!-- RIGHT COLUMN: Detail & Progress Controls (Width 3/5) -->
-    <div class="w-3/5 flex flex-col h-full bg-surface">
+    <!-- DRAG HANDLE RESIZER -->
+    <div
+        @mousedown="startPanelResize($event)"
+        class="hidden md:block w-[2px] bg-border hover:bg-accent active:bg-accent cursor-col-resize transition-all h-full z-10 flex-shrink-0"
+    ></div>
+
+    <!-- RIGHT COLUMN: Detail & Progress Controls -->
+    <div class="flex-grow flex flex-col h-full bg-surface min-w-0">
         <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between">
             <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-text-subtle">Path Dashboard</span>
             <span class="text-[10px] text-text-subtle font-mono uppercase tracking-wider" x-text="'Last activity: ' + activePath.lastActive"></span>

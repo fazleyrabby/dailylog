@@ -18,20 +18,20 @@
     <!-- Add Bookmark Inline Form -->
     <div class="bg-surface border border-border rounded-sm p-4 text-xs">
         <h4 class="text-xxs font-bold text-text-subtle uppercase tracking-wider mb-2.5">Capture New Bookmark</h4>
-        <div class="flex space-x-2">
+        <div class="flex flex-col sm:flex-row gap-2">
             <div class="flex-grow">
-                <input 
-                    type="url" 
-                    x-model="newUrl" 
-                    placeholder="https://example.com/blog-post" 
+                <input
+                    type="url"
+                    x-model="newUrl"
+                    placeholder="https://example.com/blog-post"
                     class="w-full bg-transparent border border-border px-3 py-1.5 rounded-sm focus:outline-none focus:border-accent text-text-main"
                 />
             </div>
-            <div class="w-1/3">
-                <input 
-                    type="text" 
-                    x-model="newTags" 
-                    placeholder="tags (comma-separated)" 
+            <div class="w-full sm:w-1/3">
+                <input
+                    type="text"
+                    x-model="newTags"
+                    placeholder="tags (comma-separated)"
                     class="w-full bg-transparent border border-border px-3 py-1.5 rounded-sm focus:outline-none focus:border-accent text-text-main"
                 />
             </div>
@@ -70,7 +70,7 @@
         </template>
         
         <template x-for="b in currentBookmarks" :key="b.id">
-            <div class="bg-surface border border-border rounded-sm p-4 text-xs flex justify-between space-x-4 hover:border-accent/30 transition-colors">
+            <div class="bg-surface border border-border rounded-sm p-4 text-xs flex flex-col sm:flex-row sm:justify-between gap-3 sm:space-x-4 hover:border-accent/30 transition-colors">
                 <div class="space-y-1.5 min-w-0 flex-grow">
                     <div class="flex items-center space-x-2">
                         <span class="text-type-bookmark">⚲</span>
@@ -87,7 +87,7 @@
                     </div>
                 </div>
                 
-                <div class="flex-shrink-0 flex flex-col justify-between items-end space-y-2">
+                <div class="flex-shrink-0 flex flex-col sm:items-end items-start space-y-2">
                     <div class="flex space-x-1.5">
                         <template x-if="b.state === 'unread'">
                             <x-ui.button variant="secondary" size="sm" @click="markReviewed(b.id)">

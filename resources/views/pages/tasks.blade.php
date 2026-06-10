@@ -4,13 +4,16 @@
 @section('header_breadcrumbs', 'DAILYLOG // TASKS')
 
 @section('content')
-<div 
-    x-data="tasksComponent({{ json_encode($tasks) }})"
-    class="h-[calc(100vh-100px)] flex overflow-hidden border border-border rounded-sm bg-surface select-none"
+<div
+    x-data="Object.assign(tasksComponent({{ json_encode($tasks) }}), panelResizer({key:'tasks', initial:420, min:300, max:640}))"
+    x-init="initPanelResizer()"
+    class="h-[calc(100vh-100px)] flex flex-col md:flex-row overflow-hidden border border-border rounded-sm bg-surface select-none"
+    :class="resizing ? 'cursor-col-resize' : ''"
 >
     <!-- MIDDLE COLUMN: Tasks List & Search (Pane 2) -->
-    <div 
-        class="w-[420px] flex-shrink-0 flex flex-col border-r border-border bg-surface-2/10 select-text"
+    <div
+        :style="panelStyle"
+        class="w-full md:flex-shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-border bg-surface-2/10 select-text max-h-[40vh] md:max-h-full"
     >
         <!-- Search & Quick Add Header -->
         <div class="p-3 border-b border-border bg-surface space-y-3">
@@ -110,8 +113,14 @@
         </div>
     </div>
 
+    <!-- DRAG HANDLE RESIZER -->
+    <div
+        @mousedown="startPanelResize($event)"
+        class="hidden md:block w-[2px] bg-border hover:bg-accent active:bg-accent cursor-col-resize transition-all h-full z-10 flex-shrink-0"
+    ></div>
+
     <!-- RIGHT COLUMN: Task Workspace & Detail Inspector (Pane 3) -->
-    <div class="flex-grow flex flex-col h-full bg-surface overflow-hidden select-text">
+    <div class="flex-grow flex flex-col h-full bg-surface overflow-hidden select-text min-w-0">
         <template x-if="activeTask.id">
             <div class="flex flex-col h-full">
                 <!-- Header Actions -->
