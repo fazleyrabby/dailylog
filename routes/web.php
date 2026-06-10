@@ -39,6 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
     Route::patch('/entries/{entry}/toggle-pin', [DashboardController::class, 'togglePin'])->name('entries.toggle-pin');
     Route::get('/inbox', [InboxController::class, 'index'])->name('inbox.index');
+    Route::patch('/inbox/{entry}/triage', [InboxController::class, 'triage'])->name('inbox.triage');
     Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 
     Route::get('/tasks', [TasksController::class, 'index'])->name('tasks.index');

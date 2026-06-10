@@ -5,15 +5,19 @@
 
 @section('content')
 <div 
-    x-data="inboxComponent()"
+    x-data="inboxComponent({{ json_encode($entries) }}, {{ json_encode($projects) }})"
     class="max-w-4xl mx-auto space-y-6"
 >
     <!-- Header -->
-    <x-ui.section-header title="Inbox Triage Container" badge="3" />
+    <x-ui.section-header title="Inbox Triage Container" badge="">
+        <x-slot:badge>
+            <span x-text="items.length"></span>
+        </x-slot:badge>
+    </x-ui.section-header>
 
     <!-- Help Banner -->
     <div class="p-3 bg-surface-2 border border-border rounded-sm text-xs text-text-muted leading-relaxed">
-        Anything captured via command palette without formatting syntax lands here. Use the quick triage keys to file them into tasks, notes, or archive.
+        Anything captured via command palette without formatting syntax lands here. Use the quick triage actions to convert them into tasks, notes, or archive.
     </div>
 
     <!-- Triage List Rows -->
@@ -26,26 +30,34 @@
             </template>
             
             <template x-for="item in items" :key="item.id">
-                <div class="py-3 px-1 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs group hover:bg-surface-2/10 transition-colors">
-                    <div class="min-w-0 space-y-1">
-                        <div class="font-medium text-text-main leading-normal select-text" x-text="item.text"></div>
-                        <div class="flex items-center space-x-1.5 font-mono text-[9px] text-text-subtle">
-                            <span>Project:</span>
-                            <span class="text-accent uppercase font-bold" x-text="'@' + item.project"></span>
+                <div class="py-4 px-3 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs group hover:bg-surface-2/10 transition-colors">
+                    <div class="min-w-0 space-y-2 flex-grow">
+                        <div class="font-medium text-text-main leading-normal select-text text-sm" x-text="item.text"></div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-[10px] text-text-subtle font-mono uppercase">Assign Project:</span>
+                            <select 
+                                x-model="item.project_id"
+                                class="bg-surface border border-border px-2 py-0.5 rounded-sm focus:outline-none focus:border-accent text-text-main text-[10px] font-mono"
+                            >
+                                <option :value="null">None (Inbox)</option>
+                                <template x-for="p in projects" :key="p.id">
+                                    <option :value="p.id" x-text="p.name" :selected="item.project_id === p.id"></option>
+                                </template>
+                            </select>
                         </div>
                     </div>
                     
                     <!-- Quick action buttons -->
-                    <div class="flex items-center space-x-1.5 flex-shrink-0">
-                        <x-ui.button variant="secondary" @click="fileAsTask(item.id)">
+                    <div class="flex items-center space-x-2 flex-shrink-0">
+                        <x-ui.button variant="secondary" size="sm" @click="triage(item.id, 'task')">
                             File Task
                         </x-ui.button>
-                        <x-ui.button variant="secondary" @click="fileAsNote(item.id)">
+                        <x-ui.button variant="secondary" size="sm" @click="triage(item.id, 'note')">
                             File Note
                         </x-ui.button>
                         <button 
-                            @click="archive(item.id)"
-                            class="p-1.5 border border-border hover:bg-surface rounded-sm text-text-subtle hover:text-danger cursor-pointer"
+                            @click="triage(item.id, 'archive')"
+                            class="p-1.5 border border-border hover:bg-surface-2 rounded-sm text-text-subtle hover:text-danger cursor-pointer transition-colors"
                             title="Archive item"
                         >
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -60,42 +72,38 @@
 </div>
 
 <script>
-window.inboxComponent = function() {
+window.inboxComponent = function(initialItems, initialProjects) {
     return {
-        items: [
-            { id: 1, text: 'Review Docker production configurations before push to ECS cluster', project: 'DevOps' },
-            { id: 2, text: 'Need to research Redis Streams scaling consumer groups acknowledge packets', project: 'DailyLOG' },
-            { id: 3, text: 'Buy SSL certificates from Let\'s Encrypt for dev sandbox environment', project: 'Freelancing' }
-        ],
+        items: initialItems,
+        projects: initialProjects,
 
-        fileAsTask(id) {
+        triage(id, action) {
             let item = this.items.find(x => x.id === id);
-            if (item) {
-                this.items = this.items.filter(x => x.id !== id);
-                window.dispatchEvent(new CustomEvent('show-toast', { 
-                    detail: { message: 'Filed as Task: ' + (item.text.length > 20 ? item.text.substring(0, 20) + '...' : item.text), action: 'Undo' }
-                }));
-            }
-        },
+            if (!item) return;
 
-        fileAsNote(id) {
-            let item = this.items.find(x => x.id === id);
-            if (item) {
-                this.items = this.items.filter(x => x.id !== id);
-                window.dispatchEvent(new CustomEvent('show-toast', { 
-                    detail: { message: 'Filed as Note: ' + (item.text.length > 20 ? item.text.substring(0, 20) + '...' : item.text), action: 'Undo' }
-                }));
-            }
-        },
-
-        archive(id) {
-            let item = this.items.find(x => x.id === id);
-            if (item) {
-                this.items = this.items.filter(x => x.id !== id);
-                window.dispatchEvent(new CustomEvent('show-toast', { 
-                    detail: { message: 'Archived: ' + (item.text.length > 20 ? item.text.substring(0, 20) + '...' : item.text), action: 'Undo' }
-                }));
-            }
+            fetch(`/inbox/${id}/triage`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: action,
+                    project_id: item.project_id
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    this.items = this.items.filter(x => x.id !== id);
+                    
+                    let actionMsg = action === 'archive' ? 'Archived' : `Filed as ${action.charAt(0).toUpperCase() + action.slice(1)}`;
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: `${actionMsg}: ` + (item.text.length > 25 ? item.text.substring(0, 25) + '...' : item.text) }
+                    }));
+                }
+            });
         }
     };
 };
