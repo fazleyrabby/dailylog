@@ -71,8 +71,10 @@
     <!-- DRAG HANDLE RESIZER -->
     <div
         @mousedown="startPanelResize($event)"
-        class="hidden md:block w-[2px] bg-border hover:bg-accent active:bg-accent cursor-col-resize transition-all h-full z-10 flex-shrink-0"
-    ></div>
+        class="hidden md:flex w-3 flex-shrink-0 h-full z-10 cursor-col-resize items-center justify-center group"
+    >
+        <div class="w-[2px] h-full bg-border group-hover:bg-accent transition-colors duration-150"></div>
+    </div>
 
     <!-- RIGHT SECTION: Editor / Read Mode (Fluid width) -->
     <div class="flex-grow flex flex-col h-full bg-surface overflow-hidden select-text min-w-0">
@@ -160,29 +162,7 @@ window.notesComponent = function(initialNotes) {
         selectedTag: '',
         selectedNoteId: initialNotes.length > 0 ? initialNotes[0].id : null,
         editMode: false,
-        resizing: false,
-        sidebarWidth: 320,
 
-        startResizing(event) {
-            this.resizing = true;
-            const startX = event.clientX;
-            const startWidth = this.sidebarWidth;
-            
-            const doDrag = (e) => {
-                if (!this.resizing) return;
-                this.sidebarWidth = Math.max(240, Math.min(600, startWidth + (e.clientX - startX)));
-            };
-            
-            const stopDrag = () => {
-                this.resizing = false;
-                document.removeEventListener('mousemove', doDrag);
-                document.removeEventListener('mouseup', stopDrag);
-            };
-            
-            document.addEventListener('mousemove', doDrag);
-            document.addEventListener('mouseup', stopDrag);
-        },
-        
         notes: initialNotes,
 
         get allTags() {
