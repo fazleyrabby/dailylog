@@ -128,8 +128,8 @@
                 <!-- Header Actions -->
                 <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between flex-shrink-0">
                     <div class="flex items-center space-x-2">
-                        <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-text-subtle">Task Details</span>
-                        <span class="text-[10px] font-mono bg-surface border border-border text-text-muted px-1.5 py-0.5 rounded-sm" x-text="activeTask.project ? '@' + activeTask.project : '@None'"></span>
+                        <span class="text-xxs font-mono font-bold uppercase tracking-wider text-text-subtle">Task Details</span>
+                        <span class="text-xxs font-mono bg-surface border border-border text-text-muted px-1.5 py-0.5 rounded-sm" x-text="activeTask.project ? '@' + activeTask.project : '@None'"></span>
                     </div>
                     
                     <div class="flex items-center space-x-2">
@@ -143,22 +143,22 @@
                 <div class="flex-grow p-6 overflow-y-auto space-y-6 max-w-xl">
                     <!-- Title Input Area -->
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold uppercase tracking-wider text-text-subtle block">Task Title</label>
+                        <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block">Task Title</label>
                         <input 
                             type="text" 
                             x-model="activeTask.title" 
                             @blur="saveTaskTitle(activeTask.id)"
                             @keydown.enter="$el.blur()"
-                            class="w-full text-base font-bold bg-transparent border-0 border-b border-border pb-2 focus:ring-0 focus:border-accent focus:outline-none text-text-main"
+                            class="w-full text-sm font-semibold bg-transparent border-0 border-b border-border pb-2 focus:ring-0 focus:border-accent focus:outline-none text-text-main"
                             placeholder="Task title"
                         />
-                        <p class="text-[10px] text-text-subtle">Edits save automatically on blur or Enter.</p>
+                        <p class="text-xxs text-text-subtle">Edits save automatically on blur or Enter.</p>
                     </div>
 
                     <!-- Quick Attributes Grid -->
                     <div class="grid grid-cols-2 gap-4 pt-2">
                         <div>
-                            <label class="text-[10px] font-bold uppercase tracking-wider text-text-subtle block mb-1">Priority</label>
+                            <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-1">Priority</label>
                             <div class="flex space-x-1">
                                 <template x-for="p in ['low', 'medium', 'high']">
                                     <button 
@@ -177,7 +177,7 @@
                         </div>
 
                         <div>
-                            <label class="text-[10px] font-bold uppercase tracking-wider text-text-subtle block mb-1">Due Date</label>
+                            <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-1">Due Date</label>
                             <span class="inline-block px-2.5 py-1 text-xxs border border-border bg-surface-2/40 text-text-main rounded-sm font-mono" x-text="activeTask.due || 'No due date'"></span>
                         </div>
                     </div>
@@ -185,15 +185,15 @@
                     <!-- Associated Project & Tags -->
                     <div class="grid grid-cols-2 gap-4 border-t border-border pt-4">
                         <div>
-                            <label class="text-[10px] font-bold uppercase tracking-wider text-text-subtle block mb-1">Project Container</label>
+                            <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-1">Project Container</label>
                             <span class="inline-block px-2.5 py-1 text-xxs border border-border bg-surface-2/40 text-text-main rounded-sm font-mono" x-text="activeTask.project"></span>
                         </div>
 
                         <div>
-                            <label class="text-[10px] font-bold uppercase tracking-wider text-text-subtle block mb-1">Tags</label>
+                            <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-1">Tags</label>
                             <div class="flex flex-wrap gap-1">
                                 <template x-if="!activeTask.tags || activeTask.tags.length === 0">
-                                    <span class="text-xxs text-text-subtle italic">No tags</span>
+                                    <span class="text-xxs text-text-subtle">No tags</span>
                                 </template>
                                 <template x-for="tag in activeTask.tags" :key="tag">
                                     <span class="bg-surface-2 border border-border text-[9px] px-2 py-0.5 rounded-sm text-text-subtle font-mono">#<span x-text="tag"></span></span>
@@ -204,7 +204,7 @@
 
                     <!-- Status Display -->
                     <div class="border-t border-border pt-4">
-                        <label class="text-[10px] font-bold uppercase tracking-wider text-text-subtle block mb-2">Status</label>
+                        <label class="text-xxs font-bold uppercase tracking-wider text-text-subtle block mb-2">Status</label>
                         <button 
                             @click="toggleTask(activeTask.id)"
                             :class="activeTask.completed ? 'bg-success/10 border-success/30 text-success' : 'bg-surface border-border text-text-main'"
@@ -221,7 +221,7 @@
             <div class="flex-grow flex flex-col items-center justify-center p-6 text-center">
                 <span class="text-2xl mb-2 text-text-muted">☑</span>
                 <h3 class="text-xs font-bold text-text-main uppercase tracking-wider">No Task Selected</h3>
-                <p class="text-xxs text-text-subtle mt-1">Select a task from the list or add a new one.</p>
+                <p class="text-xs text-text-subtle mt-1">Select a task from the list or add a new one.</p>
             </div>
         </template>
     </div>
