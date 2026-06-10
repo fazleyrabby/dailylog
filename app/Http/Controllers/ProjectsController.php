@@ -17,7 +17,7 @@ class ProjectsController extends Controller
     {
         try {
             $projects = Project::query()
-                ->where('status', 'active')
+                ->whereNull('archived_at')
                 ->get();
 
             $formatted = $projects->map(fn (Project $project) => $this->formatProjectData($project))->toArray();
