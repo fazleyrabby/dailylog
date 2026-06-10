@@ -5,58 +5,15 @@
 
 @section('content')
 <div 
-    x-data="{
-        items: [
-            { id: 19, title: 'AWS ECS Container Deployments', type: 'Learning', days: 34, severity: 'high' },
-            { id: 23, title: 'Redis Streams Deep-dive Guide', type: 'Bookmark', days: 30, severity: 'medium' },
-            { id: 17, title: 'Freelancing Project Container', type: 'Project', days: 21, severity: 'low' },
-            { id: 1, title: 'Docker production config review', type: 'Task', days: 30, severity: 'low' }
-        ],
-
-        resume(id) {
-            let item = this.items.find(x => x.id === id);
-            if (item) {
-                this.items = this.items.filter(x => x.id !== id);
-                window.dispatchEvent(new CustomEvent('show-toast', { 
-                    detail: { message: `Resumed: Heartbeat bumped for '${item.title}'`, action: 'Undo' }
-                }));
-            }
-        },
-
-        schedule(id) {
-            let item = this.items.find(x => x.id === id);
-            if (item) {
-                this.items = this.items.filter(x => x.id !== id);
-                window.dispatchEvent(new CustomEvent('show-toast', { 
-                    detail: { message: `Scheduled study task created for '${item.title}'`, action: 'Undo' }
-                }));
-            }
-        },
-
-        snooze(id) {
-            let item = this.items.find(x => x.id === id);
-            if (item) {
-                this.items = this.items.filter(x => x.id !== id);
-                window.dispatchEvent(new CustomEvent('show-toast', { 
-                    detail: { message: `'${item.title}' snoozed for 7 days`, action: 'Undo' }
-                }));
-            }
-        },
-
-        letGo(id) {
-            let item = this.items.find(x => x.id === id);
-            if (item) {
-                this.items = this.items.filter(x => x.id !== id);
-                window.dispatchEvent(new CustomEvent('show-toast', { 
-                    detail: { message: `Archived: Honored and let go '${item.title}'`, action: 'Undo' }
-                }));
-            }
-        }
-    }"
+    x-data="slippingComponent({{ json_encode($slippingItems) }})"
     class="max-w-4xl mx-auto space-y-6"
 >
     <!-- Header -->
-    <x-ui.section-header title="Slipping Items Triage" badge="4" />
+    <x-ui.section-header title="Slipping Items Triage" badge="">
+        <x-slot:badge>
+            <span x-text="items.length"></span>
+        </x-slot:badge>
+    </x-ui.section-header>
 
     <!-- Help Banner -->
     <div class="p-3 bg-warning/5 border border-warning/20 rounded-sm text-xs text-text-main flex items-start space-x-3">
@@ -111,16 +68,16 @@
                 
                 <!-- Action Buttons -->
                 <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
-                    <x-ui.button variant="primary" @click="resume(item.id)">
+                    <x-ui.button variant="primary" @click="triage(item.id, 'resume')">
                         Resume
                     </x-ui.button>
-                    <x-ui.button variant="secondary" @click="schedule(item.id)">
+                    <x-ui.button variant="secondary" @click="triage(item.id, 'schedule')">
                         Schedule task
                     </x-ui.button>
-                    <x-ui.button variant="secondary" @click="snooze(item.id)">
+                    <x-ui.button variant="secondary" @click="triage(item.id, 'snooze')">
                         Snooze
                     </x-ui.button>
-                    <x-ui.button variant="ghost" @click="letGo(item.id)" class="text-text-subtle hover:text-danger">
+                    <x-ui.button variant="ghost" @click="triage(item.id, 'let-go')" class="text-text-subtle hover:text-danger">
                         Let go
                     </x-ui.button>
                 </div>
@@ -128,4 +85,47 @@
         </template>
     </div>
 </div>
+
+<script>
+window.slippingComponent = function(initialItems) {
+    return {
+        items: initialItems,
+
+        triage(id, action) {
+            let item = this.items.find(x => x.id === id);
+            if (!item) return;
+
+            fetch(`/slipping/${id}/${action}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    this.items = this.items.filter(x => x.id !== id);
+                    
+                    let msg = '';
+                    if (action === 'resume') {
+                        msg = `Resumed work on: ${item.title}`;
+                    } else if (action === 'schedule') {
+                        msg = `Task scheduled for: ${item.title}`;
+                    } else if (action === 'snooze') {
+                        msg = `Snoozed alert for: ${item.title}`;
+                    } else if (action === 'let-go') {
+                        msg = `Let go (archived): ${item.title}`;
+                    }
+
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: msg }
+                    }));
+                }
+            });
+        }
+    };
+};
+</script>
 @endsection
