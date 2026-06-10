@@ -9,7 +9,14 @@
     <!-- Dashboard Greeting Row -->
     <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-border">
         <div>
-            <h1 class="text-xl font-bold tracking-tight text-text-main">Good morning, Developer.</h1>
+            <div class="flex items-center space-x-3">
+                <h1 class="text-xl font-bold tracking-tight text-text-main">Good morning, Developer.</h1>
+                @if($streak > 0)
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-accent/15 text-accent border border-accent/25 font-mono select-none">
+                        🔥 {{ $streak }} day streak
+                    </span>
+                @endif
+            </div>
             <p class="text-xs text-text-muted mt-1">{{ $greetingDate }} · {{ $todayTasksCount }} tasks due today · {{ $slippingCount }} items slipping</p>
         </div>
         <div class="mt-3 md:mt-0 flex space-x-2">
@@ -60,6 +67,30 @@
                         </div>
                     </template>
                 </div>
+            </x-ui.card>
+
+            <!-- IN-PAGE QUICK CAPTURE WIDGET -->
+            <x-ui.card>
+                <x-slot name="header">
+                    <div class="flex items-center space-x-1.5">
+                        <span class="text-accent">⚡</span>
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-text-main">Quick Capture Widget</h4>
+                    </div>
+                    <span class="text-xxs text-text-subtle font-mono">Type grammar (e.g. task Buy milk @Self)</span>
+                </x-slot>
+                <form @submit.prevent="submitQuickCapture()" class="flex space-x-2">
+                    <div class="flex-grow">
+                        <input 
+                            type="text" 
+                            x-model="quickCaptureInput"
+                            placeholder="Capture a thought... (e.g. task Review PR @DailyLOG #ops)"
+                            class="w-full bg-surface border border-border rounded-sm px-3 py-1.5 text-xs focus:outline-none focus:border-accent text-text-main placeholder-text-muted font-mono"
+                        />
+                    </div>
+                    <button type="submit" class="bg-accent hover:bg-accent-hover text-white px-4 py-1.5 rounded-sm text-xs font-semibold cursor-pointer transition-colors">
+                        Capture
+                    </button>
+                </form>
             </x-ui.card>
 
             <!-- TODAY'S TASKS -->
@@ -202,21 +233,29 @@
                 </div>
             </x-ui.card>
 
-            <!-- RECENTLY TOUCHED -->
-            <x-ui.card title="Recent Activity">
-                <div class="space-y-2">
-                    @if(count($recentNotes) === 0)
+            <!-- UNIFIED ACTIVITY TIMELINE -->
+            <x-ui.card title="Recent Activity Feed">
+                <div class="space-y-3">
+                    @if(count($timeline) === 0)
                         <div class="py-4 text-center text-xs text-text-muted border border-dashed border-border rounded-sm bg-surface">
                             No recent activity.
                         </div>
                     @endif
-                    @foreach($recentNotes as $n)
-                        <div class="p-2 border-b border-border last:border-b-0 text-xs">
+                    @foreach($timeline as $item)
+                        <div class="p-2 bg-surface border border-border/80 rounded-sm text-xs space-y-1">
                             <div class="flex items-center justify-between">
-                                <a href="/notes" class="font-semibold text-accent hover:underline truncate">{{ $n['title'] }}</a>
-                                <span class="text-[10px] text-text-subtle font-mono">{{ $n['updated_at'] }}</span>
+                                <div class="flex items-center space-x-1.5 min-w-0">
+                                    <span class="text-[10px]" title="{{ ucfirst($item['type']) }}">
+                                        @if($item['type'] === 'note') ✎
+                                        @elseif($item['type'] === 'task') ✓
+                                        @else ⚲
+                                        @endif
+                                    </span>
+                                    <span class="font-semibold text-text-main truncate text-[11px]">{{ $item['title'] }}</span>
+                                </div>
+                                <span class="text-[9px] text-text-subtle font-mono flex-shrink-0 ml-2">{{ $item['time_ago'] }}</span>
                             </div>
-                            <p class="text-[10px] text-text-muted mt-0.5 truncate">{{ $n['body'] }}</p>
+                            <p class="text-[10px] text-text-muted truncate select-text leading-relaxed">{{ $item['desc'] }}</p>
                         </div>
                     @endforeach
                 </div>
@@ -234,6 +273,32 @@ window.dashboardComponent = function(initialFocus, initialTasks, initialUpcoming
         focusItems: initialFocus,
         activeTasks: initialTasks,
         upcomingTasks: initialUpcoming,
+        quickCaptureInput: '',
+        
+        submitQuickCapture() {
+            if (!this.quickCaptureInput) return;
+            fetch('/capture', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ input: this.quickCaptureInput })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.id) {
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: `Captured thought successfully.` }
+                    }));
+                    this.quickCaptureInput = '';
+                    
+                    // Reload the dashboard after capture so new tasks/notes immediately populate
+                    setTimeout(() => window.location.reload(), 600);
+                }
+            });
+        },
         
         unfocus(idx) {
             let item = this.focusItems[idx];

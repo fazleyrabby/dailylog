@@ -64,7 +64,9 @@ class DashboardControllerTest extends TestCase
             ->assertViewHas('slippingCount', 1)
             ->assertViewHas('focusItems', function ($focus) {
                 return count($focus) === 1 && $focus[0]['title'] === 'Pinned Note Test';
-            });
+            })
+            ->assertViewHas('timeline')
+            ->assertViewHas('streak', 0);
     }
 
     public function test_toggle_pin_updates_entry_pin_status(): void

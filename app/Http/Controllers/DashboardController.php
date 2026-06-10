@@ -102,7 +102,7 @@ class DashboardController extends Controller
                 'color' => $proj->color ?? 'orange',
             ])->toArray();
 
-        // 7. Recent activity (Modified notes)
+        // 7. Recent activity (Unified notes, tasks, bookmarks)
         $recentNotes = Entry::query()
             ->notes()
             ->active()
@@ -110,11 +110,81 @@ class DashboardController extends Controller
             ->take(5)
             ->get()
             ->map(fn (Entry $entry) => [
-                'id' => $entry->id,
+                'type' => 'note',
                 'title' => $entry->title ?? 'Untitled Note',
-                'updated_at' => $entry->updated_at ? $entry->updated_at->diffForHumans() : 'Just now',
-                'body' => strip_tags(str_replace("\n", " ", $entry->body ?? '')),
-            ])->toArray();
+                'timestamp' => $entry->updated_at,
+                'time_ago' => $entry->updated_at ? $entry->updated_at->diffForHumans() : 'Just now',
+                'desc' => strip_tags(str_replace("\n", " ", $entry->body ?? '')),
+            ]);
+
+        $recentTasks = Entry::query()
+            ->tasks()
+            ->active()
+            ->whereHas('taskDetails', fn ($q) => $q->whereNotNull('completed_at'))
+            ->orderByDesc('updated_at')
+            ->take(5)
+            ->get()
+            ->map(fn (Entry $entry) => [
+                'type' => 'task',
+                'title' => $entry->title,
+                'timestamp' => $entry->taskDetails?->completed_at ?? $entry->updated_at,
+                'time_ago' => ($entry->taskDetails?->completed_at ?? $entry->updated_at)->diffForHumans(),
+                'desc' => 'Task marked completed.',
+            ]);
+
+        $recentBookmarks = Entry::query()
+            ->bookmarks()
+            ->active()
+            ->orderByDesc('created_at')
+            ->take(5)
+            ->get()
+            ->map(fn (Entry $entry) => [
+                'type' => 'bookmark',
+                'title' => $entry->title ?? 'Untitled Bookmark',
+                'timestamp' => $entry->created_at,
+                'time_ago' => $entry->created_at ? $entry->created_at->diffForHumans() : 'Just now',
+                'desc' => $entry->bookmarkDetails?->site ?? 'Bookmark link captured.',
+            ]);
+
+        $timeline = collect($recentNotes)
+            ->concat($recentTasks)
+            ->concat($recentBookmarks)
+            ->sortByDesc(fn ($item) => $item['timestamp'] ? $item['timestamp']->getTimestamp() : 0)
+            ->take(6)
+            ->values()
+            ->toArray();
+
+        // 8. Calculate Reflection Streak (consecutive days of journal logs)
+        $journalDates = Entry::query()
+            ->journals()
+            ->active()
+            ->orderByDesc('occurred_on')
+            ->pluck('occurred_on')
+            ->map(fn($date) => $date->format('Y-m-d'))
+            ->unique()
+            ->values();
+
+        $streak = 0;
+        $todayStr = now()->format('Y-m-d');
+        $yesterdayStr = now()->subDay()->format('Y-m-d');
+
+        if ($journalDates->isNotEmpty()) {
+            $hasToday = $journalDates->contains($todayStr);
+            $hasYesterday = $journalDates->contains($yesterdayStr);
+
+            if ($hasToday || $hasYesterday) {
+                $checkDate = $hasToday ? now() : now()->subDay();
+                while (true) {
+                    $dateStr = $checkDate->format('Y-m-d');
+                    if ($journalDates->contains($dateStr)) {
+                        $streak++;
+                        $checkDate->subDay();
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
 
         return view('pages.dashboard', [
             'greetingDate' => now()->format('l, F j'),
@@ -125,7 +195,8 @@ class DashboardController extends Controller
             'upcomingTasks' => $upcomingTasks,
             'slipping' => $slipping,
             'projects' => $projects,
-            'recentNotes' => $recentNotes,
+            'timeline' => $timeline,
+            'streak' => $streak,
         ]);
     }
 
