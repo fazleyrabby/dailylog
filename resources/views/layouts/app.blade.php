@@ -98,12 +98,18 @@
             <!-- Sidebar Header & Toggle -->
             <div>
                 <div class="h-12 border-b border-border flex items-center justify-between px-3">
-                    <a href="/dashboard" class="flex items-center space-x-2 font-bold text-accent tracking-wider" x-show="!sidebarCollapsed">
-                        <span class="text-sm">Daily<span class="text-text-main">LOG</span></span>
-                        <span class="text-[9px] bg-accent-subtle-bg border border-accent/20 px-1 py-0.2 rounded-full font-mono uppercase text-accent">V1</span>
-                    </a>
+                    <div class="flex items-center space-x-3">
+                        <div class="flex items-center space-x-1.5" x-show="!sidebarCollapsed">
+                            <span class="w-3 h-3 rounded-full bg-[#FF5F56] border border-[#E0443E]/50"></span>
+                            <span class="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]/50"></span>
+                            <span class="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]/50"></span>
+                        </div>
+                        <a href="/dashboard" class="flex items-center space-x-1.5 font-bold text-accent tracking-wider" x-show="!sidebarCollapsed">
+                            <span class="text-xs">Daily<span class="text-text-main">LOG</span></span>
+                        </a>
+                    </div>
                     <div class="mx-auto" x-show="sidebarCollapsed">
-                        <span class="text-accent text-lg font-bold">D</span>
+                        <span class="text-accent text-sm font-bold">D</span>
                     </div>
                     <button @click="toggleSidebar()" class="text-text-subtle hover:text-text-main cursor-pointer focus:outline-none" aria-label="Toggle Sidebar">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -277,8 +283,10 @@
             <!-- TOP NAVIGATION HEADER -->
             <header class="h-12 border-b border-border bg-surface flex items-center justify-between px-6 z-10">
                 <div class="flex items-center space-x-4">
-                    <span class="text-xs font-semibold text-text-muted uppercase tracking-wider font-mono">
-                        @yield('header_breadcrumbs', 'DAILYLOG // WORKSPACE')
+                    <span class="text-xs font-semibold text-text-muted font-mono tracking-tight flex items-center space-x-1.5">
+                        <span class="text-accent/80">~</span>
+                        <span class="text-text-subtle font-normal">/</span>
+                        <span class="text-text-main">@yield('header_breadcrumbs', 'dailylog/workspace')</span>
                     </span>
                 </div>
                 

@@ -9,7 +9,7 @@
     class="h-[calc(100vh-100px)] flex overflow-hidden border border-border rounded-sm bg-surface"
 >
     <!-- LEFT SIDEBAR: Calendar & History -->
-    <div class="w-1/3 border-r border-border flex flex-col bg-surface-2/10">
+    <div class="w-[360px] flex-shrink-0 border-r border-border flex flex-col bg-surface-2/10">
         <!-- Calendar Grid Header -->
         <div class="p-3 border-b border-border bg-surface">
             <div class="flex items-center justify-between mb-3">
@@ -59,7 +59,7 @@
             <template x-for="entry in sortedEntries" :key="entry.id">
                 <div 
                     @click="selectDateFromString(entry.occurred_on)"
-                    :class="selectedDate === entry.occurred_on ? 'bg-accent-subtle-bg/30' : 'hover:bg-surface-2/30'"
+                    :class="selectedDate === entry.occurred_on ? 'bg-accent-subtle-bg/30 border-l-2 border-accent' : 'hover:bg-surface-2/30 border-l-2 border-transparent'"
                     class="p-3 cursor-pointer transition-colors"
                 >
                     <div class="font-semibold text-xs text-text-main" x-text="entry.date"></div>
@@ -70,7 +70,7 @@
     </div>
 
     <!-- RIGHT SECTION: Journal Content Editor -->
-    <div class="w-2/3 flex flex-col h-full bg-surface">
+    <div class="flex-grow flex flex-col h-full bg-surface">
         
         <!-- Controls Header -->
         <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between">

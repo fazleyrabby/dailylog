@@ -49,7 +49,7 @@
             <template x-for="note in filteredNotes" :key="note.id">
                 <div 
                     @click="selectedNoteId = note.id; editMode = false"
-                    :class="selectedNoteId === note.id ? 'bg-accent-subtle-bg/30 text-text-main' : 'text-text-muted hover:bg-surface-2/30'"
+                    :class="selectedNoteId === note.id ? 'bg-accent-subtle-bg/30 text-text-main border-l-2 border-accent' : 'text-text-muted hover:bg-surface-2/30 border-l-2 border-transparent'"
                     class="p-3.5 cursor-pointer flex flex-col transition-all"
                 >
                     <div class="flex items-center justify-between">
@@ -59,7 +59,7 @@
                     <p class="text-xxs text-text-muted mt-1 truncate" x-text="note.body ? note.body.replace(/[#*`]/g, '') : ''"></p>
                     <div class="flex items-center space-x-1 mt-2 flex-wrap">
                         <template x-for="t in note.tags" :key="t">
-                            <span class="bg-surface-2 border border-border text-[9px] px-1 rounded-sm text-text-subtle">#<span x-text="t"></span></span>
+                            <span class="bg-surface-2 border border-border text-[9px] px-1 rounded-sm text-text-subtle font-mono">#<span x-text="t"></span></span>
                         </template>
                     </div>
                 </div>
@@ -70,7 +70,7 @@
     <!-- DRAG HANDLE RESIZER -->
     <div 
         @mousedown="startResizing($event)"
-        class="w-[3px] hover:w-[5px] active:w-[5px] bg-border hover:bg-accent active:bg-accent cursor-col-resize transition-all h-full z-10 flex-shrink-0"
+        class="w-[2px] bg-border hover:bg-accent active:bg-accent cursor-col-resize transition-all h-full z-10 flex-shrink-0"
     ></div>
 
     <!-- RIGHT SECTION: Editor / Read Mode (Fluid width) -->
@@ -128,8 +128,8 @@
 
             <!-- PREVIEW MODE (Editorial read mode) -->
             <div x-show="!editMode" class="flex-grow overflow-y-auto w-full select-text">
-                <div class="max-w-2xl mx-auto p-6 font-serif-reading leading-relaxed">
-                    <h1 class="text-2xl font-bold font-sans-ui text-text-main border-b border-border pb-3 mb-4" x-text="activeNote.title"></h1>
+                <div class="max-w-2xl mx-auto p-6 font-sans-ui leading-relaxed">
+                    <h1 class="text-2xl font-bold text-text-main border-b border-border pb-3 mb-4" x-text="activeNote.title"></h1>
                     
                     <div class="text-sm md:text-base text-text-main space-y-4">
                         <p class="italic text-xs text-text-subtle font-mono">Last updated: <span x-text="activeNote.updated"></span></p>

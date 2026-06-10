@@ -6,144 +6,217 @@
 @section('content')
 <div 
     x-data="tasksComponent({{ json_encode($tasks) }})"
-    class="max-w-4xl mx-auto space-y-6"
+    class="h-[calc(100vh-100px)] flex overflow-hidden border border-border rounded-sm bg-surface select-none"
 >
-    <!-- Tasks Header -->
-    <x-ui.section-header title="Tasks Container" badge="{{ collect($tasks)->except('completed')->flatten(1)->count() }}">
-        <x-slot name="actions">
-            <!-- Priority Filter Chips -->
-            <div class="flex items-center space-x-1">
-                <span class="text-[10px] text-text-subtle font-semibold mr-1 font-mono uppercase">Filter Priority:</span>
-                <span class="bg-danger/10 text-danger border border-danger/20 text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer">High</span>
-                <span class="bg-warning/10 text-warning border border-warning/20 text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer">Medium</span>
-                <span class="bg-success/10 text-success border border-success/20 text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer">Low</span>
+    <!-- MIDDLE COLUMN: Tasks List & Search (Pane 2) -->
+    <div 
+        class="w-[420px] flex-shrink-0 flex flex-col border-r border-border bg-surface-2/10 select-text"
+    >
+        <!-- Search & Quick Add Header -->
+        <div class="p-3 border-b border-border bg-surface space-y-3">
+            <div class="flex items-center space-x-2">
+                <div class="flex-grow">
+                    <x-ui.search-input x-model="searchQuery" placeholder="Search tasks..." />
+                </div>
             </div>
-        </x-slot>
-    </x-ui.section-header>
-
-    <!-- Task Navigation Tabs -->
-    <div class="border-b border-border flex items-center justify-between pb-px">
-        <div class="flex space-x-4">
-            <template x-for="tab in ['inbox', 'today', 'upcoming', 'completed']">
-                <button 
-                    @click="activeTab = tab"
-                    :class="activeTab === tab ? 'border-b-2 border-accent text-accent font-semibold' : 'text-text-muted hover:text-text-main border-b-2 border-transparent'"
-                    class="pb-2 text-xs font-semibold uppercase tracking-wider cursor-pointer transition-all focus:outline-none select-none"
-                    x-text="tab"
-                ></button>
-            </template>
+            
+            <!-- Quick Task Creation Input -->
+            <form @submit.prevent="addTask()" class="flex space-x-2">
+                <div class="flex-grow">
+                    <input 
+                        type="text"
+                        x-model="newTaskTitle" 
+                        placeholder="New task... (e.g. Write script @DailyLOG #ops due:today)" 
+                        class="w-full bg-surface-2 border border-border rounded-sm px-2.5 py-1 text-xs focus:outline-none focus:border-accent text-text-main placeholder-text-muted"
+                    />
+                </div>
+                <button type="submit" class="bg-accent hover:bg-accent-hover text-white px-2.5 py-1 rounded-sm text-xs font-semibold cursor-pointer transition-colors">
+                    Add
+                </button>
+            </form>
         </div>
-        
-        <kbd class="text-[10px] text-text-subtle font-mono select-none">TAB to cycle views</kbd>
-    </div>
 
-    <!-- Quick Task Creation Input -->
-    <form @submit.prevent="addTask()" class="flex space-x-2">
-        <div class="flex-grow">
-            <x-ui.input 
-                x-model="newTaskTitle" 
-                placeholder="Type new task and press Enter (e.g. Write backups script @DailyLOG #ops)" 
-            />
+        <!-- Task Navigation Tabs -->
+        <div class="border-b border-border bg-surface px-3 py-1 flex items-center justify-between">
+            <div class="flex space-x-3">
+                <template x-for="tab in ['inbox', 'today', 'upcoming', 'completed']">
+                    <button 
+                        @click="activeTab = tab; selectFirstTaskOfTab()"
+                        :class="activeTab === tab ? 'border-b-2 border-accent text-accent font-semibold' : 'text-text-muted hover:text-text-main border-b-2 border-transparent'"
+                        class="pb-1 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all focus:outline-none select-none"
+                        x-text="tab"
+                    ></button>
+                </template>
+            </div>
+            <kbd class="text-[9px] text-text-subtle font-mono select-none">TAB cycles</kbd>
         </div>
-        <x-ui.button type="submit" variant="primary" class="font-bold select-none cursor-pointer">
-            Add Task
-        </x-ui.button>
-    </form>
 
-    <!-- High Density List Rows -->
-    <x-ui.card>
-        <div class="divide-y divide-border">
-            <template x-if="currentTasks.length === 0">
+        <!-- Tasks Scroll List -->
+        <div class="flex-grow overflow-y-auto divide-y divide-border">
+            <template x-if="filteredTasks.length === 0">
                 <div class="py-8 text-center text-xs text-text-muted">
-                    No tasks found in this view. Use the input box above or <kbd class="bg-surface-2 px-1 border rounded text-text-muted font-mono font-semibold">c</kbd> to add.
+                    No tasks found in this view.
                 </div>
             </template>
             
-            <template x-for="task in currentTasks" :key="task.id">
-                <div class="flex items-center justify-between py-2.5 px-1 hover:bg-surface-2/20 transition-colors text-xs group">
-                    <div class="flex items-center space-x-3 min-w-0 flex-grow mr-4">
-                        <input 
-                            type="checkbox" 
-                            :checked="task.completed"
-                            @click="toggleTask(task.id)"
-                            class="rounded-sm border-border bg-surface text-accent focus:ring-accent cursor-pointer"
-                        />
-                        <template x-if="editingTaskId === task.id">
+            <template x-for="task in filteredTasks" :key="task.id">
+                <div 
+                    @click="selectedTaskId = task.id"
+                    :class="selectedTaskId === task.id ? 'bg-accent-subtle-bg/30 text-text-main' : 'text-text-muted hover:bg-surface-2/30'"
+                    class="p-3 cursor-pointer flex flex-col transition-all"
+                >
+                    <div class="flex items-start justify-between space-x-2">
+                        <div class="flex items-start space-x-2.5 min-w-0">
                             <input 
-                                type="text" 
-                                x-model="editingTitle" 
-                                @keydown.enter="saveTaskTitle(task.id)" 
-                                @keydown.escape="cancelEdit()"
-                                @blur="saveTaskTitle(task.id)"
-                                class="border border-border bg-surface text-text-main text-xs px-2 py-1 rounded focus:outline-none focus:ring-1 focus:ring-accent w-full"
-                                x-init="$nextTick(() => $el.focus())"
+                                type="checkbox" 
+                                :checked="task.completed"
+                                @click.stop="toggleTask(task.id)"
+                                class="mt-0.5 rounded-sm border-border bg-surface text-accent focus:ring-accent cursor-pointer flex-shrink-0"
                             />
-                        </template>
-                        <template x-if="editingTaskId !== task.id">
                             <span 
-                                @dblclick="startEdit(task)"
                                 :class="task.completed ? 'line-through text-text-subtle' : 'text-text-main font-medium'"
-                                class="truncate cursor-text flex-grow" 
+                                class="text-xs break-words" 
                                 x-text="task.title"
                             ></span>
-                        </template>
-                    </div>
-                    
-                    <div class="flex items-center space-x-3 flex-shrink-0">
-                        <template x-if="task.tags && task.tags.length > 0">
-                            <div class="flex items-center space-x-1">
-                                <template x-for="tag in task.tags">
-                                    <span class="text-[9px] bg-surface-2 border border-border px-1.5 py-0.2 rounded-full text-text-subtle">#<span x-text="tag"></span></span>
-                                </template>
-                            </div>
-                        </template>
+                        </div>
                         
                         <span 
-                            @click="cyclePriority(task)"
                             :class="{
-                                'bg-danger/5 text-danger border-danger/20 hover:bg-danger/10': task.priority === 'high',
-                                'bg-warning/5 text-warning border-warning/20 hover:bg-warning/10': task.priority === 'medium',
-                                'bg-success/5 text-success border-success/20 hover:bg-success/10': task.priority === 'low'
+                                'bg-danger/10 text-danger border-danger/20': task.priority === 'high',
+                                'bg-warning/10 text-warning border-warning/20': task.priority === 'medium',
+                                'bg-success/10 text-success border-success/20': task.priority === 'low'
                             }" 
-                            class="border px-1.5 py-0.2 rounded-full text-[9px] uppercase font-semibold font-mono cursor-pointer select-none transition-colors" 
+                            class="border px-1.5 py-0.2 rounded-full text-[9px] uppercase font-semibold font-mono flex-shrink-0" 
                             x-text="task.priority"
-                            title="Click to cycle priority"
                         ></span>
-                        
-                        <template x-if="task.due">
-                            <span class="text-[10px] font-mono text-text-subtle bg-surface border border-border px-1 rounded-sm" x-text="'due: ' + task.due"></span>
-                        </template>
-                        
-                        <template x-if="task.project && task.project !== 'None'">
-                            <span class="text-[10px] font-mono text-text-subtle bg-surface border border-border px-1 rounded-sm" x-text="'@' + task.project"></span>
-                        </template>
-                        
-                        <!-- Hover Action triggers -->
-                        <div class="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
-                            <button 
-                                @click="startEdit(task)"
-                                class="text-text-subtle hover:text-accent cursor-pointer focus:outline-none"
-                                title="Edit Title (or Double-Click)"
-                            >
-                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                                </svg>
-                            </button>
-                            <button 
-                                @click="deleteTask(task.id)"
-                                class="text-text-subtle hover:text-danger cursor-pointer focus:outline-none"
-                                title="Archive Task"
-                            >
-                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                                </svg>
-                            </button>
+                    </div>
+
+                    <!-- Task Metadata Row -->
+                    <div class="flex items-center justify-between mt-2 text-[9px] text-text-subtle">
+                        <div class="flex items-center space-x-1.5 overflow-hidden">
+                            <template x-if="task.project && task.project !== 'None'">
+                                <span class="font-mono bg-surface border border-border px-1 rounded-sm text-text-muted" x-text="'@' + task.project"></span>
+                            </template>
+                            <template x-for="tag in task.tags">
+                                <span class="font-mono text-text-muted">#<span x-text="tag"></span></span>
+                            </template>
                         </div>
+                        <template x-if="task.due">
+                            <span class="font-mono text-text-muted" x-text="'due: ' + task.due"></span>
+                        </template>
                     </div>
                 </div>
             </template>
         </div>
-    </x-ui.card>
+    </div>
+
+    <!-- RIGHT COLUMN: Task Workspace & Detail Inspector (Pane 3) -->
+    <div class="flex-grow flex flex-col h-full bg-surface overflow-hidden select-text">
+        <template x-if="activeTask.id">
+            <div class="flex flex-col h-full">
+                <!-- Header Actions -->
+                <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between flex-shrink-0">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-[10px] font-mono bg-surface border border-border text-text-muted px-1.5 py-0.5 rounded-sm" x-text="activeTask.project ? '@' + activeTask.project : '@None'"></span>
+                        <span class="text-xxs text-text-subtle">Task details</span>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                        <button 
+                            @click="deleteTask(activeTask.id)"
+                            class="h-7 px-2.5 bg-surface border border-danger hover:bg-danger/10 text-danger text-xxs font-medium rounded-sm flex items-center space-x-1 cursor-pointer select-none"
+                        >
+                            Archive Task
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Detail Inspector Body -->
+                <div class="flex-grow p-6 overflow-y-auto space-y-6 max-w-xl">
+                    <!-- Title Input Area -->
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold uppercase tracking-wider text-text-subtle block">Task Title</label>
+                        <input 
+                            type="text" 
+                            x-model="activeTask.title" 
+                            @blur="saveTaskTitle(activeTask.id)"
+                            @keydown.enter="$el.blur()"
+                            class="w-full text-base font-bold bg-transparent border-0 border-b border-border pb-2 focus:ring-0 focus:border-accent focus:outline-none text-text-main"
+                            placeholder="Task title"
+                        />
+                        <p class="text-[10px] text-text-subtle">Edits save automatically on blur or Enter.</p>
+                    </div>
+
+                    <!-- Quick Attributes Grid -->
+                    <div class="grid grid-cols-2 gap-4 pt-2">
+                        <div>
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-text-subtle block mb-1">Priority</label>
+                            <div class="flex space-x-1">
+                                <template x-for="p in ['low', 'medium', 'high']">
+                                    <button 
+                                        @click="setTaskPriority(activeTask, p)"
+                                        :class="{
+                                            'bg-danger/15 text-danger border-danger/30 font-bold': activeTask.priority === p && p === 'high',
+                                            'bg-warning/15 text-warning border-warning/30 font-bold': activeTask.priority === p && p === 'medium',
+                                            'bg-success/15 text-success border-success/30 font-bold': activeTask.priority === p && p === 'low',
+                                            'bg-surface border-border text-text-muted hover:text-text-main': activeTask.priority !== p
+                                        }"
+                                        class="px-2.5 py-1 text-xxs border rounded-sm cursor-pointer select-none transition-all"
+                                        x-text="p"
+                                    ></button>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-text-subtle block mb-1">Due Date</label>
+                            <span class="inline-block px-2.5 py-1 text-xxs border border-border bg-surface-2/40 text-text-main rounded-sm font-mono" x-text="activeTask.due || 'No due date'"></span>
+                        </div>
+                    </div>
+
+                    <!-- Associated Project & Tags -->
+                    <div class="grid grid-cols-2 gap-4 border-t border-border pt-4">
+                        <div>
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-text-subtle block mb-1">Project Container</label>
+                            <span class="inline-block px-2.5 py-1 text-xxs border border-border bg-surface-2/40 text-text-main rounded-sm font-mono" x-text="activeTask.project"></span>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-text-subtle block mb-1">Tags</label>
+                            <div class="flex flex-wrap gap-1">
+                                <template x-if="!activeTask.tags || activeTask.tags.length === 0">
+                                    <span class="text-xxs text-text-subtle italic">No tags</span>
+                                </template>
+                                <template x-for="tag in activeTask.tags" :key="tag">
+                                    <span class="bg-surface-2 border border-border text-[9px] px-2 py-0.5 rounded-sm text-text-subtle font-mono">#<span x-text="tag"></span></span>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Display -->
+                    <div class="border-t border-border pt-4">
+                        <label class="text-[10px] font-bold uppercase tracking-wider text-text-subtle block mb-2">Status</label>
+                        <button 
+                            @click="toggleTask(activeTask.id)"
+                            :class="activeTask.completed ? 'bg-success/10 border-success/30 text-success' : 'bg-surface border-border text-text-main'"
+                            class="flex items-center space-x-2 px-3 py-1.5 border rounded-sm text-xxs font-semibold cursor-pointer select-none transition-colors"
+                        >
+                            <span x-text="activeTask.completed ? '✓ Completed' : '☐ Active'"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+        
+        <template x-if="!activeTask.id">
+            <div class="flex-grow flex flex-col items-center justify-center p-6 text-center">
+                <span class="text-2xl mb-2 text-text-muted">☑</span>
+                <h3 class="text-xs font-bold text-text-main uppercase tracking-wider">No Task Selected</h3>
+                <p class="text-xxs text-text-subtle mt-1">Select a task from the list or add a new one.</p>
+            </div>
+        </template>
+    </div>
 </div>
 
 <script>
@@ -151,34 +224,63 @@ window.tasksComponent = function(initialTasks) {
     return {
         activeTab: 'today',
         newTaskTitle: '',
-        editingTaskId: null,
-        editingTitle: '',
+        searchQuery: '',
+        selectedTaskId: null,
         
         tasks: Object.keys(initialTasks).flatMap(tab => 
             initialTasks[tab].map(task => ({ ...task, tab }))
         ),
 
-        startEdit(task) {
-            this.editingTaskId = task.id;
-            this.editingTitle = task.title;
+        init() {
+            this.selectFirstTaskOfTab();
+            // Bind keyboard shortcut to cycle tabs
+            window.addEventListener('keydown', e => {
+                if (e.key === 'Tab' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    const tabs = ['inbox', 'today', 'upcoming', 'completed'];
+                    let nextIndex = (tabs.indexOf(this.activeTab) + 1) % tabs.length;
+                    this.activeTab = tabs[nextIndex];
+                    this.selectFirstTaskOfTab();
+                }
+            });
         },
 
-        cancelEdit() {
-            this.editingTaskId = null;
-            this.editingTitle = '';
+        selectFirstTaskOfTab() {
+            this.$nextTick(() => {
+                const list = this.filteredTasks;
+                if (list.length > 0) {
+                    this.selectedTaskId = list[0].id;
+                } else {
+                    this.selectedTaskId = null;
+                }
+            });
+        },
+
+        get filteredTasks() {
+            return this.tasks.filter(t => {
+                const matchesTab = t.tab === this.activeTab;
+                const matchesSearch = t.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                                      (t.project && t.project.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
+                                      (t.tags && t.tags.some(tag => tag.toLowerCase().includes(this.searchQuery.toLowerCase())));
+                return matchesTab && matchesSearch;
+            });
+        },
+
+        get activeTask() {
+            return this.tasks.find(x => x.id === this.selectedTaskId) || {
+                id: null,
+                title: '',
+                priority: 'low',
+                project: 'None',
+                tags: [],
+                due: '',
+                completed: false
+            };
         },
 
         saveTaskTitle(id) {
-            if (!this.editingTitle.trim()) {
-                this.cancelEdit();
-                return;
-            }
-            
-            let t = this.tasks.find(x => x.id === id);
-            if (t && t.title === this.editingTitle.trim()) {
-                this.cancelEdit();
-                return;
-            }
+            const t = this.tasks.find(x => x.id === id);
+            if (!t || !t.title.trim()) return;
 
             fetch(`/tasks/${id}`, {
                 method: 'PUT',
@@ -187,28 +289,20 @@ window.tasksComponent = function(initialTasks) {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({ title: this.editingTitle })
+                body: JSON.stringify({ title: t.title })
             })
             .then(res => res.json())
             .then(data => {
                 if (data.task) {
-                    if (t) {
-                        t.title = data.task.title;
-                    }
+                    t.title = data.task.title;
                     window.dispatchEvent(new CustomEvent('show-toast', { 
-                        detail: { message: 'Task updated successfully' }
+                        detail: { message: 'Task title updated' }
                     }));
                 }
-                this.cancelEdit();
-            })
-            .catch(() => this.cancelEdit());
+            });
         },
 
-        cyclePriority(task) {
-            const priorities = ['low', 'medium', 'high'];
-            let nextIndex = (priorities.indexOf(task.priority) + 1) % priorities.length;
-            let nextPriority = priorities[nextIndex];
-
+        setTaskPriority(task, priority) {
             fetch(`/tasks/${task.id}`, {
                 method: 'PUT',
                 headers: {
@@ -216,7 +310,7 @@ window.tasksComponent = function(initialTasks) {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({ priority: nextPriority })
+                body: JSON.stringify({ priority: priority })
             })
             .then(res => res.json())
             .then(data => {
@@ -227,10 +321,6 @@ window.tasksComponent = function(initialTasks) {
                     }));
                 }
             });
-        },
-
-        get currentTasks() {
-            return this.tasks.filter(t => t.tab === this.activeTab);
         },
 
         addTask() {
@@ -260,8 +350,9 @@ window.tasksComponent = function(initialTasks) {
                     const task = data.task;
                     task.tab = task.completed ? 'completed' : (task.due ? (task.due === 'Today' ? 'today' : 'upcoming') : 'inbox');
                     this.tasks.push(task);
+                    this.selectedTaskId = task.id;
                     window.dispatchEvent(new CustomEvent('show-toast', { 
-                        detail: { message: 'Task created successfully' }
+                        detail: { message: 'Task created' }
                     }));
                     this.newTaskTitle = '';
                 }
@@ -286,14 +377,20 @@ window.tasksComponent = function(initialTasks) {
                         if (t.completed) {
                             setTimeout(() => {
                                 t.tab = 'completed';
+                                if (this.selectedTaskId === id && this.activeTab !== 'completed') {
+                                    this.selectFirstTaskOfTab();
+                                }
                                 window.dispatchEvent(new CustomEvent('show-toast', { 
-                                    detail: { message: 'Task completed · Moved to history' }
+                                    detail: { message: 'Task completed' }
                                 }));
                             }, 500);
                         } else {
                             t.tab = data.task.due ? (data.task.due === 'Today' ? 'today' : 'upcoming') : 'inbox';
+                            if (this.selectedTaskId === id && this.activeTab !== t.tab) {
+                                this.selectFirstTaskOfTab();
+                            }
                             window.dispatchEvent(new CustomEvent('show-toast', { 
-                                detail: { message: 'Task marked incomplete' }
+                                detail: { message: 'Task marked active' }
                             }));
                         }
                     }
@@ -317,8 +414,9 @@ window.tasksComponent = function(initialTasks) {
             .then(data => {
                 if (data.success) {
                     this.tasks = this.tasks.filter(x => x.id !== id);
+                    this.selectFirstTaskOfTab();
                     window.dispatchEvent(new CustomEvent('show-toast', { 
-                        detail: { message: 'Archived: ' + (t.title.length > 15 ? t.title.substring(0, 15) + '...' : t.title) }
+                        detail: { message: 'Task archived' }
                     }));
                 }
             });
