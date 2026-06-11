@@ -60,6 +60,7 @@
                       else if (event.key === 'p') window.location.href = '/projects';
                       else if (event.key === 's') window.location.href = '/slipping';
                       else if (event.key === 'i') window.location.href = '/inbox';
+                      else if (event.key === 'w') window.location.href = '/wallet';
                       window.removeEventListener('keydown', handler);
                   };
                   window.addEventListener('keydown', handler, { once: true });
@@ -203,6 +204,15 @@
                                     </svg>
                                 </x-slot>
                                 Lab
+                            </x-ui.sidebar-item>
+
+                            <x-ui.sidebar-item href="/wallet" :active="request()->is('wallet*')" :badge="$sidebarCounts['wallets'] ?: null">
+                                <x-slot name="icon">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
+                                    </svg>
+                                </x-slot>
+                                Wallet
                             </x-ui.sidebar-item>
                         </div>
                     </div>
@@ -463,6 +473,9 @@
 
                     <div class="flex items-center space-x-1"><kbd class="bg-surface-2 px-1 border border-border rounded font-mono font-semibold">g</kbd> then <kbd class="bg-surface-2 px-1 border border-border rounded font-mono font-semibold">s</kbd></div>
                     <div class="text-text-muted">Go to Slipping Items</div>
+
+                    <div class="flex items-center space-x-1"><kbd class="bg-surface-2 px-1 border border-border rounded font-mono font-semibold">g</kbd> then <kbd class="bg-surface-2 px-1 border border-border rounded font-mono font-semibold">w</kbd></div>
+                    <div class="text-text-muted">Go to Wallet</div>
                 </div>
             </div>
 

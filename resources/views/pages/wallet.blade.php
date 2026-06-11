@@ -1,0 +1,617 @@
+@extends('layouts.app')
+
+@section('title', 'Wealth & Wallet Tracker')
+@section('header_breadcrumbs', 'DAILYLOG // WEALTH // WALLETS')
+
+@section('content')
+<div 
+    x-data="{
+        txType: 'income',
+        txWalletId: '',
+        txTargetWalletId: '',
+        txAmount: '',
+        txOccurredOn: '{{ now()->format('Y-m-d') }}',
+        txDescription: '',
+        walletTitle: '',
+        walletType: 'cash',
+        walletInitialBalance: '0.00',
+        walletCurrency: 'BDT',
+        walletProjectId: '',
+        isEditingWallet: false,
+        editWalletId: '',
+        isEditingTransaction: false,
+        editTransactionId: '',
+        selectedWalletId: {{ $wallets->first()?->id ?? 'null' }},
+        filterType: 'all',
+        filterStartDate: '',
+        filterEndDate: '',
+
+        matchesFilters(occurredOn, type, walletId, targetWalletId) {
+            if (this.selectedWalletId !== null && this.selectedWalletId !== 'null' && this.selectedWalletId !== '') {
+                const selId = parseInt(this.selectedWalletId);
+                if (walletId !== selId && targetWalletId !== selId) {
+                    return false;
+                }
+            }
+            if (this.filterType !== 'all') {
+                if (type !== this.filterType) {
+                    return false;
+                }
+            }
+            if (this.filterStartDate !== '') {
+                if (occurredOn < this.filterStartDate) {
+                    return false;
+                }
+            }
+            if (this.filterEndDate !== '') {
+                if (occurredOn > this.filterEndDate) {
+                    return false;
+                }
+            }
+            return true;
+        },
+
+        openNewWallet() {
+            this.isEditingWallet = false;
+            this.editWalletId = '';
+            this.walletTitle = '';
+            this.walletType = 'cash';
+            this.walletInitialBalance = '0.00';
+            this.walletCurrency = 'BDT';
+            this.walletProjectId = '';
+            this.$dispatch('open-modal', { name: 'wallet-modal' });
+        },
+
+        openEditWallet(wallet) {
+            this.isEditingWallet = true;
+            this.editWalletId = wallet.id;
+            this.walletTitle = wallet.title;
+            this.walletType = wallet.wallet_details.type;
+            this.walletInitialBalance = parseFloat(wallet.wallet_details.initial_balance).toFixed(2);
+            this.walletCurrency = wallet.wallet_details.currency;
+            this.walletProjectId = wallet.project_id || '';
+            this.$dispatch('open-modal', { name: 'wallet-modal' });
+        },
+
+        openNewTransaction() {
+            this.isEditingTransaction = false;
+            this.editTransactionId = '';
+            this.txType = 'income';
+            this.txWalletId = '';
+            this.txTargetWalletId = '';
+            this.txAmount = '';
+            this.txOccurredOn = '{{ now()->format('Y-m-d') }}';
+            this.txDescription = '';
+            this.$dispatch('open-modal', { name: 'transaction-modal' });
+        },
+
+        openEditTransaction(tx) {
+            this.isEditingTransaction = true;
+            this.editTransactionId = tx.id;
+            this.txType = tx.type;
+            this.txWalletId = tx.wallet_id;
+            this.txTargetWalletId = tx.target_wallet_id || '';
+            this.txAmount = parseFloat(tx.amount).toFixed(2);
+            this.txOccurredOn = tx.occurred_on;
+            this.txDescription = tx.description || '';
+            this.$dispatch('open-modal', { name: 'transaction-modal' });
+        }
+    }" 
+    class="max-w-6xl mx-auto space-y-6 pb-12"
+>
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-border">
+        <div>
+            <div class="text-[10px] font-bold text-accent font-mono uppercase tracking-widest">// wealth & financial ledger</div>
+            <h1 class="text-xl font-bold tracking-tight text-text-main mt-1">Wallet Tracker</h1>
+            <p class="text-xs text-text-muted mt-0.5">Track your net worth, manage financial accounts, and log everyday transactions.</p>
+        </div>
+        <div class="mt-3 md:mt-0 flex space-x-2">
+            <x-ui.button variant="secondary" @click="openNewWallet()">
+                + New Wallet
+            </x-ui.button>
+            <x-ui.button variant="primary" @click="openNewTransaction()">
+                ⚡ Add Transaction
+            </x-ui.button>
+        </div>
+    </div>
+
+    <!-- Summary Widgets & Net Worth -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Net Worth Card -->
+        <div class="bg-surface border border-border p-5 rounded-xs flex flex-col justify-between shadow-xs">
+            <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-text-subtle font-mono">Total Net Worth</span>
+                <div class="mt-3 space-y-2">
+                    @foreach($netWorthByCurrency as $currency => $balance)
+                        <div class="flex items-baseline justify-between border-b border-border/40 pb-1.5 last:border-0 last:pb-0">
+                            <span class="text-xs font-mono font-bold text-text-muted">{{ $currency }}</span>
+                            <span class="text-xl font-bold tracking-tight {{ $balance >= 0 ? 'text-text-main' : 'text-danger' }}">
+                                {{ number_format($balance, 2) }}
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+            <div class="text-[9px] font-mono text-text-subtle mt-4">// aggregates all active accounts</div>
+        </div>
+
+        <!-- Monthly Income -->
+        <div class="bg-surface border border-border p-5 rounded-xs flex flex-col justify-between shadow-xs">
+            <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-success font-mono">This Month Income</span>
+                <div class="mt-3 space-y-1.5">
+                    @php $hasIncome = false; @endphp
+                    @foreach($monthlyStatsByCurrency as $currency => $stats)
+                        @foreach($stats->where('type', 'income') as $stat)
+                            @php $hasIncome = true; @endphp
+                            <div class="flex items-baseline justify-between">
+                                <span class="text-xs font-mono font-semibold text-text-muted">{{ $currency }}</span>
+                                <span class="text-lg font-bold text-success">
+                                    +{{ number_format($stat->total, 2) }}
+                                </span>
+                            </div>
+                        @endforeach
+                    @endforeach
+                    @if(!$hasIncome)
+                        <span class="text-xs text-text-muted italic block py-2">No income logged this month.</span>
+                    @endif
+                </div>
+            </div>
+            <div class="text-[9px] font-mono text-text-subtle mt-4">// current calendar month</div>
+        </div>
+
+        <!-- Monthly Expense -->
+        <div class="bg-surface border border-border p-5 rounded-xs flex flex-col justify-between shadow-xs">
+            <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-danger font-mono">This Month Expenses</span>
+                <div class="mt-3 space-y-1.5">
+                    @php $hasExpense = false; @endphp
+                    @foreach($monthlyStatsByCurrency as $currency => $stats)
+                        @foreach($stats->where('type', 'expense') as $stat)
+                            @php $hasExpense = true; @endphp
+                            <div class="flex items-baseline justify-between">
+                                <span class="text-xs font-mono font-semibold text-text-muted">{{ $currency }}</span>
+                                <span class="text-lg font-bold text-danger">
+                                    -{{ number_format($stat->total, 2) }}
+                                </span>
+                            </div>
+                        @endforeach
+                    @endforeach
+                    @if(!$hasExpense)
+                        <span class="text-xs text-text-muted italic block py-2">No expenses logged this month.</span>
+                    @endif
+                </div>
+            </div>
+            <div class="text-[9px] font-mono text-text-subtle mt-4">// current calendar month</div>
+        </div>
+
+    </div>
+
+    <!-- Active Wallets Grid -->
+    <div>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-text-subtle border-b border-border pb-2 mb-4 font-mono">// Active Wallet Accounts</h3>
+        
+        @if($wallets->isEmpty())
+            <div class="py-12 text-center border border-dashed border-border rounded-sm bg-surface-2/10">
+                <span class="text-xl">💳</span>
+                <h4 class="text-xs font-bold text-text-main mt-2 uppercase font-mono">No accounts yet</h4>
+                <p class="text-xs text-text-muted mt-1">Create your first wallet to start tracking your wealth.</p>
+                <x-ui.button variant="secondary" class="mt-4" @click="openNewWallet()">
+                    Create Wallet
+                </x-ui.button>
+            </div>
+        @else
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                @foreach($wallets as $wallet)
+                    <div 
+                        @click="selectedWalletId = (selectedWalletId === {{ $wallet->id }} ? null : {{ $wallet->id }})"
+                        :class="selectedWalletId === {{ $wallet->id }} ? 'border-accent ring-1 ring-accent bg-accent-subtle-bg/10' : 'hover:border-accent/30 bg-surface'"
+                        class="border border-border rounded-xs p-4 flex flex-col justify-between transition-all group cursor-pointer relative"
+                    >
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] font-bold font-mono px-2 py-0.5 rounded-xs uppercase tracking-wide border border-border bg-surface-2 text-text-muted">
+                                    {{ $wallet->walletDetails?->type }}
+                                </span>
+                                
+                                <div class="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity" @click.stop>
+                                    <button 
+                                        @click="openEditWallet(@js($wallet))" 
+                                        class="text-text-subtle hover:text-accent cursor-pointer text-[11px] p-0.5"
+                                    >
+                                        ✎ Edit
+                                    </button>
+                                    <span class="text-text-subtle/30 text-[10px]">|</span>
+                                    <form action="{{ route('wallet.destroy', $wallet) }}" method="POST" onsubmit="return confirm('Delete this wallet? All transactions associated will be lost.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-text-subtle hover:text-danger cursor-pointer text-[11px] p-0.5">
+                                            &times; Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            
+                            <h4 class="font-bold text-sm text-text-main mt-3 truncate">{{ $wallet->title }}</h4>
+                            
+                            @if($wallet->project)
+                                <div class="text-[10px] text-text-subtle mt-1 font-mono">
+                                    @span &middot; @ {{ $wallet->project->name }}
+                                </div>
+                            @endif
+                        </div>
+                        
+                        <div class="mt-6 pt-3 border-t border-border/40 flex items-baseline justify-between">
+                            <span class="text-[10px] font-mono font-bold text-text-muted">{{ $wallet->walletDetails?->currency }}</span>
+                            <span class="text-base font-bold font-mono text-text-main">
+                                {{ number_format($wallet->current_balance, 2) }}
+                            </span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </div>
+
+    <!-- Transaction Ledger -->
+    <div>
+        <div class="flex items-center justify-between border-b border-border pb-2 mb-4">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-text-subtle font-mono">// Transaction Ledger</h3>
+            <template x-if="selectedWalletId !== null || filterType !== 'all' || filterStartDate !== '' || filterEndDate !== ''">
+                <button 
+                    @click="selectedWalletId = null; filterType = 'all'; filterStartDate = ''; filterEndDate = ''" 
+                    class="text-[10px] font-bold uppercase font-mono text-accent hover:underline cursor-pointer"
+                >
+                    Clear Filters (Show All)
+                </button>
+            </template>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-4 bg-surface p-3 border border-border rounded-xs">
+            <div>
+                <label class="block text-[9px] font-bold uppercase tracking-wider text-text-subtle font-mono mb-1">Account Filter</label>
+                <select 
+                    x-model="selectedWalletId" 
+                    class="w-full text-xs bg-surface-2 border border-border rounded-xs p-1.5 text-text-main focus:outline-none focus:ring-1 focus:ring-accent"
+                >
+                    <option :value="null">All Accounts</option>
+                    @foreach($wallets as $w)
+                        <option value="{{ $w->id }}">{{ $w->title }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[9px] font-bold uppercase tracking-wider text-text-subtle font-mono mb-1">Type Filter</label>
+                <select 
+                    x-model="filterType" 
+                    class="w-full text-xs bg-surface-2 border border-border rounded-xs p-1.5 text-text-main focus:outline-none focus:ring-1 focus:ring-accent"
+                >
+                    <option value="all">All Types</option>
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                    <option value="transfer">Transfer</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[9px] font-bold uppercase tracking-wider text-text-subtle font-mono mb-1">From Date</label>
+                <input 
+                    type="date" 
+                    x-model="filterStartDate" 
+                    class="w-full text-xs bg-surface-2 border border-border rounded-xs p-1.5 text-text-main focus:outline-none focus:ring-1 focus:ring-accent"
+                />
+            </div>
+
+            <div>
+                <label class="block text-[9px] font-bold uppercase tracking-wider text-text-subtle font-mono mb-1">To Date</label>
+                <input 
+                    type="date" 
+                    x-model="filterEndDate" 
+                    class="w-full text-xs bg-surface-2 border border-border rounded-xs p-1.5 text-text-main focus:outline-none focus:ring-1 focus:ring-accent"
+                />
+            </div>
+        </div>
+        
+        <div class="bg-surface border border-border rounded-xs overflow-hidden shadow-xs">
+            <x-ui.table>
+                <x-slot name="thead">
+                    <tr>
+                        <th class="w-24 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">Date</th>
+                        <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">Type</th>
+                        <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">Account</th>
+                        <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">Details</th>
+                        <th class="text-right px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">Amount</th>
+                        <th class="w-16 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-text-muted font-mono"></th>
+                    </tr>
+                </x-slot>
+                
+                @if($transactions->isEmpty())
+                    <tr>
+                        <td colspan="6" class="px-4 py-12 text-center text-xs text-text-muted italic">
+                            No transactions logged yet. Click "Add Transaction" to create one.
+                        </td>
+                    </tr>
+                @else
+                    @foreach($transactions as $tx)
+                        <tr 
+                            x-show="matchesFilters('{{ $tx->occurred_on->format('Y-m-d') }}', '{{ $tx->type }}', {{ $tx->wallet_id }}, {{ $tx->target_wallet_id ?? 'null' }})"
+                            class="hover:bg-surface-2/10"
+                        >
+                            <td class="px-4 py-2.5 font-mono text-xxs whitespace-nowrap text-text-subtle align-middle">
+                                {{ $tx->occurred_on->format('Y-m-d') }}
+                            </td>
+                            <td class="px-4 py-2.5 align-middle">
+                                @if($tx->type === 'income')
+                                    <span class="bg-success/5 text-success border border-success/20 px-1.5 py-0.2 rounded-xs text-[9px] uppercase font-bold font-mono">Income</span>
+                                @elseif($tx->type === 'expense')
+                                    <span class="bg-danger/5 text-danger border border-danger/20 px-1.5 py-0.2 rounded-xs text-[9px] uppercase font-bold font-mono">Expense</span>
+                                @else
+                                    <span class="bg-info/5 text-info border border-info/20 px-1.5 py-0.2 rounded-xs text-[9px] uppercase font-bold font-mono">Transfer</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-2.5 text-xs font-semibold text-text-main truncate max-w-[150px] align-middle">
+                                @if($tx->type === 'transfer')
+                                    <div class="flex items-center space-x-1">
+                                        <span class="truncate">{{ $tx->wallet?->title }}</span>
+                                        <span class="text-text-subtle font-mono text-[9px]">&rarr;</span>
+                                        <span class="truncate">{{ $tx->targetWallet?->title }}</span>
+                                    </div>
+                                @else
+                                    {{ $tx->wallet?->title }}
+                                @endif
+                            </td>
+                            <td class="px-4 py-2.5 text-xs text-text-muted truncate max-w-[200px] align-middle" title="{{ $tx->description }}">
+                                {{ $tx->description ?: '-' }}
+                            </td>
+                            <td class="px-4 py-2.5 text-right font-mono text-xs font-bold whitespace-nowrap align-middle">
+                                @if($tx->type === 'income')
+                                    <span class="text-success">+{{ number_format($tx->amount, 2) }}</span>
+                                @elseif($tx->type === 'expense')
+                                    <span class="text-danger">-{{ number_format($tx->amount, 2) }}</span>
+                                @else
+                                    <span class="text-text-main">{{ number_format($tx->amount, 2) }}</span>
+                                @endif
+                                <span class="text-[9px] font-normal text-text-subtle ml-1 font-sans">
+                                    {{ $tx->wallet?->walletDetails?->currency }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2.5 text-right align-middle" @click.stop>
+                                <div class="flex items-center justify-end space-x-1.5">
+                                    <button 
+                                        @click="openEditTransaction(@js($tx))" 
+                                        class="text-text-subtle hover:text-accent cursor-pointer text-xs font-semibold focus:outline-none"
+                                        title="Edit transaction"
+                                    >
+                                        ✎
+                                    </button>
+                                    <span class="text-text-subtle/30 text-[10px]">|</span>
+                                    <form action="{{ route('wallet.transaction.destroy', $tx) }}" method="POST" onsubmit="return confirm('Delete this transaction?');" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-text-subtle hover:text-danger cursor-pointer text-xs font-semibold px-1 focus:outline-none">
+                                            &times;
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                @endif
+            </x-ui.table>
+        </div>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Wallet Creation/Editing Modal -->
+    <x-ui.modal name="wallet-modal" maxWidth="sm">
+        <x-slot:title>
+            <span x-text="isEditingWallet ? 'Edit Wallet Account' : 'Create Wallet Account'"></span>
+        </x-slot:title>
+        
+        <form :action="isEditingWallet ? '/wallet/' + editWalletId : '{{ route('wallet.store') }}'" method="POST" id="wallet-form" class="space-y-4">
+            @csrf
+            <template x-if="isEditingWallet">
+                <input type="hidden" name="_method" value="PUT" />
+            </template>
+            
+            <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-text-subtle font-mono mb-1">Account Title</label>
+                <x-ui.input 
+                    type="text" 
+                    name="title" 
+                    x-model="walletTitle" 
+                    placeholder="e.g. Mutual Trust Bank checking" 
+                    required 
+                />
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-text-subtle font-mono mb-1">Account Type</label>
+                    <select 
+                        name="type" 
+                        x-model="walletType" 
+                        class="w-full text-xs bg-surface border border-border rounded-xs p-2 text-text-main focus:outline-none focus:ring-1 focus:ring-accent"
+                    >
+                        <option value="cash">Cash</option>
+                        <option value="bank">Bank Account</option>
+                        <option value="credit">Credit Card</option>
+                        <option value="savings">Savings</option>
+                        <option value="investment">Investment</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-text-subtle font-mono mb-1">Currency Code</label>
+                    <x-ui.input 
+                        type="text" 
+                        name="currency" 
+                        x-model="walletCurrency" 
+                        placeholder="BDT" 
+                        required 
+                    />
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-text-subtle font-mono mb-1">Initial Balance</label>
+                    <x-ui.input 
+                        type="number" 
+                        step="0.01" 
+                        name="initial_balance" 
+                        x-model="walletInitialBalance" 
+                        required 
+                    />
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-text-subtle font-mono mb-1">Related Project</label>
+                    <select 
+                        name="project_id" 
+                        x-model="walletProjectId" 
+                        class="w-full text-xs bg-surface border border-border rounded-xs p-2 text-text-main focus:outline-none focus:ring-1 focus:ring-accent"
+                    >
+                        <option value="">None</option>
+                        @foreach($projects as $p)
+                            <option value="{{ $p->id }}">{{ $p->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+        </form>
+
+        <x-slot:footer>
+            <x-ui.button type="button" variant="secondary" @click="$dispatch('close-modal', { name: 'wallet-modal' })" class="font-bold cursor-pointer">
+                Cancel
+            </x-ui.button>
+            <x-ui.button type="submit" form="wallet-form" variant="primary" class="font-bold cursor-pointer">
+                <span x-text="isEditingWallet ? 'Update Wallet' : 'Create Wallet'"></span>
+            </x-ui.button>
+        </x-slot:footer>
+    </x-ui.modal>
+
+    <!-- Transaction Modal -->
+    <x-ui.modal name="transaction-modal" maxWidth="sm">
+        <x-slot:title>
+            <span x-text="isEditingTransaction ? 'Edit Ledger Transaction' : 'Log Ledger Transaction'"></span>
+        </x-slot:title>
+        
+        <form :action="isEditingTransaction ? '/wallet/transaction/' + editTransactionId : '{{ route('wallet.transaction.store') }}'" method="POST" id="transaction-form" class="space-y-4">
+            @csrf
+            <template x-if="isEditingTransaction">
+                <input type="hidden" name="_method" value="PUT" />
+            </template>
+            
+            <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-text-subtle font-mono mb-1">Transaction Type</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <label :class="txType === 'income' ? 'bg-success/10 border-success/40 text-success' : 'bg-surface-2 border-border text-text-muted'" class="flex items-center justify-center py-2 border rounded-xs text-xs font-bold font-mono cursor-pointer transition-all">
+                        <input type="radio" name="type" value="income" x-model="txType" class="sr-only" />
+                        <span>Income</span>
+                    </label>
+                    <label :class="txType === 'expense' ? 'bg-danger/10 border-danger/40 text-danger' : 'bg-surface-2 border-border text-text-muted'" class="flex items-center justify-center py-2 border rounded-xs text-xs font-bold font-mono cursor-pointer transition-all">
+                        <input type="radio" name="type" value="expense" x-model="txType" class="sr-only" />
+                        <span>Expense</span>
+                    </label>
+                    <label :class="txType === 'transfer' ? 'bg-info/10 border-info/40 text-info' : 'bg-surface-2 border-border text-text-muted'" class="flex items-center justify-center py-2 border rounded-xs text-xs font-bold font-mono cursor-pointer transition-all">
+                        <input type="radio" name="type" value="transfer" x-model="txType" class="sr-only" />
+                        <span>Transfer</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label x-text="txType === 'transfer' ? 'Source Wallet' : 'Wallet Account'" class="block text-[10px] font-bold uppercase tracking-wider text-text-subtle font-mono mb-1"></label>
+                    <select 
+                        name="wallet_id" 
+                        x-model="txWalletId" 
+                        required 
+                        class="w-full text-xs bg-surface border border-border rounded-xs p-2 text-text-main focus:outline-none focus:ring-1 focus:ring-accent"
+                    >
+                        <option value="">Select Account</option>
+                        @foreach($wallets as $w)
+                            <option value="{{ $w->id }}">{{ $w->title }} ({{ number_format($w->current_balance, 2) }} {{ $w->walletDetails?->currency }})</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div x-show="txType === 'transfer'">
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-text-subtle font-mono mb-1">Destination Wallet</label>
+                    <select 
+                        name="target_wallet_id" 
+                        x-model="txTargetWalletId" 
+                        ::required="txType === 'transfer'" 
+                        class="w-full text-xs bg-surface border border-border rounded-xs p-2 text-text-main focus:outline-none focus:ring-1 focus:ring-accent"
+                    >
+                        <option value="">Select Account</option>
+                        @foreach($wallets as $w)
+                            <option value="{{ $w->id }}">{{ $w->title }} ({{ number_format($w->current_balance, 2) }} {{ $w->walletDetails?->currency }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <div x-show="txType !== 'transfer'">
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-text-subtle font-mono mb-1">Date Occurred</label>
+                    <x-ui.input 
+                        type="date" 
+                        name="occurred_on" 
+                        x-model="txOccurredOn" 
+                        required 
+                    />
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-text-subtle font-mono mb-1">Amount</label>
+                    <x-ui.input 
+                        type="number" 
+                        step="0.01" 
+                        name="amount" 
+                        x-model="txAmount" 
+                        placeholder="0.00" 
+                        required 
+                    />
+                </div>
+
+                <div x-show="txType === 'transfer'">
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-text-subtle font-mono mb-1">Date Occurred</label>
+                    <x-ui.input 
+                        type="date" 
+                        name="occurred_on" 
+                        x-model="txOccurredOn" 
+                        ::required="txType === 'transfer'" 
+                    />
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-text-subtle font-mono mb-1">Description / Notes</label>
+                <x-ui.input 
+                    type="text" 
+                    name="description" 
+                    x-model="txDescription" 
+                    placeholder="e.g. Grocery shopping, salary payout" 
+                />
+            </div>
+        </form>
+
+        <x-slot:footer>
+            <x-ui.button type="button" variant="secondary" @click="$dispatch('close-modal', { name: 'transaction-modal' })" class="font-bold cursor-pointer">
+                Cancel
+            </x-ui.button>
+            <x-ui.button type="submit" form="transaction-form" variant="primary" class="font-bold cursor-pointer">
+                <span x-text="isEditingTransaction ? 'Update Transaction' : 'Log Transaction'"></span>
+            </x-ui.button>
+        </x-slot:footer>
+    </x-ui.modal>
+
+</div>
+@endsection

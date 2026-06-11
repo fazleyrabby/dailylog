@@ -16,6 +16,7 @@ use App\Http\Controllers\ProjectsController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SlippingController;
 use App\Http\Controllers\TasksController;
+use App\Http\Controllers\WalletController;
 use App\Support\MockData;
 use Illuminate\Support\Facades\Route;
 
@@ -87,4 +88,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/lab/{entry}', [LabController::class, 'destroy'])->name('lab.destroy');
     Route::patch('/lab/{entry}/items', [LabController::class, 'updateItems'])->name('lab.items.update');
     Route::post('/lab/items/{item}/graduate', [LabController::class, 'graduate'])->name('lab.items.graduate');
+
+    // Wallet Routes
+    Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
+    Route::post('/wallet', [WalletController::class, 'storeWallet'])->name('wallet.store');
+    Route::put('/wallet/{entry}', [WalletController::class, 'updateWallet'])->name('wallet.update');
+    Route::post('/wallet/transaction', [WalletController::class, 'storeTransaction'])->name('wallet.transaction.store');
+    Route::put('/wallet/transaction/{transaction}', [WalletController::class, 'updateTransaction'])->name('wallet.transaction.update');
+    Route::delete('/wallet/transaction/{transaction}', [WalletController::class, 'destroyTransaction'])->name('wallet.transaction.destroy');
+    Route::delete('/wallet/{entry}', [WalletController::class, 'destroyWallet'])->name('wallet.destroy');
 });

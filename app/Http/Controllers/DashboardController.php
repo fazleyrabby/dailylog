@@ -103,13 +103,14 @@ class DashboardController extends Controller
             ])->toArray();
 
         // 7. Recent activity (Unified notes, tasks, bookmarks)
-        $recentNotes = Entry::query()
+        $recentNotesRaw = Entry::query()
             ->notes()
             ->active()
             ->orderByDesc('updated_at')
             ->take(5)
-            ->get()
-            ->map(fn (Entry $entry) => [
+            ->get();
+
+        $recentNotes = $recentNotesRaw->map(fn (Entry $entry) => [
                 'type' => 'note',
                 'title' => $entry->title ?? 'Untitled Note',
                 'timestamp' => $entry->updated_at,
@@ -197,6 +198,7 @@ class DashboardController extends Controller
             'projects' => $projects,
             'timeline' => $timeline,
             'streak' => $streak,
+            'recentNotes' => $recentNotesRaw,
         ]);
     }
 

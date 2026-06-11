@@ -43,6 +43,7 @@ class Entry extends Model
     public function scopeLearnings(Builder $query): Builder { return $query->where('type', 'learning'); }
     public function scopeIdeas(Builder $query): Builder { return $query->where('type', 'idea'); }
     public function scopeLabs(Builder $query): Builder { return $query->where('type', 'lab'); }
+    public function scopeWallets(Builder $query): Builder { return $query->where('type', 'wallet'); }
 
     // Scopes for status filtering
     public function scopeActive(Builder $query): Builder { return $query->whereNull('archived_at'); }
@@ -70,10 +71,21 @@ class Entry extends Model
     public function resourceDetails(): HasOne { return $this->hasOne(ResourceDetails::class, 'entry_id'); }
     public function learningDetails(): HasOne { return $this->hasOne(LearningDetails::class, 'entry_id'); }
     public function quoteDetails(): HasOne { return $this->hasOne(QuoteDetails::class, 'entry_id'); }
+    public function walletDetails(): HasOne { return $this->hasOne(WalletDetails::class, 'entry_id'); }
     
     public function labItems(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(LabItem::class, 'entry_id');
+    }
+
+    public function walletTransactions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(WalletTransaction::class, 'wallet_id');
+    }
+
+    public function incomingTransfers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(WalletTransaction::class, 'target_wallet_id');
     }
 
     // Self-referential graph links

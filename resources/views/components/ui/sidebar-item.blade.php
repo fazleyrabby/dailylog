@@ -11,9 +11,9 @@
 @endphp
 
 <a href="{{ $href }}" {{ $attributes->merge(['class' => $classes]) }}>
-    <div class="flex items-center space-x-2.5">
+    <div class="flex items-center">
         @if(isset($icon))
-            <span class="{{ $active ? 'text-text-main' : 'text-text-subtle' }}">
+            <span class="inline-flex items-center justify-center w-5 h-5 mr-2.5 flex-shrink-0 {{ $active ? 'text-text-main' : 'text-text-subtle' }}">
                 {{ $icon }}
             </span>
         @endif

@@ -35,6 +35,7 @@ class SidebarCountsTest extends TestCase
         $this->assertSame(1, $counts['learning']);
         $this->assertSame(1, $counts['projects']);
         $this->assertSame(0, $counts['slipping']);
+        $this->assertSame(0, $counts['wallets']);
     }
 
     public function test_guest_gets_zero_counts(): void
@@ -43,6 +44,6 @@ class SidebarCountsTest extends TestCase
         (new SidebarCountsComposer)->compose($view);
         $counts = $view->getData()['sidebarCounts'];
 
-        $this->assertSame([0, 0, 0, 0], array_values($counts));
+        $this->assertSame([0, 0, 0, 0, 0], array_values($counts));
     }
 }

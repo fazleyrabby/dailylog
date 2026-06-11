@@ -12,7 +12,7 @@ class SidebarCountsComposer
     public function compose(View $view): void
     {
         if (! auth()->check()) {
-            $view->with('sidebarCounts', ['tasks' => 0, 'learning' => 0, 'projects' => 0, 'slipping' => 0]);
+            $view->with('sidebarCounts', ['tasks' => 0, 'learning' => 0, 'projects' => 0, 'slipping' => 0, 'wallets' => 0]);
             return;
         }
 
@@ -42,11 +42,18 @@ class SidebarCountsComposer
             ->where(fn ($q) => $q->whereNull('snoozed_until')->orWhere('snoozed_until', '<=', now()))
             ->count();
 
+        $walletsCount = Entry::query()
+            ->where('type', 'wallet')
+            ->where('status', 'active')
+            ->whereNull('archived_at')
+            ->count();
+
         $view->with('sidebarCounts', [
             'tasks' => $tasksToday,
             'learning' => $learningActive,
             'projects' => $projectsActive,
             'slipping' => $slipping,
+            'wallets' => $walletsCount,
         ]);
     }
 }

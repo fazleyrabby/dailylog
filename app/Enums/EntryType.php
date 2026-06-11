@@ -13,6 +13,7 @@ enum EntryType: string
     case Learning = 'learning';
     case Idea = 'idea';
     case Lab = 'lab';
+    case Wallet = 'wallet';
 
     public function label(): string
     {
@@ -26,6 +27,7 @@ enum EntryType: string
             self::Learning => 'Learning',
             self::Idea => 'Idea',
             self::Lab => 'Lab',
+            self::Wallet => 'Wallet',
         };
     }
 
@@ -41,11 +43,12 @@ enum EntryType: string
             self::Learning => 'active',
             self::Idea => 'spark',
             self::Lab => 'active',
+            self::Wallet => 'active',
         };
     }
 
     public function hasExtension(): bool
     {
-        return in_array($this, [self::Task, self::Bookmark, self::Resource, self::Learning, self::Quote], true);
+        return in_array($this, [self::Task, self::Bookmark, self::Resource, self::Learning, self::Quote, self::Wallet], true);
     }
 }

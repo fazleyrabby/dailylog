@@ -38,10 +38,10 @@
         </div>
         <div class="flex-grow overflow-y-auto p-2 space-y-1">
             @foreach($boards as $b)
-                <div class="group relative rounded-sm transition-colors {{ $b->id === $activeBoard->id ? 'bg-accent-subtle-bg/30 border-l-2 border-accent' : 'hover:bg-surface-2/50' }}">
+                <div class="group relative rounded-sm transition-colors {{ $b->id === $activeBoard->id ? 'bg-accent-subtle-bg/40 font-semibold' : 'hover:bg-surface-2/50' }}">
                     <a
                         href="{{ route('lab.show', $b) }}"
-                        class="block px-3 py-2 pr-14 text-xs {{ $b->id === $activeBoard->id ? 'text-accent font-semibold' : 'text-text-muted' }}"
+                        class="block px-3 py-2 pr-14 text-xs {{ $b->id === $activeBoard->id ? 'text-accent' : 'text-text-muted' }}"
                     >
                         <div class="truncate font-mono">{{ $b->title }}</div>
                         <div class="text-[10px] text-text-subtle mt-0.5" style="font-size: 9px;">
