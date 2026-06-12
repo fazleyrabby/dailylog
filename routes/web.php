@@ -97,4 +97,9 @@ Route::middleware('auth')->group(function () {
     Route::put('/wallet/transaction/{transaction}', [WalletController::class, 'updateTransaction'])->name('wallet.transaction.update');
     Route::delete('/wallet/transaction/{transaction}', [WalletController::class, 'destroyTransaction'])->name('wallet.transaction.destroy');
     Route::delete('/wallet/{entry}', [WalletController::class, 'destroyWallet'])->name('wallet.destroy');
+    Route::post('/wallet/recurring', [WalletController::class, 'storeRecurring'])->name('wallet.recurring.store');
+    Route::delete('/wallet/recurring/{recurring}', [WalletController::class, 'destroyRecurring'])->name('wallet.recurring.destroy');
+    Route::post('/wallet/recurring/{recurring}/post', [WalletController::class, 'postRecurring'])->name('wallet.recurring.post');
+    Route::post('/wallet/budget', [WalletController::class, 'storeBudget'])->name('wallet.budget.store');
+    Route::post('/wallet/settings', [WalletController::class, 'updateCurrencySettings'])->name('wallet.settings.update');
 });

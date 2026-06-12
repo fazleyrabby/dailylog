@@ -234,6 +234,70 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Project Financials Section -->
+                    <div class="border-t border-border pt-6 space-y-4">
+                        <div class="flex items-center justify-between border-b border-border/60 pb-1">
+                            <h4 class="text-xs font-bold text-text-subtle uppercase tracking-wider">Project Financials</h4>
+                            <span class="text-[9px] font-mono text-text-muted">// linked wallets & recent activity</span>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Linked Wallets -->
+                            <div class="space-y-3">
+                                <h5 class="text-xxs font-bold text-text-muted uppercase tracking-wider">Linked Wallets</h5>
+                                <div class="space-y-2">
+                                    <template x-if="!activeProj.financials || activeProj.financials.wallets.length === 0">
+                                        <p class="text-xxs text-text-subtle italic">No wallets linked to this project.</p>
+                                    </template>
+                                    <template x-for="w in (activeProj.financials ? activeProj.financials.wallets : [])" :key="w.id">
+                                        <div class="p-2.5 bg-surface-2/30 border border-border/60 rounded-sm flex justify-between items-center">
+                                            <div>
+                                                <span class="text-xs font-semibold text-text-main" x-text="w.title"></span>
+                                                <span class="text-[9px] font-bold font-mono px-1.5 py-0.2 rounded-xs uppercase tracking-wide border border-border bg-surface-2 text-text-muted ml-2" x-text="w.type"></span>
+                                            </div>
+                                            <span class="font-mono text-xs font-bold text-text-main">
+                                                <span x-text="w.balance.toFixed(2)"></span> <span class="text-[9px] font-normal text-text-subtle" x-text="w.currency"></span>
+                                            </span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Recent Financial Transactions -->
+                            <div class="space-y-3">
+                                <h5 class="text-xxs font-bold text-text-muted uppercase tracking-wider">Recent Transactions</h5>
+                                <div class="space-y-2">
+                                    <template x-if="!activeProj.financials || activeProj.financials.transactions.length === 0">
+                                        <p class="text-xxs text-text-subtle italic">No recent financial transactions.</p>
+                                    </template>
+                                    <template x-for="tx in (activeProj.financials ? activeProj.financials.transactions : [])" :key="tx.id">
+                                        <div class="p-2 bg-surface-2/30 border border-border/60 rounded-sm text-xs flex justify-between items-center">
+                                            <div class="flex flex-col min-w-0">
+                                                <div class="flex items-center space-x-1.5">
+                                                    <span :class="{
+                                                        'bg-success/5 text-success border-success/20': tx.type === 'income',
+                                                        'bg-danger/5 text-danger border-danger/20': tx.type === 'expense',
+                                                        'bg-info/5 text-info border-info/20': tx.type === 'transfer'
+                                                    }" class="border text-[8px] px-1 py-0.2 rounded-xs font-bold font-mono uppercase" x-text="tx.type"></span>
+                                                    <span class="font-medium text-text-main truncate" x-text="tx.description || 'No description'"></span>
+                                                </div>
+                                                <span class="text-[9px] text-text-subtle mt-0.5" x-text="tx.wallet_title + (tx.target_wallet_title ? ' → ' + tx.target_wallet_title : '') + ' • ' + tx.occurred_on"></span>
+                                            </div>
+                                            <span :class="{
+                                                'text-success': tx.type === 'income',
+                                                'text-danger': tx.type === 'expense',
+                                                'text-text-main': tx.type === 'transfer'
+                                            }" class="font-mono text-xs font-bold whitespace-nowrap ml-2">
+                                                <span x-text="(tx.type === 'income' ? '+' : (tx.type === 'expense' ? '-' : '')) + tx.amount.toFixed(2)"></span>
+                                                <span class="text-[8px] font-normal text-text-subtle" x-text="tx.currency"></span>
+                                            </span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </template>
@@ -334,7 +398,11 @@ window.projectsComponent = function(initialProjects) {
                 progress: 0,
                 tasks: [],
                 notes: [],
-                activity: []
+                activity: [],
+                financials: {
+                    wallets: [],
+                    transactions: []
+                }
             };
         },
 

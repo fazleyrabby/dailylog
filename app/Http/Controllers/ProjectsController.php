@@ -193,6 +193,69 @@ class ProjectsController extends Controller
         });
         $activity = array_slice($activity, 0, 5);
 
+        $wallets = Entry::query()
+            ->where('project_id', $project->id)
+            ->wallets()
+            ->active()
+            ->with(['walletDetails'])
+            ->get();
+
+        $calculatedWallets = $wallets->map(function (Entry $wallet) {
+            $initial = (float) ($wallet->walletDetails?->initial_balance ?? 0.0);
+
+            $incomeSum = (float) \App\Models\WalletTransaction::where('wallet_id', $wallet->id)
+                ->where('type', 'income')
+                ->sum('amount');
+
+            $expenseSum = (float) \App\Models\WalletTransaction::where('wallet_id', $wallet->id)
+                ->where('type', 'expense')
+                ->sum('amount');
+
+            $transfersOut = (float) \App\Models\WalletTransaction::where('wallet_id', $wallet->id)
+                ->where('type', 'transfer')
+                ->sum('amount');
+
+            $transfersIn = (float) \App\Models\WalletTransaction::where('target_wallet_id', $wallet->id)
+                ->where('type', 'transfer')
+                ->sum('amount');
+
+            $wallet->current_balance = $initial + $incomeSum - $expenseSum - $transfersOut + $transfersIn;
+            return $wallet;
+        });
+
+        $walletIds = $wallets->pluck('id')->toArray();
+        $transactions = [];
+        if (!empty($walletIds)) {
+            $transactions = \App\Models\WalletTransaction::query()
+                ->where(function($query) use ($walletIds) {
+                    $query->whereIn('wallet_id', $walletIds)
+                          ->orWhereIn('target_wallet_id', $walletIds);
+                })
+                ->with(['wallet.walletDetails', 'targetWallet.walletDetails'])
+                ->orderByDesc('occurred_on')
+                ->orderByDesc('created_at')
+                ->limit(10)
+                ->get()
+                ->map(fn ($tx) => [
+                    'id' => $tx->id,
+                    'type' => $tx->type,
+                    'occurred_on' => $tx->occurred_on->format('Y-m-d'),
+                    'amount' => (float) $tx->amount,
+                    'currency' => $tx->wallet?->walletDetails?->currency ?? 'BDT',
+                    'description' => $tx->description ?? '',
+                    'wallet_title' => $tx->wallet?->title ?? '',
+                    'target_wallet_title' => $tx->targetWallet?->title ?? '',
+                ])->toArray();
+        }
+
+        $walletsFormatted = $calculatedWallets->map(fn ($w) => [
+            'id' => $w->id,
+            'title' => $w->title,
+            'type' => $w->walletDetails?->type ?? 'cash',
+            'currency' => $w->walletDetails?->currency ?? 'BDT',
+            'balance' => (float) $w->current_balance,
+        ])->toArray();
+
         return [
             'id' => $project->id,
             'name' => $project->name,
@@ -207,6 +270,10 @@ class ProjectsController extends Controller
                 'updated' => $n['updated'],
             ])->toArray(),
             'activity' => $activity,
+            'financials' => [
+                'wallets' => $walletsFormatted,
+                'transactions' => $transactions,
+            ],
         ];
     }
 }
