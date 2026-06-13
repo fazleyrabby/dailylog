@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 
 #[Fillable([
     'user_id', 'type', 'title', 'body', 'body_format', 'status',
-    'project_id', 'pinned', 'captured_via', 'occurred_on', 'last_activity_at', 'archived_at',
+    'project_id', 'folder_id', 'pinned', 'captured_via', 'occurred_on', 'last_activity_at', 'archived_at',
 ])]
 class Entry extends Model
 {
@@ -58,6 +58,11 @@ class Entry extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function folder(): BelongsTo
+    {
+        return $this->belongsTo(Folder::class);
     }
 
     public function tags(): BelongsToMany

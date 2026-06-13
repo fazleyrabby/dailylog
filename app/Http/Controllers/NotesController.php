@@ -6,6 +6,7 @@ use App\Domains\Entries\Actions\UpdateEntry;
 use App\Enums\BodyFormat;
 use App\Enums\EntryType;
 use App\Models\Entry;
+use App\Models\Folder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -27,19 +28,35 @@ class NotesController extends Controller
 
         $formatted = $entries->map(fn (Entry $entry) => $this->formatNote($entry))->toArray();
 
+        $folders = Folder::query()
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Folder $folder) => [
+                'id' => $folder->id,
+                'name' => $folder->name,
+                'parent_id' => $folder->parent_id,
+            ])
+            ->toArray();
+
         return view('pages.notes', [
             'notes' => $formatted,
+            'folders' => $folders,
         ]);
     }
 
     public function store(Request $request): JsonResponse
     {
+        $validated = $request->validate([
+            'folder_id' => ['nullable', 'integer', 'exists:folders,id'],
+        ]);
+
         $entry = Entry::create([
             'type' => EntryType::Note,
             'title' => 'Untitled Note',
             'body' => '# Untitled Note\n\nStart writing notes in markdown here...',
             'body_format' => BodyFormat::Markdown,
             'status' => 'active',
+            'folder_id' => $validated['folder_id'] ?? null,
             'last_activity_at' => now(),
         ]);
 
@@ -62,6 +79,19 @@ class NotesController extends Controller
         ]);
     }
 
+    public function move(Request $request, Entry $entry): JsonResponse
+    {
+        $validated = $request->validate([
+            'folder_id' => ['nullable', 'integer', 'exists:folders,id'],
+        ]);
+
+        $entry->update(['folder_id' => $validated['folder_id'] ?? null]);
+
+        return response()->json([
+            'note' => $this->formatNote($entry->load(['tags', 'project', 'backlinks'])),
+        ]);
+    }
+
     public function destroy(Entry $entry): JsonResponse
     {
         $entry->update(['archived_at' => now()]);
@@ -75,6 +105,7 @@ class NotesController extends Controller
     {
         return [
             'id' => $entry->id,
+            'folder_id' => $entry->folder_id,
             'title' => $entry->title ?? 'Untitled Note',
             'body' => $entry->body ?? '',
             'tags' => $entry->tags->pluck('name')->toArray(),

@@ -9,6 +9,7 @@ use App\Http\Controllers\InboxController;
 use App\Http\Controllers\JournalController;
 use App\Http\Controllers\LabController;
 use App\Http\Controllers\LearningController;
+use App\Http\Controllers\FolderController;
 use App\Http\Controllers\NotesController;
 use App\Http\Controllers\Partials\SearchSuggestController;
 use App\Http\Controllers\Partials\TagAutocompleteController;
@@ -56,7 +57,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/notes', [NotesController::class, 'index'])->name('notes.index');
     Route::post('/notes', [NotesController::class, 'store'])->name('notes.store');
     Route::put('/notes/{entry}', [NotesController::class, 'update'])->name('notes.update');
+    Route::patch('/notes/{entry}/move', [NotesController::class, 'move'])->name('notes.move');
     Route::delete('/notes/{entry}', [NotesController::class, 'destroy'])->name('notes.destroy');
+
+    Route::post('/folders', [FolderController::class, 'store'])->name('folders.store');
+    Route::put('/folders/{folder}', [FolderController::class, 'update'])->name('folders.update');
+    Route::delete('/folders/{folder}', [FolderController::class, 'destroy'])->name('folders.destroy');
 
     Route::get('/journal', [JournalController::class, 'index'])->name('journal.index');
     Route::post('/journal', [JournalController::class, 'store'])->name('journal.store');

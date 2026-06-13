@@ -5,7 +5,7 @@
 
 @section('content')
 <div
-    x-data="Object.assign(notesComponent({{ json_encode($notes) }}), panelResizer({key:'notes', initial:320, min:240, max:600}))"
+    x-data="Object.assign(notesComponent({{ json_encode($notes) }}, {{ json_encode($folders) }}), panelResizer({key:'notes', initial:320, min:240, max:600}))"
     x-init="initPanelResizer()"
     class="h-[calc(100vh-100px)] flex flex-col md:flex-row overflow-hidden border border-border rounded-sm bg-surface select-none"
     :class="resizing ? 'cursor-col-resize' : ''"
@@ -23,6 +23,58 @@
             <x-ui.button variant="secondary" @click="createNote()" class="h-8 font-semibold select-none cursor-pointer">
                 + New
             </x-ui.button>
+        </div>
+
+        <!-- Folder list -->
+        <div class="border-b border-border bg-surface">
+            <div class="px-3 pt-2 pb-1 flex items-center justify-between">
+                <span class="text-[9px] font-bold uppercase tracking-wider text-text-subtle">Folders</span>
+                <button @click="createFolder()" class="text-text-subtle hover:text-accent text-xs cursor-pointer select-none" title="New folder">+ Folder</button>
+            </div>
+            <div class="pb-1.5">
+                <button
+                    @click="selectedFolderId = null"
+                    :class="selectedFolderId === null ? 'bg-accent/10 text-accent font-semibold' : 'text-text-muted hover:bg-surface-2/30'"
+                    class="w-full flex items-center justify-between px-3 py-1.5 text-xxs cursor-pointer select-none"
+                >
+                    <span>🗂 All Notes</span>
+                    <span class="font-mono text-text-subtle" x-text="notes.length"></span>
+                </button>
+                <button
+                    @click="selectedFolderId = 'none'"
+                    :class="selectedFolderId === 'none' ? 'bg-accent/10 text-accent font-semibold' : 'text-text-muted hover:bg-surface-2/30'"
+                    class="w-full flex items-center justify-between px-3 py-1.5 text-xxs cursor-pointer select-none"
+                >
+                    <span>📭 Unfiled</span>
+                    <span class="font-mono text-text-subtle" x-text="notes.filter(n => !n.folder_id).length"></span>
+                </button>
+                <template x-for="folder in folderTree" :key="folder.id">
+                    <div
+                        @click="folder.hasChildren ? toggleFolder(folder.id) : (selectedFolderId = folder.id)"
+                        :class="selectedFolderId === folder.id ? 'bg-accent/10 text-accent font-semibold' : 'text-text-muted hover:bg-surface-2/30'"
+                        class="group w-full flex items-center justify-between pr-3 py-1.5 text-xxs cursor-pointer select-none"
+                        :style="'padding-left:' + (12 + folder.depth * 14) + 'px'"
+                    >
+                        <span class="flex items-center min-w-0">
+                            <button
+                                x-show="folder.hasChildren"
+                                @click.stop="toggleFolder(folder.id)"
+                                class="mr-1 w-3 text-text-subtle hover:text-accent transition-transform"
+                                :class="expanded.includes(folder.id) ? 'rotate-90' : ''"
+                                title="Toggle"
+                            >▶</button>
+                            <span x-show="!folder.hasChildren" class="mr-1 w-3 inline-block"></span>
+                            <span class="truncate" @click.stop="selectedFolderId = folder.id" x-text="(expanded.includes(folder.id) ? '📂 ' : '📁 ') + folder.name"></span>
+                        </span>
+                        <span class="flex items-center space-x-1.5 flex-shrink-0">
+                            <span class="font-mono text-text-subtle" x-text="notesInFolder(folder.id)"></span>
+                            <button @click.stop="createFolder(folder.id)" class="opacity-0 group-hover:opacity-100 hover:text-accent" title="New subfolder">＋</button>
+                            <button @click.stop="renameFolder(folder)" class="opacity-0 group-hover:opacity-100 hover:text-accent" title="Rename">✎</button>
+                            <button @click.stop="deleteFolder(folder)" class="opacity-0 group-hover:opacity-100 hover:text-danger" title="Delete">✕</button>
+                        </span>
+                    </div>
+                </template>
+            </div>
         </div>
 
         <!-- Tag chips filter list -->
@@ -83,6 +135,17 @@
         <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between">
             <div class="flex items-center space-x-2">
                 <span class="text-[10px] font-mono bg-surface border border-border text-text-muted px-1.5 py-0.5 rounded-sm" x-text="'@' + activeNote.project"></span>
+                <template x-if="activeNote.id">
+                    <select
+                        @change="moveNote(activeNote.id, $event.target.value)"
+                        class="text-[10px] font-mono bg-surface border border-border text-text-muted px-1.5 py-0.5 rounded-sm focus:ring-0 focus:outline-none cursor-pointer"
+                    >
+                        <option value="" :selected="!activeNote.folder_id">📭 Unfiled</option>
+                        <template x-for="folder in folderTree" :key="folder.id">
+                            <option :value="folder.id" :selected="activeNote.folder_id === folder.id" x-text="'　'.repeat(folder.depth) + '📁 ' + folder.name"></option>
+                        </template>
+                    </select>
+                </template>
                 <span class="text-xxs text-text-subtle" x-show="activeNote.id">Saved</span>
             </div>
             
@@ -160,14 +223,71 @@
 </div>
 
 <script>
-window.notesComponent = function(initialNotes) {
+window.notesComponent = function(initialNotes, initialFolders) {
     return {
         searchQuery: '',
         selectedTag: '',
+        selectedFolderId: null,
         selectedNoteId: initialNotes.length > 0 ? initialNotes[0].id : null,
         editMode: false,
 
         notes: initialNotes,
+        folders: initialFolders || [],
+        expanded: [],
+
+        get csrfHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            };
+        },
+
+        // Folders grouped by parent, each child list name-sorted.
+        get foldersByParent() {
+            const byParent = {};
+            this.folders.forEach(f => {
+                const key = (f.parent_id == null) ? 'root' : f.parent_id;
+                (byParent[key] = byParent[key] || []).push(f);
+            });
+            Object.values(byParent).forEach(arr => arr.sort((a, b) => a.name.localeCompare(b.name)));
+            return byParent;
+        },
+
+        // Flattened tree in display order, skipping descendants of collapsed parents.
+        get folderTree() {
+            const byParent = this.foldersByParent;
+            const out = [];
+            const walk = (key, depth) => {
+                (byParent[key] || []).forEach(f => {
+                    const hasChildren = !!(byParent[f.id] && byParent[f.id].length);
+                    out.push({ ...f, depth, hasChildren });
+                    if (hasChildren && this.expanded.includes(f.id)) walk(f.id, depth + 1);
+                });
+            };
+            walk('root', 0);
+            return out;
+        },
+
+        descendantIds(id) {
+            const byParent = this.foldersByParent;
+            const ids = [];
+            const walk = (k) => (byParent[k] || []).forEach(f => { ids.push(f.id); walk(f.id); });
+            walk(id);
+            return ids;
+        },
+
+        // Note count for a folder including all its subfolders.
+        notesInFolder(id) {
+            const ids = new Set([id, ...this.descendantIds(id)]);
+            return this.notes.filter(n => ids.has(n.folder_id)).length;
+        },
+
+        toggleFolder(id) {
+            const i = this.expanded.indexOf(id);
+            if (i === -1) this.expanded.push(id);
+            else this.expanded.splice(i, 1);
+        },
 
         get allTags() {
             const tags = new Set();
@@ -179,16 +299,26 @@ window.notesComponent = function(initialNotes) {
 
         get filteredNotes() {
             return this.notes.filter(n => {
-                let matchesSearch = n.title.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
+                let matchesSearch = n.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
                                     (n.body && n.body.toLowerCase().includes(this.searchQuery.toLowerCase()));
                 let matchesTag = this.selectedTag === '' || (n.tags && n.tags.includes(this.selectedTag));
-                return matchesSearch && matchesTag;
+                let matchesFolder;
+                if (this.selectedFolderId === null) {
+                    matchesFolder = true;
+                } else if (this.selectedFolderId === 'none') {
+                    matchesFolder = !n.folder_id;
+                } else {
+                    const ids = new Set([this.selectedFolderId, ...this.descendantIds(this.selectedFolderId)]);
+                    matchesFolder = ids.has(n.folder_id);
+                }
+                return matchesSearch && matchesTag && matchesFolder;
             });
         },
 
         get activeNote() {
             return this.notes.find(n => n.id === this.selectedNoteId) || {
                 id: null,
+                folder_id: null,
                 title: 'No note selected',
                 body: 'Start creating notes...',
                 tags: [],
@@ -229,13 +359,13 @@ window.notesComponent = function(initialNotes) {
         },
 
         createNote() {
+            // New note lands in the currently-selected folder (if a real one is active).
+            const folderId = (typeof this.selectedFolderId === 'number') ? this.selectedFolderId : null;
+
             fetch('/notes', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                }
+                headers: this.csrfHeaders,
+                body: JSON.stringify({ folder_id: folderId })
             })
             .then(res => res.json())
             .then(data => {
@@ -243,6 +373,90 @@ window.notesComponent = function(initialNotes) {
                     this.notes.unshift(data.note);
                     this.selectedNoteId = data.note.id;
                     this.editMode = true;
+                }
+            });
+        },
+
+        moveNote(id, folderId) {
+            const fid = folderId === '' ? null : parseInt(folderId, 10);
+
+            fetch(`/notes/${id}/move`, {
+                method: 'PATCH',
+                headers: this.csrfHeaders,
+                body: JSON.stringify({ folder_id: fid })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.note) {
+                    let index = this.notes.findIndex(n => n.id === data.note.id);
+                    if (index !== -1) this.notes[index] = data.note;
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { message: 'Note moved' }
+                    }));
+                }
+            });
+        },
+
+        createFolder(parentId = null) {
+            const name = prompt(parentId ? 'Subfolder name:' : 'Folder name:');
+            if (!name || !name.trim()) return;
+
+            fetch('/folders', {
+                method: 'POST',
+                headers: this.csrfHeaders,
+                body: JSON.stringify({ name: name.trim(), parent_id: parentId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.folder) {
+                    this.folders.push(data.folder);
+                    if (parentId && !this.expanded.includes(parentId)) this.expanded.push(parentId);
+                    this.selectedFolderId = data.folder.id;
+                }
+            });
+        },
+
+        renameFolder(folder) {
+            const name = prompt('Rename folder:', folder.name);
+            if (!name || !name.trim() || name.trim() === folder.name) return;
+
+            fetch(`/folders/${folder.id}`, {
+                method: 'PUT',
+                headers: this.csrfHeaders,
+                body: JSON.stringify({ name: name.trim() })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.folder) {
+                    let index = this.folders.findIndex(f => f.id === data.folder.id);
+                    if (index !== -1) this.folders[index] = data.folder;
+                    this.folders.sort((a, b) => a.name.localeCompare(b.name));
+                }
+            });
+        },
+
+        deleteFolder(folder) {
+            const kids = this.descendantIds(folder.id);
+            const msg = kids.length
+                ? `Delete "${folder.name}" and its ${kids.length} subfolder(s)? Notes inside become Unfiled.`
+                : `Delete folder "${folder.name}"? Notes inside become Unfiled.`;
+            if (!confirm(msg)) return;
+
+            fetch(`/folders/${folder.id}`, {
+                method: 'DELETE',
+                headers: this.csrfHeaders
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const gone = new Set([folder.id, ...kids]);
+                    this.folders = this.folders.filter(f => !gone.has(f.id));
+                    this.expanded = this.expanded.filter(id => !gone.has(id));
+                    this.notes.forEach(n => { if (gone.has(n.folder_id)) n.folder_id = null; });
+                    if (gone.has(this.selectedFolderId)) this.selectedFolderId = null;
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { message: 'Folder deleted' }
+                    }));
                 }
             });
         },
