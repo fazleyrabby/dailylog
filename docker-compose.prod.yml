@@ -29,7 +29,7 @@ services:
     image: cloudflare/cloudflared:latest
     container_name: dailylog_prod_tunnel
     restart: unless-stopped
-    command: tunnel --no-autoupdate run
+    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
     environment:
       - TUNNEL_TOKEN=${TUNNEL_TOKEN}
     depends_on:
