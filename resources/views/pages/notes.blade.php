@@ -62,6 +62,12 @@
 .editor-statusbar {
     display: none !important;
 }
+/* Enable text selection inside the editor and preview panels, overriding parent select-none */
+.CodeMirror, .CodeMirror *, .CodeMirror-scroll, .CodeMirror-lines, .CodeMirror-line, .CodeMirror-line *,
+.prose, .prose * {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+}
 </style>
 <div
     x-data="notesComponent({{ json_encode($notes) }}, {{ json_encode($folders) }})"
