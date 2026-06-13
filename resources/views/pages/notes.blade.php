@@ -6,13 +6,17 @@
 
 @section('content')
 <div
-    x-data="Object.assign(notesComponent({{ json_encode($notes) }}, {{ json_encode($folders) }}), panelResizer({key:'notes_list', initial:280, min:200, max:500}))"
-    x-init="initPanelResizer()"
+    x-data="notesComponent({{ json_encode($notes) }}, {{ json_encode($folders) }})"
+    x-init="initMobile()"
     class="h-[calc(100vh-48px)] flex flex-row overflow-hidden bg-surface select-none"
-    :class="resizing ? 'cursor-col-resize' : ''"
+    :class="(resizingFolder || resizingNotes) ? 'cursor-col-resize' : ''"
 >
     <!-- PANEL 1: FOLDERS & TAGS SIDEBAR -->
-    <div class="w-60 flex-shrink-0 flex flex-col bg-surface-2/10 border-r border-border h-full">
+    <div 
+        x-show="!isMobile || mobileView === 'folders'"
+        :style="isMobile ? 'width: 100%' : 'width:' + folderPanelWidth + 'px'"
+        class="flex-shrink-0 flex flex-col bg-surface-2/10 border-r border-border h-full"
+    >
         <!-- Folders title and action -->
         <div class="px-4 pt-3.5 pb-1 flex items-center justify-between">
             <span class="text-[9px] font-bold uppercase tracking-wider text-text-subtle">Folders</span>
@@ -22,7 +26,9 @@
         <!-- Folders List -->
         <div class="flex-grow overflow-y-auto pb-4">
             <button
-                @click="selectedFolderId = null"
+                @click="selectedFolderId = null; if (isMobile) mobileView = 'notes';"
+                @dragover.prevent
+                @drop="handleDrop($event, 'none')"
                 :class="selectedFolderId === null ? 'bg-accent/10 text-accent font-semibold' : 'text-text-muted hover:bg-surface-2/30'"
                 class="w-full flex items-center justify-between px-3 py-1.5 text-xxs cursor-pointer select-none"
             >
@@ -35,7 +41,9 @@
                 <span class="font-mono text-text-subtle" x-text="notes.length"></span>
             </button>
             <button
-                @click="selectedFolderId = 'none'"
+                @click="selectedFolderId = 'none'; if (isMobile) mobileView = 'notes';"
+                @dragover.prevent
+                @drop="handleDrop($event, 'none')"
                 :class="selectedFolderId === 'none' ? 'bg-accent/10 text-accent font-semibold' : 'text-text-muted hover:bg-surface-2/30'"
                 class="w-full flex items-center justify-between px-3 py-1.5 text-xxs cursor-pointer select-none"
             >
@@ -49,9 +57,14 @@
             </button>
             <template x-for="folder in folderTree" :key="folder.id">
                 <div
-                    @click="folder.hasChildren ? toggleFolder(folder.id) : (selectedFolderId = folder.id)"
+                    draggable="true"
+                    @dragstart="handleDragStart($event, 'folder', folder.id)"
+                    @dragend="handleDragEnd($event)"
+                    @dragover.prevent
+                    @drop="handleDrop($event, folder.id)"
+                    @click="folder.hasChildren ? toggleFolder(folder.id) : (selectedFolderId = folder.id; if (isMobile) mobileView = 'notes';)"
                     :class="selectedFolderId === folder.id ? 'bg-accent/10 text-accent font-semibold' : 'text-text-muted hover:bg-surface-2/30'"
-                    class="group w-full flex items-center justify-between pr-3 py-1.5 text-xxs cursor-pointer select-none"
+                    class="group w-full flex items-center justify-between pr-3 py-1.5 text-xxs cursor-pointer select-none border-b border-border/10"
                     :style="'padding-left:' + (12 + folder.depth * 14) + 'px'"
                 >
                     <span class="flex items-center min-w-0">
@@ -67,7 +80,7 @@
                             </svg>
                         </button>
                         <span x-show="!folder.hasChildren" class="mr-1 w-3.5 inline-block"></span>
-                        <span class="truncate flex items-center" @click.stop="selectedFolderId = folder.id">
+                        <span class="truncate flex items-center" @click.stop="selectedFolderId = folder.id; if (isMobile) mobileView = 'notes';">
                             <!-- Closed Folder SVG (when not expanded) -->
                             <svg class="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-text-subtle group-hover:text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" x-show="!expanded.includes(folder.id)">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
@@ -94,7 +107,7 @@
             <span class="text-[9px] font-bold uppercase tracking-wider text-text-subtle block mb-2 font-mono">Tags</span>
             <div class="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
                 <button 
-                    @click="selectedTag = ''" 
+                    @click="selectedTag = ''; if (isMobile) mobileView = 'notes';" 
                     :class="selectedTag === '' ? 'bg-accent/15 border-accent/20 text-accent font-semibold' : 'bg-surface border-border text-text-muted hover:text-text-main'"
                     class="px-2 py-0.5 rounded-full text-xxs border cursor-pointer select-none"
                 >
@@ -102,7 +115,7 @@
                 </button>
                 <template x-for="tag in allTags" :key="tag">
                     <button 
-                        @click="selectedTag = tag" 
+                        @click="selectedTag = tag; if (isMobile) mobileView = 'notes';" 
                         :class="selectedTag === tag ? 'bg-accent/15 border-accent/20 text-accent font-semibold' : 'bg-surface border-border text-text-muted hover:text-text-main'"
                         class="px-2 py-0.5 rounded-full text-xxs border cursor-pointer select-none"
                     >
@@ -113,13 +126,34 @@
         </div>
     </div>
 
+    <!-- DRAG HANDLE RESIZER FOR FOLDER SIDEBAR -->
+    <div
+        x-show="!isMobile"
+        @mousedown="startFolderResize($event)"
+        class="hidden md:flex w-1.5 flex-shrink-0 h-full z-10 cursor-col-resize items-center justify-center group"
+    >
+        <div class="w-[1px] h-full bg-border group-hover:bg-accent transition-colors duration-150"></div>
+    </div>
+
     <!-- PANEL 2: NOTES LIST -->
     <div
-        :style="isMobile ? '' : 'width:' + panelWidth + 'px'"
+        x-show="!isMobile || mobileView === 'notes'"
+        :style="isMobile ? 'width: 100%' : 'width:' + notesPanelWidth + 'px'"
         class="flex-shrink-0 flex flex-col bg-surface select-text border-r border-border h-full"
     >
         <!-- Search bar -->
         <div class="p-3 border-b border-border flex items-center space-x-2 bg-surface">
+            <!-- Mobile back button to Folders -->
+            <button 
+                x-show="isMobile" 
+                @click="mobileView = 'folders'" 
+                class="mr-1 text-text-subtle hover:text-accent focus:outline-none flex items-center space-x-0.5 text-xxs font-semibold"
+            >
+                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+                <span>Folders</span>
+            </button>
             <div class="flex-grow">
                 <x-ui.search-input x-model="searchQuery" placeholder="Search notes..." />
             </div>
@@ -138,7 +172,10 @@
                     <div class="divide-y divide-border/20">
                         <template x-for="note in group.notes" :key="note.id">
                             <div 
-                                @click="selectedNoteId = note.id; editMode = false"
+                                draggable="true"
+                                @dragstart="handleDragStart($event, 'note', note.id)"
+                                @dragend="handleDragEnd($event)"
+                                @click="selectedNoteId = note.id; editMode = false; if (isMobile) mobileView = 'editor';"
                                 :class="selectedNoteId === note.id ? 'bg-accent/10 text-text-main border-l-2 border-l-accent' : 'text-text-muted hover:bg-surface-2/20 border-l-2 border-l-transparent'"
                                 class="p-3 cursor-pointer flex flex-col transition-all"
                             >
@@ -164,18 +201,33 @@
 
     <!-- DRAG HANDLE RESIZER -->
     <div
-        @mousedown="startPanelResize($event)"
+        x-show="!isMobile"
+        @mousedown="startNotesResize($event)"
         class="hidden md:flex w-1.5 flex-shrink-0 h-full z-10 cursor-col-resize items-center justify-center group"
     >
         <div class="w-[1px] h-full bg-border group-hover:bg-accent transition-colors duration-150"></div>
     </div>
 
     <!-- PANEL 3: EDITOR / PREVIEW CANVAS -->
-    <div class="flex-grow flex flex-col h-full bg-surface overflow-hidden select-text min-w-0">
-        
+    <div 
+        x-show="!isMobile || mobileView === 'editor'"
+        class="flex-grow flex flex-col h-full bg-surface overflow-hidden select-text min-w-0"
+    >
         <!-- Editor Controls Header -->
         <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between">
             <div class="flex items-center space-x-2">
+                <!-- Mobile back button to Notes -->
+                <button 
+                    x-show="isMobile" 
+                    @click="mobileView = 'notes'" 
+                    class="mr-1 text-text-subtle hover:text-accent focus:outline-none flex items-center space-x-0.5 text-xxs font-semibold"
+                >
+                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span>Notes</span>
+                </button>
+                
                 <span class="text-[10px] font-mono bg-surface border border-border text-text-muted px-1.5 py-0.5 rounded-sm" x-text="'@' + activeNote.project"></span>
                 <template x-if="activeNote.id">
                     <select
@@ -184,7 +236,7 @@
                     >
                         <option value="" :selected="!activeNote.folder_id">Unfiled</option>
                         <template x-for="folder in folderTree" :key="folder.id">
-                            <option :value="folder.id" :selected="activeNote.folder_id === folder.id" x-text="'  '.repeat(folder.depth) + '├─ ' + folder.name"></option>
+                            <option :value="folder.id" :selected="activeNote.folder_id === folder.id" x-text="' '.repeat(folder.depth * 2) + '├─ ' + folder.name"></option>
                         </template>
                     </select>
                 </template>
@@ -273,9 +325,84 @@ window.notesComponent = function(initialNotes, initialFolders) {
         selectedNoteId: initialNotes.length > 0 ? initialNotes[0].id : null,
         editMode: false,
 
+        folderPanelWidth: (() => {
+            const stored = parseInt(localStorage.getItem('panel-w-notes_folders'), 10);
+            return !isNaN(stored) ? Math.max(180, Math.min(400, stored)) : 240;
+        })(),
+        notesPanelWidth: (() => {
+            const stored = parseInt(localStorage.getItem('panel-w-notes_list'), 10);
+            return !isNaN(stored) ? Math.max(200, Math.min(500, stored)) : 280;
+        })(),
+        resizingFolder: false,
+        resizingNotes: false,
+
         notes: initialNotes,
         folders: initialFolders || [],
         expanded: [],
+
+        // Mobile Responsive state
+        isMobile: window.innerWidth < 768,
+        mobileView: 'folders', // 'folders', 'notes', 'editor'
+
+        startFolderResize(event) {
+            if (this.isMobile) return;
+            event.preventDefault();
+
+            this.resizingFolder = true;
+            document.body.style.cursor    = 'col-resize';
+            document.body.style.userSelect = 'none';
+
+            const startX     = event.clientX;
+            const startWidth = this.folderPanelWidth;
+
+            const move = (e) => {
+                if (!this.resizingFolder) return;
+                const cap = Math.min(400, Math.floor(window.innerWidth * 0.4));
+                this.folderPanelWidth = Math.max(180, Math.min(cap, startWidth + (e.clientX - startX)));
+            };
+
+            const up = () => {
+                this.resizingFolder = false;
+                document.body.style.cursor    = '';
+                document.body.style.userSelect = '';
+                try { localStorage.setItem('panel-w-notes_folders', this.folderPanelWidth); } catch (_) {}
+                document.removeEventListener('mousemove', move);
+                document.removeEventListener('mouseup',   up);
+            };
+
+            document.addEventListener('mousemove', move);
+            document.addEventListener('mouseup',   up);
+        },
+
+        startNotesResize(event) {
+            if (this.isMobile) return;
+            event.preventDefault();
+
+            this.resizingNotes = true;
+            document.body.style.cursor    = 'col-resize';
+            document.body.style.userSelect = 'none';
+
+            const startX     = event.clientX;
+            const startWidth = this.notesPanelWidth;
+
+            const move = (e) => {
+                if (!this.resizingNotes) return;
+                const cap = Math.min(500, Math.floor(window.innerWidth * 0.5));
+                this.notesPanelWidth = Math.max(200, Math.min(cap, startWidth + (e.clientX - startX)));
+            };
+
+            const up = () => {
+                this.resizingNotes = false;
+                document.body.style.cursor    = '';
+                document.body.style.userSelect = '';
+                try { localStorage.setItem('panel-w-notes_list', this.notesPanelWidth); } catch (_) {}
+                document.removeEventListener('mousemove', move);
+                document.removeEventListener('mouseup',   up);
+            };
+
+            document.addEventListener('mousemove', move);
+            document.addEventListener('mouseup',   up);
+        },
 
         get csrfHeaders() {
             return {
@@ -283,6 +410,76 @@ window.notesComponent = function(initialNotes, initialFolders) {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 'Accept': 'application/json'
             };
+        },
+
+        initMobile() {
+            window.addEventListener('resize', () => {
+                this.isMobile = window.innerWidth < 768;
+            });
+            // Auto open first note on desktop
+            if (!this.isMobile && this.selectedNoteId === null && this.notes.length > 0) {
+                this.selectedNoteId = this.notes[0].id;
+            }
+        },
+
+        // HTML5 Drag & Drop handlers
+        handleDragStart(e, type, id) {
+            e.dataTransfer.setData('text/plain', `${type}:${id}`);
+            e.target.style.opacity = '0.4';
+        },
+
+        handleDragEnd(e) {
+            e.target.style.opacity = '1';
+        },
+
+        handleDrop(e, targetFolderId) {
+            e.preventDefault();
+            const data = e.dataTransfer.getData('text/plain');
+            if (!data) return;
+
+            const [type, idStr] = data.split(':');
+            const id = parseInt(idStr, 10);
+            
+            const folderIdVal = targetFolderId === 'none' ? null : parseInt(targetFolderId, 10);
+
+            if (type === 'note') {
+                this.moveNote(id, folderIdVal);
+            } else if (type === 'folder') {
+                if (id === folderIdVal) return;
+                // Avoid recursive loops: can't move parent into its own child
+                if (folderIdVal && this.descendantIds(id).includes(folderIdVal)) {
+                    alert('Cannot move a folder into its own subfolder.');
+                    return;
+                }
+                this.moveFolder(id, folderIdVal);
+            }
+        },
+
+        moveFolder(id, parentId) {
+            const folder = this.folders.find(f => f.id === id);
+            if (!folder) return;
+
+            fetch(`/folders/${id}`, {
+                method: 'PUT',
+                headers: this.csrfHeaders,
+                body: JSON.stringify({
+                    name: folder.name,
+                    parent_id: parentId
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.folder) {
+                    let index = this.folders.findIndex(f => f.id === data.folder.id);
+                    if (index !== -1) {
+                        this.folders[index] = data.folder;
+                    }
+                    this.folders.sort((a, b) => a.name.localeCompare(b.name));
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { message: 'Folder structure updated' }
+                    }));
+                }
+            });
         },
 
         // Group notes in list by month
@@ -416,7 +613,6 @@ window.notesComponent = function(initialNotes, initialFolders) {
         },
 
         createNote() {
-            // New note lands in the currently-selected folder (if a real one is active).
             const folderId = (typeof this.selectedFolderId === 'number') ? this.selectedFolderId : null;
 
             fetch('/notes', {
@@ -430,17 +626,16 @@ window.notesComponent = function(initialNotes, initialFolders) {
                     this.notes.unshift(data.note);
                     this.selectedNoteId = data.note.id;
                     this.editMode = true;
+                    if (this.isMobile) this.mobileView = 'editor';
                 }
             });
         },
 
         moveNote(id, folderId) {
-            const fid = folderId === '' ? null : parseInt(folderId, 10);
-
             fetch(`/notes/${id}/move`, {
                 method: 'PATCH',
                 headers: this.csrfHeaders,
-                body: JSON.stringify({ folder_id: fid })
+                body: JSON.stringify({ folder_id: folderId })
             })
             .then(res => res.json())
             .then(data => {
@@ -480,7 +675,7 @@ window.notesComponent = function(initialNotes, initialFolders) {
             fetch(`/folders/${folder.id}`, {
                 method: 'PUT',
                 headers: this.csrfHeaders,
-                body: JSON.stringify({ name: name.trim() })
+                body: JSON.stringify({ name: name.trim(), parent_id: folder.parent_id })
             })
             .then(res => res.json())
             .then(data => {
@@ -538,6 +733,7 @@ window.notesComponent = function(initialNotes, initialFolders) {
                     window.dispatchEvent(new CustomEvent('show-toast', { 
                         detail: { message: 'Note archived successfully' }
                     }));
+                    if (this.isMobile) this.mobileView = 'notes';
                 }
             });
         }

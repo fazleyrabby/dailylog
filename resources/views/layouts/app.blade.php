@@ -373,7 +373,7 @@
             </header>
             
             <!-- PAGE CONTENT CONTAINER -->
-            <div class="flex-grow overflow-y-auto p-3 md:p-6 relative">
+            <div class="flex-grow overflow-y-auto @yield('content_padding', 'p-3 md:p-6') relative">
                 @yield('content')
             </div>
             

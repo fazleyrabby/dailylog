@@ -111,6 +111,7 @@ class NotesController extends Controller
             'tags' => $entry->tags->pluck('name')->toArray(),
             'project' => $entry->project?->name ?? 'None',
             'updated' => $entry->updated_at ? $entry->updated_at->diffForHumans() : 'Just now',
+            'month' => $entry->updated_at ? $entry->updated_at->format('F Y') : 'Drafts',
             'backlinks' => $entry->backlinks->pluck('title')->toArray(),
         ];
     }
