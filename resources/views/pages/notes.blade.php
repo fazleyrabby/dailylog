@@ -5,6 +5,64 @@
 @section('content_padding', 'p-0')
 
 @section('content')
+<!-- EasyMDE editor assets -->
+<link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+<script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+
+<style>
+/* Theme overrides for EasyMDE to match DailyLOG modern dark/light system */
+.EasyMDEContainer {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    border: none !important;
+    height: calc(100% - 40px);
+}
+.editor-toolbar {
+    background: var(--color-surface-2) !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: 4px 4px 0 0 !important;
+    opacity: 0.95;
+    padding: 4px 8px !important;
+}
+.editor-toolbar button {
+    color: var(--color-text-muted) !important;
+    border-radius: 4px !important;
+    transition: all 0.15s ease !important;
+    background: transparent !important;
+    border: none !important;
+}
+.editor-toolbar button:hover, .editor-toolbar button.active {
+    background: var(--color-surface-3) !important;
+    color: var(--color-accent) !important;
+}
+.editor-toolbar i.separator {
+    border-left: 1px solid var(--color-border) !important;
+}
+.CodeMirror {
+    flex-grow: 1;
+    background: var(--color-surface) !important;
+    color: var(--color-text-main) !important;
+    border: 1px solid var(--color-border) !important;
+    border-top: none !important;
+    border-radius: 0 0 4px 4px !important;
+    font-family: var(--font-serif-reading) !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+}
+.CodeMirror-scroll {
+    min-height: 250px;
+}
+.CodeMirror-cursor {
+    border-left: 2px solid var(--color-accent) !important;
+}
+.CodeMirror-selected {
+    background: rgba(var(--color-accent-rgb), 0.2) !important;
+}
+.editor-statusbar {
+    display: none !important;
+}
+</style>
 <div
     x-data="notesComponent({{ json_encode($notes) }}, {{ json_encode($folders) }})"
     x-init="initMobile()"
@@ -276,9 +334,8 @@
                     placeholder="Note title"
                 />
                 <textarea 
-                    x-model="activeNote.body" 
-                    class="w-full flex-grow bg-transparent border-0 text-base font-serif-reading leading-relaxed focus:ring-0 focus:outline-none resize-none text-text-main"
-                    placeholder="Write in markdown... [[link-note]] or #tag"
+                    x-ref="noteBodyEditor"
+                    class="hidden"
                 ></textarea>
             </div>
 
@@ -337,6 +394,7 @@ window.notesComponent = function(initialNotes, initialFolders) {
         })(),
         resizingFolder: false,
         resizingNotes: false,
+        easymde: null,
 
         notes: initialNotes,
         folders: initialFolders || [],
@@ -422,6 +480,47 @@ window.notesComponent = function(initialNotes, initialFolders) {
             if (!this.isMobile && this.selectedNoteId === null && this.notes.length > 0) {
                 this.selectedNoteId = this.notes[0].id;
             }
+
+            // Initialize EasyMDE Editor
+            this.$nextTick(() => {
+                this.easymde = new EasyMDE({
+                    element: this.$refs.noteBodyEditor,
+                    spellChecker: false,
+                    autosave: { enabled: false },
+                    status: false,
+                    placeholder: "Write in markdown... (supports bold, headings, links, lists, etc.)",
+                    toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen"],
+                    nativeSpellcheck: true
+                });
+
+                // Sync EasyMDE changes to Alpine state
+                this.easymde.codemirror.on("change", () => {
+                    this.activeNote.body = this.easymde.value();
+                });
+
+                // Set initial value
+                if (this.activeNote && this.activeNote.id) {
+                    this.easymde.value(this.activeNote.body || "");
+                }
+            });
+
+            // Watch for note selection changes
+            this.$watch('selectedNoteId', (newId) => {
+                if (this.easymde) {
+                    const note = this.notes.find(n => n.id === newId);
+                    this.easymde.value(note ? (note.body || "") : "");
+                }
+            });
+
+            // Watch for editMode toggles to refresh layout
+            this.$watch('editMode', (val) => {
+                if (val && this.easymde) {
+                    this.$nextTick(() => {
+                        this.easymde.codemirror.refresh();
+                        this.easymde.codemirror.focus();
+                    });
+                }
+            });
         },
 
         // HTML5 Drag & Drop handlers
