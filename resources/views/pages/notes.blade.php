@@ -33,6 +33,7 @@
                 class="w-full flex items-center justify-between px-3 py-1.5 text-xxs cursor-pointer select-none"
             >
                 <span class="flex items-center min-w-0">
+                    <span class="mr-1 w-3.5 inline-block"></span>
                     <svg class="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
                     </svg>
@@ -48,6 +49,7 @@
                 class="w-full flex items-center justify-between px-3 py-1.5 text-xxs cursor-pointer select-none"
             >
                 <span class="flex items-center min-w-0">
+                    <span class="mr-1 w-3.5 inline-block"></span>
                     <svg class="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0l-2.586 2.586a1 1 0 01-.707.293H7.293a1 1 0 01-.707-.293L4 13" />
                     </svg>
