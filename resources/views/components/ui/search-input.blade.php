@@ -13,7 +13,7 @@
     
     <input 
         x-ref="searchInput"
-        x-model="query"
+        @input="query = $event.target.value"
         type="text" 
         name="{{ $name }}"
         placeholder="{{ $placeholder }}"
@@ -35,7 +35,7 @@
         <button 
             type="button"
             x-show="query !== ''" 
-            @click="query = ''; $refs.searchInput.value = ''; $dispatch('clear-search');" 
+            @click="query = ''; $refs.searchInput.value = ''; $refs.searchInput.dispatchEvent(new Event('input')); $dispatch('clear-search');" 
             class="text-text-subtle hover:text-text-main focus:outline-none"
             style="display: none;"
         >
