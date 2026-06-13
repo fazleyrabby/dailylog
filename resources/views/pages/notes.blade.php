@@ -2,21 +2,124 @@
 
 @section('title', 'Notes')
 @section('header_breadcrumbs', 'DAILYLOG // NOTES')
+@section('content_padding', 'p-0')
 
 @section('content')
 <div
-    x-data="Object.assign(notesComponent({{ json_encode($notes) }}, {{ json_encode($folders) }}), panelResizer({key:'notes', initial:320, min:240, max:600}))"
+    x-data="Object.assign(notesComponent({{ json_encode($notes) }}, {{ json_encode($folders) }}), panelResizer({key:'notes_list', initial:280, min:200, max:500}))"
     x-init="initPanelResizer()"
-    class="h-[calc(100vh-100px)] flex flex-col md:flex-row overflow-hidden border border-border rounded-sm bg-surface select-none"
+    class="h-[calc(100vh-48px)] flex flex-row overflow-hidden bg-surface select-none"
     :class="resizing ? 'cursor-col-resize' : ''"
 >
-    <!-- LEFT SIDEBAR: Lists & Search -->
+    <!-- PANEL 1: FOLDERS & TAGS SIDEBAR -->
+    <div class="w-60 flex-shrink-0 flex flex-col bg-surface-2/10 border-r border-border h-full">
+        <!-- Folders title and action -->
+        <div class="px-4 pt-3.5 pb-1 flex items-center justify-between">
+            <span class="text-[9px] font-bold uppercase tracking-wider text-text-subtle">Folders</span>
+            <button @click="createFolder()" class="text-text-subtle hover:text-accent text-xs cursor-pointer select-none font-semibold" title="New folder">+ Folder</button>
+        </div>
+        
+        <!-- Folders List -->
+        <div class="flex-grow overflow-y-auto pb-4">
+            <button
+                @click="selectedFolderId = null"
+                :class="selectedFolderId === null ? 'bg-accent/10 text-accent font-semibold' : 'text-text-muted hover:bg-surface-2/30'"
+                class="w-full flex items-center justify-between px-3 py-1.5 text-xxs cursor-pointer select-none"
+            >
+                <span class="flex items-center min-w-0">
+                    <svg class="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                    </svg>
+                    <span>All Notes</span>
+                </span>
+                <span class="font-mono text-text-subtle" x-text="notes.length"></span>
+            </button>
+            <button
+                @click="selectedFolderId = 'none'"
+                :class="selectedFolderId === 'none' ? 'bg-accent/10 text-accent font-semibold' : 'text-text-muted hover:bg-surface-2/30'"
+                class="w-full flex items-center justify-between px-3 py-1.5 text-xxs cursor-pointer select-none"
+            >
+                <span class="flex items-center min-w-0">
+                    <svg class="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0l-2.586 2.586a1 1 0 01-.707.293H7.293a1 1 0 01-.707-.293L4 13" />
+                    </svg>
+                    <span>Unfiled</span>
+                </span>
+                <span class="font-mono text-text-subtle" x-text="notes.filter(n => !n.folder_id).length"></span>
+            </button>
+            <template x-for="folder in folderTree" :key="folder.id">
+                <div
+                    @click="folder.hasChildren ? toggleFolder(folder.id) : (selectedFolderId = folder.id)"
+                    :class="selectedFolderId === folder.id ? 'bg-accent/10 text-accent font-semibold' : 'text-text-muted hover:bg-surface-2/30'"
+                    class="group w-full flex items-center justify-between pr-3 py-1.5 text-xxs cursor-pointer select-none"
+                    :style="'padding-left:' + (12 + folder.depth * 14) + 'px'"
+                >
+                    <span class="flex items-center min-w-0">
+                        <button
+                            x-show="folder.hasChildren"
+                            @click.stop="toggleFolder(folder.id)"
+                            class="mr-1 w-3.5 h-3.5 flex items-center justify-center text-text-subtle hover:text-accent transition-transform duration-150"
+                            :class="expanded.includes(folder.id) ? 'rotate-90' : ''"
+                            title="Toggle"
+                        >
+                            <svg class="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                        <span x-show="!folder.hasChildren" class="mr-1 w-3.5 inline-block"></span>
+                        <span class="truncate flex items-center" @click.stop="selectedFolderId = folder.id">
+                            <!-- Closed Folder SVG (when not expanded) -->
+                            <svg class="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-text-subtle group-hover:text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" x-show="!expanded.includes(folder.id)">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                            </svg>
+                            <!-- Open Folder SVG (when expanded) -->
+                            <svg class="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" x-show="expanded.includes(folder.id)">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v5H3m2 6h14a2 2 0 002-2v-5a2 2 0 00-2-2H9l-2-2H5a2 2 0 00-2 2v10z" />
+                            </svg>
+                            <span x-text="folder.name"></span>
+                        </span>
+                    </span>
+                    <span class="flex items-center space-x-1.5 flex-shrink-0">
+                        <span class="font-mono text-text-subtle" x-text="notesInFolder(folder.id)"></span>
+                        <button @click.stop="createFolder(folder.id)" class="opacity-0 group-hover:opacity-100 hover:text-accent text-[11px]" title="New subfolder">＋</button>
+                        <button @click.stop="renameFolder(folder)" class="opacity-0 group-hover:opacity-100 hover:text-accent text-[11px]" title="Rename">✎</button>
+                        <button @click.stop="deleteFolder(folder)" class="opacity-0 group-hover:opacity-100 hover:text-danger text-[11px]" title="Delete">✕</button>
+                    </span>
+                </div>
+            </template>
+        </div>
+
+        <!-- Tags list -->
+        <div class="border-t border-border bg-surface-2/10 p-3">
+            <span class="text-[9px] font-bold uppercase tracking-wider text-text-subtle block mb-2 font-mono">Tags</span>
+            <div class="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
+                <button 
+                    @click="selectedTag = ''" 
+                    :class="selectedTag === '' ? 'bg-accent/15 border-accent/20 text-accent font-semibold' : 'bg-surface border-border text-text-muted hover:text-text-main'"
+                    class="px-2 py-0.5 rounded-full text-xxs border cursor-pointer select-none"
+                >
+                    All
+                </button>
+                <template x-for="tag in allTags" :key="tag">
+                    <button 
+                        @click="selectedTag = tag" 
+                        :class="selectedTag === tag ? 'bg-accent/15 border-accent/20 text-accent font-semibold' : 'bg-surface border-border text-text-muted hover:text-text-main'"
+                        class="px-2 py-0.5 rounded-full text-xxs border cursor-pointer select-none"
+                    >
+                        <span class="text-text-subtle font-mono mr-0.5">#</span><span x-text="tag"></span>
+                    </button>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL 2: NOTES LIST -->
     <div
         :style="isMobile ? '' : 'width:' + panelWidth + 'px'"
-        class="w-full md:flex-shrink-0 flex flex-col bg-surface-2/10 select-text border-b md:border-b-0 md:border-r border-border max-h-[45vh] md:max-h-full"
+        class="flex-shrink-0 flex flex-col bg-surface select-text border-r border-border h-full"
     >
         <!-- Search bar -->
-        <div class="p-3 border-b border-border bg-surface flex items-center space-x-2">
+        <div class="p-3 border-b border-border flex items-center space-x-2 bg-surface">
             <div class="flex-grow">
                 <x-ui.search-input x-model="searchQuery" placeholder="Search notes..." />
             </div>
@@ -25,118 +128,33 @@
             </x-ui.button>
         </div>
 
-        <!-- Folder list -->
-        <div class="border-b border-border bg-surface">
-            <div class="px-3 pt-2 pb-1 flex items-center justify-between">
-                <span class="text-[9px] font-bold uppercase tracking-wider text-text-subtle">Folders</span>
-                <button @click="createFolder()" class="text-text-subtle hover:text-accent text-xs cursor-pointer select-none" title="New folder">+ Folder</button>
-            </div>
-            <div class="pb-1.5">
-                <button
-                    @click="selectedFolderId = null"
-                    :class="selectedFolderId === null ? 'bg-accent/10 text-accent font-semibold' : 'text-text-muted hover:bg-surface-2/30'"
-                    class="w-full flex items-center justify-between px-3 py-1.5 text-xxs cursor-pointer select-none"
-                >
-                    <span class="flex items-center min-w-0">
-                        <svg class="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                        </svg>
-                        <span>All Notes</span>
-                    </span>
-                    <span class="font-mono text-text-subtle" x-text="notes.length"></span>
-                </button>
-                <button
-                    @click="selectedFolderId = 'none'"
-                    :class="selectedFolderId === 'none' ? 'bg-accent/10 text-accent font-semibold' : 'text-text-muted hover:bg-surface-2/30'"
-                    class="w-full flex items-center justify-between px-3 py-1.5 text-xxs cursor-pointer select-none"
-                >
-                    <span class="flex items-center min-w-0">
-                        <svg class="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0l-2.586 2.586a1 1 0 01-.707.293H7.293a1 1 0 01-.707-.293L4 13" />
-                        </svg>
-                        <span>Unfiled</span>
-                    </span>
-                    <span class="font-mono text-text-subtle" x-text="notes.filter(n => !n.folder_id).length"></span>
-                </button>
-                <template x-for="folder in folderTree" :key="folder.id">
-                    <div
-                        @click="folder.hasChildren ? toggleFolder(folder.id) : (selectedFolderId = folder.id)"
-                        :class="selectedFolderId === folder.id ? 'bg-accent/10 text-accent font-semibold' : 'text-text-muted hover:bg-surface-2/30'"
-                        class="group w-full flex items-center justify-between pr-3 py-1.5 text-xxs cursor-pointer select-none"
-                        :style="'padding-left:' + (12 + folder.depth * 14) + 'px'"
-                    >
-                        <span class="flex items-center min-w-0">
-                            <button
-                                x-show="folder.hasChildren"
-                                @click.stop="toggleFolder(folder.id)"
-                                class="mr-1 w-3.5 h-3.5 flex items-center justify-center text-text-subtle hover:text-accent transition-transform duration-150"
-                                :class="expanded.includes(folder.id) ? 'rotate-90' : ''"
-                                title="Toggle"
+        <!-- Notes Scroll List grouped by month -->
+        <div class="flex-grow overflow-y-auto divide-y divide-border/40">
+            <template x-for="group in groupedNotes" :key="group.name">
+                <div>
+                    <!-- Group Header -->
+                    <div class="px-3 py-1 bg-surface-2/30 border-b border-border/40 text-[9px] font-bold uppercase tracking-wider text-text-subtle font-mono" x-text="group.name"></div>
+                    <!-- Notes in Group -->
+                    <div class="divide-y divide-border/20">
+                        <template x-for="note in group.notes" :key="note.id">
+                            <div 
+                                @click="selectedNoteId = note.id; editMode = false"
+                                :class="selectedNoteId === note.id ? 'bg-accent/10 text-text-main border-l-2 border-l-accent' : 'text-text-muted hover:bg-surface-2/20 border-l-2 border-l-transparent'"
+                                class="p-3 cursor-pointer flex flex-col transition-all"
                             >
-                                <svg class="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                                </svg>
-                            </button>
-                            <span x-show="!folder.hasChildren" class="mr-1 w-3.5 inline-block"></span>
-                            <span class="truncate flex items-center" @click.stop="selectedFolderId = folder.id">
-                                <!-- Closed Folder SVG (when not expanded) -->
-                                <svg class="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-text-subtle group-hover:text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" x-show="!expanded.includes(folder.id)">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                                </svg>
-                                <!-- Open Folder SVG (when expanded) -->
-                                <svg class="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" x-show="expanded.includes(folder.id)">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v5H3m2 6h14a2 2 0 002-2v-5a2 2 0 00-2-2H9l-2-2H5a2 2 0 00-2 2v10z" />
-                                </svg>
-                                <span x-text="folder.name"></span>
-                            </span>
-                        </span>
-                        <span class="flex items-center space-x-1.5 flex-shrink-0">
-                            <span class="font-mono text-text-subtle" x-text="notesInFolder(folder.id)"></span>
-                            <button @click.stop="createFolder(folder.id)" class="opacity-0 group-hover:opacity-100 hover:text-accent text-[11px]" title="New subfolder">＋</button>
-                            <button @click.stop="renameFolder(folder)" class="opacity-0 group-hover:opacity-100 hover:text-accent text-[11px]" title="Rename">✎</button>
-                            <button @click.stop="deleteFolder(folder)" class="opacity-0 group-hover:opacity-100 hover:text-danger text-[11px]" title="Delete">✕</button>
-                        </span>
-                    </div>
-                </template>
-            </div>
-        </div>
-
-        <!-- Tag chips filter list -->
-        <div class="px-3 py-2 border-b border-border bg-surface flex items-center space-x-1.5 overflow-x-auto whitespace-nowrap scrollbar-none">
-            <button 
-                @click="selectedTag = ''" 
-                :class="selectedTag === '' ? 'bg-accent/15 border-accent/20 text-accent font-semibold' : 'bg-surface border-border text-text-muted hover:text-text-main'"
-                class="px-2 py-0.5 rounded-full text-xxs border cursor-pointer select-none"
-            >
-                All
-            </button>
-            <template x-for="tag in allTags" :key="tag">
-                <button 
-                    @click="selectedTag = tag" 
-                    :class="selectedTag === tag ? 'bg-accent/15 border-accent/20 text-accent font-semibold' : 'bg-surface border-border text-text-muted hover:text-text-main'"
-                    class="px-2 py-0.5 rounded-full text-xxs border cursor-pointer select-none"
-                >
-                    <span class="text-text-subtle font-mono mr-0.5">#</span><span x-text="tag"></span>
-                </button>
-            </template>
-        </div>
-
-        <!-- Notes Scroll List -->
-        <div class="flex-grow overflow-y-auto divide-y divide-border">
-            <template x-for="note in filteredNotes" :key="note.id">
-                <div 
-                    @click="selectedNoteId = note.id; editMode = false"
-                    :class="selectedNoteId === note.id ? 'bg-accent-subtle-bg/30 text-text-main border-l-2 border-l-accent' : 'text-text-muted hover:bg-surface-2/30 border-l-2 border-l-transparent'"
-                    class="p-3.5 cursor-pointer flex flex-col transition-all"
-                >
-                    <div class="flex items-center justify-between">
-                        <span class="font-bold text-xs uppercase tracking-wide text-text-main" x-text="note.title"></span>
-                        <span class="text-[10px] text-text-subtle font-mono" x-text="note.updated"></span>
-                    </div>
-                    <p class="text-xxs text-text-muted mt-1 truncate" x-text="note.body ? note.body.replace(/[#*`]/g, '') : ''"></p>
-                    <div class="flex items-center space-x-1 mt-2 flex-wrap">
-                        <template x-for="t in note.tags" :key="t">
-                            <span class="bg-surface-2 border border-border text-[9px] px-1 rounded-sm text-text-subtle font-mono">#<span x-text="t"></span></span>
+                                <div class="flex items-center justify-between">
+                                    <span class="font-bold text-xs uppercase tracking-wide text-text-main truncate pr-2" x-text="note.title"></span>
+                                </div>
+                                <div class="flex items-center space-x-1.5 mt-1 text-[10px] text-text-subtle">
+                                    <span class="font-mono flex-shrink-0" x-text="note.updated"></span>
+                                    <span class="truncate" x-text="note.body ? note.body.replace(/[#*`]/g, '').substring(0, 60) : ''"></span>
+                                </div>
+                                <div class="flex items-center space-x-1 mt-2 flex-wrap">
+                                    <template x-for="t in note.tags" :key="t">
+                                        <span class="bg-surface-2 border border-border text-[9px] px-1 rounded-sm text-text-subtle font-mono">#<span x-text="t"></span></span>
+                                    </template>
+                                </div>
+                            </div>
                         </template>
                     </div>
                 </div>
@@ -147,12 +165,12 @@
     <!-- DRAG HANDLE RESIZER -->
     <div
         @mousedown="startPanelResize($event)"
-        class="hidden md:flex w-3 flex-shrink-0 h-full z-10 cursor-col-resize items-center justify-center group"
+        class="hidden md:flex w-1.5 flex-shrink-0 h-full z-10 cursor-col-resize items-center justify-center group"
     >
-        <div class="w-[2px] h-full bg-border group-hover:bg-accent transition-colors duration-150"></div>
+        <div class="w-[1px] h-full bg-border group-hover:bg-accent transition-colors duration-150"></div>
     </div>
 
-    <!-- RIGHT SECTION: Editor / Read Mode (Fluid width) -->
+    <!-- PANEL 3: EDITOR / PREVIEW CANVAS -->
     <div class="flex-grow flex flex-col h-full bg-surface overflow-hidden select-text min-w-0">
         
         <!-- Editor Controls Header -->
@@ -166,7 +184,7 @@
                     >
                         <option value="" :selected="!activeNote.folder_id">Unfiled</option>
                         <template x-for="folder in folderTree" :key="folder.id">
-                            <option :value="folder.id" :selected="activeNote.folder_id === folder.id" x-text="' '.repeat(folder.depth * 2) + '├─ ' + folder.name"></option>
+                            <option :value="folder.id" :selected="activeNote.folder_id === folder.id" x-text="'  '.repeat(folder.depth) + '├─ ' + folder.name"></option>
                         </template>
                     </select>
                 </template>
@@ -265,6 +283,21 @@ window.notesComponent = function(initialNotes, initialFolders) {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 'Accept': 'application/json'
             };
+        },
+
+        // Group notes in list by month
+        get groupedNotes() {
+            const groups = [];
+            const map = {};
+            this.filteredNotes.forEach(n => {
+                const key = n.month || 'Other';
+                if (!map[key]) {
+                    map[key] = [];
+                    groups.push({ name: key, notes: map[key] });
+                }
+                map[key].push(n);
+            });
+            return groups;
         },
 
         // Folders grouped by parent, each child list name-sorted.
