@@ -11,6 +11,7 @@ services:
       - APP_ENV=production
       - APP_DEBUG=false
       - REDIS_HOST=redis
+      - SERVER_NAME=:80
     env_file:
       - .env
     depends_on:

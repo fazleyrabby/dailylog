@@ -10,6 +10,7 @@ services:
       - APP_ENV=local
       - APP_DEBUG=true
       - REDIS_HOST=redis
+      - SERVER_NAME=:80
     env_file:
       - .env
     volumes:
