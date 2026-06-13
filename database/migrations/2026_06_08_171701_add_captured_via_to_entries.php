@@ -13,12 +13,16 @@ return new class extends Migration
             $table->string('captured_via')->nullable()->after('pinned');
         });
 
-        DB::statement("ALTER TABLE entries ADD CONSTRAINT chk_entries_captured_via CHECK (captured_via IS NULL OR captured_via IN ('palette','web','extension','share','import','api','seed'))");
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE entries ADD CONSTRAINT chk_entries_captured_via CHECK (captured_via IS NULL OR captured_via IN ('palette','web','extension','share','import','api','seed'))");
+        }
     }
 
     public function down(): void
     {
-        DB::statement('ALTER TABLE entries DROP CONSTRAINT IF EXISTS chk_entries_captured_via');
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE entries DROP CONSTRAINT IF EXISTS chk_entries_captured_via');
+        }
         Schema::table('entries', function (Blueprint $table) {
             $table->dropColumn('captured_via');
         });

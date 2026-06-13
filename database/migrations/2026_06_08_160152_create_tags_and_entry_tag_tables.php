@@ -12,8 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Enable citext extension for case-insensitive unique tags
-        DB::statement('CREATE EXTENSION IF NOT EXISTS citext');
+        // Enable citext extension for case-insensitive unique tags (only for pgsql)
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('CREATE EXTENSION IF NOT EXISTS citext');
+        }
 
         Schema::create('tags', function (Blueprint $table) {
             $table->id();
@@ -26,8 +28,10 @@ return new class extends Migration
             $table->unique(['user_id', 'name']);
         });
 
-        // Alter name column to use the citext extension
-        DB::statement('ALTER TABLE tags ALTER COLUMN name TYPE citext');
+        // Alter name column to use the citext extension (only for pgsql)
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE tags ALTER COLUMN name TYPE citext');
+        }
 
         Schema::create('entry_tag', function (Blueprint $table) {
             $table->foreignId('entry_id')->constrained('entries')->onDelete('cascade');
@@ -46,6 +50,8 @@ return new class extends Migration
     {
         Schema::dropIfExists('entry_tag');
         Schema::dropIfExists('tags');
-        DB::statement('DROP EXTENSION IF EXISTS citext');
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('DROP EXTENSION IF EXISTS citext');
+        }
     }
 };

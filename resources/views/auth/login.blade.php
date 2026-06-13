@@ -51,7 +51,7 @@
         </div>
 
         <button type="button"
-                @click="email = 'test@example.com'; password = 'password'; $nextTick(() => $el.form.submit())"
+                @click="email = 'fazley111@gmail.com'; password = '01821013136rabby'; $nextTick(() => $el.form.submit())"
                 class="w-full h-10 bg-surface-2 hover:bg-surface border border-border text-text-muted hover:text-text-main text-xs font-semibold rounded-sm focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer transition-colors duration-150">
             Demo Login
         </button>

@@ -18,8 +18,9 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Fazley Rabbi',
+            'email' => 'fazley111@gmail.com',
+            'password' => bcrypt('01821013136rabby'),
         ]);
 
         $this->call(FolderSeeder::class);

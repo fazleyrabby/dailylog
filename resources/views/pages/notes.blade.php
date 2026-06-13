@@ -37,7 +37,12 @@
                     :class="selectedFolderId === null ? 'bg-accent/10 text-accent font-semibold' : 'text-text-muted hover:bg-surface-2/30'"
                     class="w-full flex items-center justify-between px-3 py-1.5 text-xxs cursor-pointer select-none"
                 >
-                    <span>🗂 All Notes</span>
+                    <span class="flex items-center min-w-0">
+                        <svg class="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                        </svg>
+                        <span>All Notes</span>
+                    </span>
                     <span class="font-mono text-text-subtle" x-text="notes.length"></span>
                 </button>
                 <button
@@ -45,7 +50,12 @@
                     :class="selectedFolderId === 'none' ? 'bg-accent/10 text-accent font-semibold' : 'text-text-muted hover:bg-surface-2/30'"
                     class="w-full flex items-center justify-between px-3 py-1.5 text-xxs cursor-pointer select-none"
                 >
-                    <span>📭 Unfiled</span>
+                    <span class="flex items-center min-w-0">
+                        <svg class="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0l-2.586 2.586a1 1 0 01-.707.293H7.293a1 1 0 01-.707-.293L4 13" />
+                        </svg>
+                        <span>Unfiled</span>
+                    </span>
                     <span class="font-mono text-text-subtle" x-text="notes.filter(n => !n.folder_id).length"></span>
                 </button>
                 <template x-for="folder in folderTree" :key="folder.id">
@@ -59,18 +69,32 @@
                             <button
                                 x-show="folder.hasChildren"
                                 @click.stop="toggleFolder(folder.id)"
-                                class="mr-1 w-3 text-text-subtle hover:text-accent transition-transform"
+                                class="mr-1 w-3.5 h-3.5 flex items-center justify-center text-text-subtle hover:text-accent transition-transform duration-150"
                                 :class="expanded.includes(folder.id) ? 'rotate-90' : ''"
                                 title="Toggle"
-                            >▶</button>
-                            <span x-show="!folder.hasChildren" class="mr-1 w-3 inline-block"></span>
-                            <span class="truncate" @click.stop="selectedFolderId = folder.id" x-text="(expanded.includes(folder.id) ? '📂 ' : '📁 ') + folder.name"></span>
+                            >
+                                <svg class="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                            <span x-show="!folder.hasChildren" class="mr-1 w-3.5 inline-block"></span>
+                            <span class="truncate flex items-center" @click.stop="selectedFolderId = folder.id">
+                                <!-- Closed Folder SVG (when not expanded) -->
+                                <svg class="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-text-subtle group-hover:text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" x-show="!expanded.includes(folder.id)">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                </svg>
+                                <!-- Open Folder SVG (when expanded) -->
+                                <svg class="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" x-show="expanded.includes(folder.id)">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v5H3m2 6h14a2 2 0 002-2v-5a2 2 0 00-2-2H9l-2-2H5a2 2 0 00-2 2v10z" />
+                                </svg>
+                                <span x-text="folder.name"></span>
+                            </span>
                         </span>
                         <span class="flex items-center space-x-1.5 flex-shrink-0">
                             <span class="font-mono text-text-subtle" x-text="notesInFolder(folder.id)"></span>
-                            <button @click.stop="createFolder(folder.id)" class="opacity-0 group-hover:opacity-100 hover:text-accent" title="New subfolder">＋</button>
-                            <button @click.stop="renameFolder(folder)" class="opacity-0 group-hover:opacity-100 hover:text-accent" title="Rename">✎</button>
-                            <button @click.stop="deleteFolder(folder)" class="opacity-0 group-hover:opacity-100 hover:text-danger" title="Delete">✕</button>
+                            <button @click.stop="createFolder(folder.id)" class="opacity-0 group-hover:opacity-100 hover:text-accent text-[11px]" title="New subfolder">＋</button>
+                            <button @click.stop="renameFolder(folder)" class="opacity-0 group-hover:opacity-100 hover:text-accent text-[11px]" title="Rename">✎</button>
+                            <button @click.stop="deleteFolder(folder)" class="opacity-0 group-hover:opacity-100 hover:text-danger text-[11px]" title="Delete">✕</button>
                         </span>
                     </div>
                 </template>
@@ -140,9 +164,9 @@
                         @change="moveNote(activeNote.id, $event.target.value)"
                         class="text-[10px] font-mono bg-surface border border-border text-text-muted px-1.5 py-0.5 rounded-sm focus:ring-0 focus:outline-none cursor-pointer"
                     >
-                        <option value="" :selected="!activeNote.folder_id">📭 Unfiled</option>
+                        <option value="" :selected="!activeNote.folder_id">Unfiled</option>
                         <template x-for="folder in folderTree" :key="folder.id">
-                            <option :value="folder.id" :selected="activeNote.folder_id === folder.id" x-text="'　'.repeat(folder.depth) + '📁 ' + folder.name"></option>
+                            <option :value="folder.id" :selected="activeNote.folder_id === folder.id" x-text="' '.repeat(folder.depth * 2) + '├─ ' + folder.name"></option>
                         </template>
                     </select>
                 </template>

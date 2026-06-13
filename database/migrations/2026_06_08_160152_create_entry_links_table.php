@@ -23,8 +23,10 @@ return new class extends Migration
             $table->index('target_id'); // index for backlinks queries
         });
 
-        // Add a check constraint to prevent an entry from linking to itself
-        DB::statement('ALTER TABLE entry_links ADD CONSTRAINT chk_source_target_distinct CHECK (source_id <> target_id)');
+        // Add a check constraint to prevent an entry from linking to itself (only for pgsql)
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE entry_links ADD CONSTRAINT chk_source_target_distinct CHECK (source_id <> target_id)');
+        }
     }
 
     /**
