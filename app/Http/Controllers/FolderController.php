@@ -38,11 +38,19 @@ class FolderController extends Controller
 
     public function destroy(Folder $folder): JsonResponse
     {
-        // Detach notes so they fall back to "Unfiled" instead of being deleted.
-        $folder->entries()->update(['folder_id' => null]);
-        $folder->delete();
+        $this->destroyRecursive($folder);
 
         return response()->json(['success' => true]);
+    }
+
+    private function destroyRecursive(Folder $folder): void
+    {
+        foreach ($folder->subfolders as $child) {
+            $this->destroyRecursive($child);
+        }
+
+        $folder->entries()->update(['folder_id' => null]);
+        $folder->delete();
     }
 
     private function formatFolder(Folder $folder): array

@@ -7,6 +7,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::connection()->getDriverName() !== 'pgsql') {
+            return;
+        }
+
         $map = [
             'task_details'     => 'task',
             'bookmark_details' => 'bookmark',
@@ -39,6 +43,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::connection()->getDriverName() !== 'pgsql') {
+            return;
+        }
+
         foreach (['task_details','bookmark_details','resource_details','learning_details','quote_details'] as $table) {
             DB::statement("DROP TRIGGER IF EXISTS {$table}_type_check ON {$table}");
             DB::statement("DROP FUNCTION IF EXISTS trg_{$table}_type_check()");

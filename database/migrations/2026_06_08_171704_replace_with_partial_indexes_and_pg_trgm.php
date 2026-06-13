@@ -7,6 +7,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::connection()->getDriverName() !== 'pgsql') {
+            return;
+        }
+
         DB::statement('CREATE EXTENSION IF NOT EXISTS pg_trgm');
 
         // Replace full indexes with partial equivalents on entries.
@@ -34,6 +38,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::connection()->getDriverName() !== 'pgsql') {
+            return;
+        }
+
         DB::statement('DROP INDEX IF EXISTS entries_title_trgm_idx');
         DB::statement('DROP INDEX IF EXISTS learning_details_status_idx');
         DB::statement('DROP INDEX IF EXISTS task_details_due_at_open_partial');

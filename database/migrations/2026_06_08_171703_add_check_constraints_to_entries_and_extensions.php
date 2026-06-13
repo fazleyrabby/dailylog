@@ -7,6 +7,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::connection()->getDriverName() !== 'pgsql') {
+            return;
+        }
+
         // Entries: per-type status CHECK. Bookmark/quote use extension state fields → permissive here.
         DB::statement('ALTER TABLE entries ALTER COLUMN status DROP DEFAULT');
         DB::statement(<<<'SQL'
@@ -43,6 +47,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::connection()->getDriverName() !== 'pgsql') {
+            return;
+        }
+
         $drops = [
             ['entries', 'chk_entries_status_per_type'],
             ['entries', 'chk_entries_body_format'],

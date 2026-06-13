@@ -12,8 +12,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement("DROP TYPE IF EXISTS entry_type");
-        DB::statement("CREATE TYPE entry_type AS ENUM ('task', 'note', 'journal', 'bookmark', 'quote', 'resource', 'learning', 'idea')");
+        $isPgsql = DB::connection()->getDriverName() === 'pgsql';
+
+        if ($isPgsql) {
+            DB::statement("DROP TYPE IF EXISTS entry_type");
+            DB::statement("CREATE TYPE entry_type AS ENUM ('task', 'note', 'journal', 'bookmark', 'quote', 'resource', 'learning', 'idea')");
+        }
 
         Schema::create('entries', function (Blueprint $table) {
             $table->id();
@@ -37,16 +41,16 @@ return new class extends Migration
             $table->index(['user_id', 'occurred_on']);
         });
 
-        // Alter type column to be the native Postgres enum
-        DB::statement("ALTER TABLE entries ALTER COLUMN type TYPE entry_type USING type::entry_type");
+        if ($isPgsql) {
+            DB::statement("ALTER TABLE entries ALTER COLUMN type TYPE entry_type USING type::entry_type");
 
-        // Add the search_vector generated column and its GIN index
-        DB::statement("ALTER TABLE entries ADD COLUMN search_vector tsvector GENERATED ALWAYS AS (
-            setweight(to_tsvector('english', coalesce(title, '')), 'A') ||
-            setweight(to_tsvector('english', coalesce(body, '')), 'B')
-        ) STORED");
+            DB::statement("ALTER TABLE entries ADD COLUMN search_vector tsvector GENERATED ALWAYS AS (
+                setweight(to_tsvector('english', coalesce(title, '')), 'A') ||
+                setweight(to_tsvector('english', coalesce(body, '')), 'B')
+            ) STORED");
 
-        DB::statement("CREATE INDEX idx_entries_search_vector ON entries USING gin(search_vector)");
+            DB::statement("CREATE INDEX idx_entries_search_vector ON entries USING gin(search_vector)");
+        }
     }
 
     /**
@@ -55,6 +59,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('entries');
-        DB::statement("DROP TYPE IF EXISTS entry_type");
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            DB::statement("DROP TYPE IF EXISTS entry_type");
+        }
     }
 };

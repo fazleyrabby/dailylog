@@ -11,24 +11,28 @@ return new class extends Migration
 
     public function up(): void
     {
-        // Add 'lab' to Postgres enum
-        DB::statement("ALTER TYPE entry_type ADD VALUE IF NOT EXISTS 'lab'");
+        $isPgsql = DB::connection()->getDriverName() === 'pgsql';
 
-        // Drop and Recreate CHECK constraint to support 'lab' with 'active' status
-        DB::statement("ALTER TABLE entries DROP CONSTRAINT IF EXISTS chk_entries_status_per_type");
-        DB::statement(<<<'SQL'
-            ALTER TABLE entries ADD CONSTRAINT chk_entries_status_per_type CHECK (
-                (type = 'task'     AND status IN ('open','done')) OR
-                (type = 'note'     AND status IN ('draft','active','archived')) OR
-                (type = 'journal'  AND status = 'active') OR
-                (type = 'bookmark') OR
-                (type = 'quote') OR
-                (type = 'resource' AND status IN ('to_consume','consuming','done')) OR
-                (type = 'learning' AND status IN ('active','paused','completed','abandoned')) OR
-                (type = 'idea'     AND status IN ('spark','exploring','parked','shipped','killed')) OR
-                (type = 'lab'      AND status = 'active')
-            )
-        SQL);
+        if ($isPgsql) {
+            // Add 'lab' to Postgres enum
+            DB::statement("ALTER TYPE entry_type ADD VALUE IF NOT EXISTS 'lab'");
+
+            // Drop and Recreate CHECK constraint to support 'lab' with 'active' status
+            DB::statement("ALTER TABLE entries DROP CONSTRAINT IF EXISTS chk_entries_status_per_type");
+            DB::statement(<<<'SQL'
+                ALTER TABLE entries ADD CONSTRAINT chk_entries_status_per_type CHECK (
+                    (type = 'task'     AND status IN ('open','done')) OR
+                    (type = 'note'     AND status IN ('draft','active','archived')) OR
+                    (type = 'journal'  AND status = 'active') OR
+                    (type = 'bookmark') OR
+                    (type = 'quote') OR
+                    (type = 'resource' AND status IN ('to_consume','consuming','done')) OR
+                    (type = 'learning' AND status IN ('active','paused','completed','abandoned')) OR
+                    (type = 'idea'     AND status IN ('spark','exploring','parked','shipped','killed')) OR
+                    (type = 'lab'      AND status = 'active')
+                )
+            SQL);
+        }
 
         // Create lab_items table
         Schema::create('lab_items', function (Blueprint $table) {
@@ -51,18 +55,20 @@ return new class extends Migration
     {
         Schema::dropIfExists('lab_items');
 
-        DB::statement("ALTER TABLE entries DROP CONSTRAINT IF EXISTS chk_entries_status_per_type");
-        DB::statement(<<<'SQL'
-            ALTER TABLE entries ADD CONSTRAINT chk_entries_status_per_type CHECK (
-                (type = 'task'     AND status IN ('open','done')) OR
-                (type = 'note'     AND status IN ('draft','active','archived')) OR
-                (type = 'journal'  AND status = 'active') OR
-                (type = 'bookmark') OR
-                (type = 'quote') OR
-                (type = 'resource' AND status IN ('to_consume','consuming','done')) OR
-                (type = 'learning' AND status IN ('active','paused','completed','abandoned')) OR
-                (type = 'idea'     AND status IN ('spark','exploring','parked','shipped','killed'))
-            )
-        SQL);
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE entries DROP CONSTRAINT IF EXISTS chk_entries_status_per_type");
+            DB::statement(<<<'SQL'
+                ALTER TABLE entries ADD CONSTRAINT chk_entries_status_per_type CHECK (
+                    (type = 'task'     AND status IN ('open','done')) OR
+                    (type = 'note'     AND status IN ('draft','active','archived')) OR
+                    (type = 'journal'  AND status = 'active') OR
+                    (type = 'bookmark') OR
+                    (type = 'quote') OR
+                    (type = 'resource' AND status IN ('to_consume','consuming','done')) OR
+                    (type = 'learning' AND status IN ('active','paused','completed','abandoned')) OR
+                    (type = 'idea'     AND status IN ('spark','exploring','parked','shipped','killed'))
+                )
+            SQL);
+        }
     }
 };
