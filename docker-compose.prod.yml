@@ -1,0 +1,38 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dailylog_prod_app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8000}:80"
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - REDIS_HOST=redis
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    container_name: dailylog_prod_redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis_prod_data:/data
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: dailylog_prod_tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    depends_on:
+      - app
+
+volumes:
+  redis_prod_data:
