@@ -248,6 +248,50 @@
                 </div>
             </template>
         </div>
+
+        <!-- Interactive Canvas Minimap -->
+        <div 
+            x-show="items.length > 0 && !isMobile"
+            class="absolute bottom-6 right-6 w-[162px] h-[122px] bg-surface/85 border border-border backdrop-blur-md rounded shadow-xl z-30 select-none overflow-hidden hidden md:block"
+        >
+            <svg 
+                @click="teleportToMinimap($event)"
+                class="w-full h-full bg-surface-2/30 cursor-pointer" 
+                viewBox="0 0 160 120"
+            >
+                <!-- Draw items -->
+                <template x-for="mi in minimapData.items" :key="mi.id">
+                    <rect 
+                        :x="mi.x" 
+                        :y="mi.y" 
+                        :width="mi.w" 
+                        :height="mi.h" 
+                        :class="{
+                            'fill-accent/40 stroke-accent/70': mi.color === 'purple' || mi.type === 'reference',
+                            'fill-warning/40 stroke-warning/70': mi.color === 'yellow',
+                            'fill-success/40 stroke-success/70': mi.color === 'green',
+                            'fill-text-subtle/20 stroke-border': mi.color === 'gray' && mi.type !== 'reference'
+                        }"
+                        stroke-width="0.5"
+                        rx="1"
+                    />
+                </template>
+                <!-- Draw viewport -->
+                <template x-if="minimapData.viewport">
+                    <rect 
+                        :x="minimapData.viewport.x" 
+                        :y="minimapData.viewport.y" 
+                        :width="minimapData.viewport.w" 
+                        :height="minimapData.viewport.h" 
+                        fill="none" 
+                        stroke="var(--color-accent)" 
+                        stroke-width="1"
+                        stroke-dasharray="2 1"
+                    />
+                </template>
+            </svg>
+        </div>
+
         <!-- Floating Canvas Toolbar (inside canvas viewport for correct centering) -->
         <div class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-surface/90 border border-border backdrop-blur-md rounded-full shadow-xl px-5 py-2.5 flex items-center space-x-4 z-30 text-xs">
             <button 
@@ -402,6 +446,93 @@ window.labCanvasComponent = function(config) {
                 (e.title && e.title.toLowerCase().includes(query)) ||
                 (e.body && e.body.toLowerCase().includes(query))
             );
+        },
+
+        get minimapData() {
+            if (this.items.length === 0) return { items: [], viewport: null };
+
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            this.items.forEach(i => {
+                const x = i.x || 0;
+                const y = i.y || 0;
+                const w = i.width || 200;
+                const h = i.height || 180;
+                if (x < minX) minX = x;
+                if (y < minY) minY = y;
+                if (x + w > maxX) maxX = x + w;
+                if (y + h > maxY) maxY = y + h;
+            });
+
+            const vpLeft = -this.panX / this.scale;
+            const vpTop = -this.panY / this.scale;
+            const vpWidth = window.innerWidth / this.scale;
+            const vpHeight = window.innerHeight / this.scale;
+
+            if (vpLeft < minX) minX = vpLeft;
+            if (vpTop < minY) minY = vpTop;
+            if (vpLeft + vpWidth > maxX) maxX = vpLeft + vpWidth;
+            if (vpTop + vpHeight > maxY) maxY = vpTop + vpHeight;
+
+            minX -= 200;
+            minY -= 200;
+            maxX += 200;
+            maxY += 200;
+
+            const boundsWidth = maxX - minX;
+            const boundsHeight = maxY - minY;
+
+            const mapW = 160;
+            const mapH = 120;
+
+            const scaleX = mapW / boundsWidth;
+            const scaleY = mapH / boundsHeight;
+            const mapScale = Math.min(scaleX, scaleY);
+
+            const offsetX = (mapW - boundsWidth * mapScale) / 2;
+            const offsetY = (mapH - boundsHeight * mapScale) / 2;
+
+            const transformX = (x) => (x - minX) * mapScale + offsetX;
+            const transformY = (y) => (y - minY) * mapScale + offsetY;
+
+            const mappedItems = this.items.map(i => ({
+                id: i.id || Math.random(),
+                x: transformX(i.x || 0),
+                y: transformY(i.y || 0),
+                w: (i.width || 200) * mapScale,
+                h: (i.height || 180) * mapScale,
+                color: i.color || 'gray',
+                type: i.type
+            }));
+
+            const mappedViewport = {
+                x: transformX(vpLeft),
+                y: transformY(vpTop),
+                w: vpWidth * mapScale,
+                h: vpHeight * mapScale
+            };
+
+            return {
+                items: mappedItems,
+                viewport: mappedViewport,
+                bounds: { minX, minY, mapScale, offsetX, offsetY }
+            };
+        },
+
+        teleportToMinimap(event) {
+            const rect = event.currentTarget.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const clickY = event.clientY - rect.top;
+            
+            const data = this.minimapData;
+            if (!data || !data.bounds) return;
+            
+            const { minX, minY, mapScale, offsetX, offsetY } = data.bounds;
+            
+            const canvasX = (clickX - offsetX) / mapScale + minX;
+            const canvasY = (clickY - offsetY) / mapScale + minY;
+            
+            this.panX = window.innerWidth / 2 - this.scale * canvasX;
+            this.panY = window.innerHeight / 2 - this.scale * canvasY;
         },
 
         // Panning/Zooming
