@@ -143,7 +143,7 @@
         <div 
             class="absolute inset-0 origin-top-left canvas-grid"
             :style="`transform: translate(${panX}px, ${panY}px) scale(${scale});`"
-            style="width: 5000px; height: 5000px; background-size: 30px 30px; background-image: radial-gradient(circle, var(--color-border) 1px, transparent 1px);"
+            style="width: 5000px; height: 5000px; background-size: 30px 30px; background-image: linear-gradient(to right, color-mix(in srgb, var(--color-border-app) 40%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--color-border-app) 40%, transparent) 1px, transparent 1px);"
         >
             <!-- Render Canvas Items -->
             <template x-for="(item, index) in items" :key="item.id || index">
@@ -236,7 +236,7 @@
                                     <h5 class="text-xs font-bold text-accent truncate" x-text="item.target.title || '(Untitled)'"></h5>
                                     <p class="text-[10px] text-text-muted leading-tight mt-1 line-clamp-3" x-text="item.target.body || ''"></p>
                                 </div>
-                                <a :href="'/' + item.target.type + 's/' + item.target.id" target="_blank" class="text-[9px] text-text-subtle hover:text-accent font-mono block mt-2">Open Details →</a>
+                                <a :href="getTargetUrl(item.target)" target="_blank" class="text-[9px] text-text-subtle hover:text-accent font-mono block mt-2">Open Details →</a>
                             </div>
                         </template>
                     </div>
@@ -254,42 +254,47 @@
             x-show="items.length > 0 && !isMobile"
             class="absolute bottom-6 right-6 w-[162px] h-[122px] bg-surface/85 border border-border backdrop-blur-md rounded shadow-xl z-30 select-none overflow-hidden hidden md:block"
         >
-            <svg 
+            <div 
                 @click="teleportToMinimap($event)"
-                class="w-full h-full bg-surface-2/30 cursor-pointer" 
-                viewBox="0 0 160 120"
+                class="w-full h-full bg-surface-2/30 cursor-pointer relative"
             >
                 <!-- Draw items -->
                 <template x-for="mi in minimapData.items" :key="mi.id">
-                    <rect 
-                        :x="mi.x" 
-                        :y="mi.y" 
-                        :width="mi.w" 
-                        :height="mi.h" 
-                        :class="{
-                            'fill-accent/40 stroke-accent/70': mi.color === 'purple' || mi.type === 'reference',
-                            'fill-warning/40 stroke-warning/70': mi.color === 'yellow',
-                            'fill-success/40 stroke-success/70': mi.color === 'green',
-                            'fill-text-subtle/20 stroke-border': mi.color === 'gray' && mi.type !== 'reference'
+                    <div 
+                        class="absolute rounded-[2px]"
+                        :style="{
+                            left: mi.x + 'px',
+                            top: mi.y + 'px',
+                            width: mi.w + 'px',
+                            height: mi.h + 'px',
+                            backgroundColor: (mi.color === 'purple' || mi.type === 'reference') ? 'color-mix(in srgb, var(--color-accent-app) 40%, transparent)' :
+                                             mi.color === 'yellow' ? 'color-mix(in srgb, var(--color-warning-app) 40%, transparent)' :
+                                             mi.color === 'green' ? 'color-mix(in srgb, var(--color-success-app) 40%, transparent)' :
+                                             'color-mix(in srgb, var(--color-text-subtle-app) 15%, transparent)',
+                            border: '0.75px solid ' + (
+                                (mi.color === 'purple' || mi.type === 'reference') ? 'var(--color-accent-app)' :
+                                mi.color === 'yellow' ? 'var(--color-warning-app)' :
+                                mi.color === 'green' ? 'var(--color-success-app)' :
+                                'var(--color-border-strong-app)'
+                            )
                         }"
-                        stroke-width="0.5"
-                        rx="1"
-                    />
+                    ></div>
                 </template>
                 <!-- Draw viewport -->
                 <template x-if="minimapData.viewport">
-                    <rect 
-                        :x="minimapData.viewport.x" 
-                        :y="minimapData.viewport.y" 
-                        :width="minimapData.viewport.w" 
-                        :height="minimapData.viewport.h" 
-                        fill="none" 
-                        stroke="var(--color-accent)" 
-                        stroke-width="1"
-                        stroke-dasharray="2 1"
-                    />
+                    <div 
+                        class="absolute border border-dashed"
+                        :style="{
+                            left: (minimapData.viewport?.x || 0) + 'px',
+                            top: (minimapData.viewport?.y || 0) + 'px',
+                            width: (minimapData.viewport?.w || 0) + 'px',
+                            height: (minimapData.viewport?.h || 0) + 'px',
+                            borderColor: 'var(--color-accent-app)',
+                            borderWidth: '1.25px'
+                        }"
+                    ></div>
                 </template>
-            </svg>
+            </div>
         </div>
 
         <!-- Floating Canvas Toolbar (inside canvas viewport for correct centering) -->
@@ -453,18 +458,18 @@ window.labCanvasComponent = function(config) {
 
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
             this.items.forEach(i => {
-                const x = i.x || 0;
-                const y = i.y || 0;
-                const w = i.width || 200;
-                const h = i.height || 180;
+                const x = parseFloat(i.x) || 0;
+                const y = parseFloat(i.y) || 0;
+                const w = parseFloat(i.width) || 200;
+                const h = parseFloat(i.height) || 180;
                 if (x < minX) minX = x;
                 if (y < minY) minY = y;
                 if (x + w > maxX) maxX = x + w;
                 if (y + h > maxY) maxY = y + h;
             });
 
-            const vpLeft = -this.panX / this.scale;
-            const vpTop = -this.panY / this.scale;
+            const vpLeft = -parseFloat(this.panX) / this.scale;
+            const vpTop = -parseFloat(this.panY) / this.scale;
             const vpWidth = window.innerWidth / this.scale;
             const vpHeight = window.innerHeight / this.scale;
 
@@ -486,20 +491,20 @@ window.labCanvasComponent = function(config) {
 
             const scaleX = mapW / boundsWidth;
             const scaleY = mapH / boundsHeight;
-            const mapScale = Math.min(scaleX, scaleY);
+            const mapScale = Math.min(scaleX, scaleY) || 1;
 
             const offsetX = (mapW - boundsWidth * mapScale) / 2;
             const offsetY = (mapH - boundsHeight * mapScale) / 2;
 
-            const transformX = (x) => (x - minX) * mapScale + offsetX;
-            const transformY = (y) => (y - minY) * mapScale + offsetY;
+            const transformX = (val) => (parseFloat(val) - minX) * mapScale + offsetX;
+            const transformY = (val) => (parseFloat(val) - minY) * mapScale + offsetY;
 
             const mappedItems = this.items.map(i => ({
                 id: i.id || Math.random(),
                 x: transformX(i.x || 0),
                 y: transformY(i.y || 0),
-                w: (i.width || 200) * mapScale,
-                h: (i.height || 180) * mapScale,
+                w: (parseFloat(i.width) || 200) * mapScale,
+                h: (parseFloat(i.height) || 180) * mapScale,
                 color: i.color || 'gray',
                 type: i.type
             }));
@@ -622,6 +627,17 @@ window.labCanvasComponent = function(config) {
         deleteItem(item) {
             this.items = this.items.filter(i => i !== item);
             this.queueSave();
+        },
+
+        getTargetUrl(target) {
+            if (!target) return '#';
+            if (target.type === 'note') return '/notes?note=' + target.id;
+            if (target.type === 'task') return '/tasks?task=' + target.id;
+            if (target.type === 'project') return '/projects?project=' + target.id;
+            if (target.type === 'learning') return '/learning?learning=' + target.id;
+            if (target.type === 'bookmark') return '/bookmarks?bookmark=' + target.id;
+            if (target.type === 'resource') return '/resources?resource=' + target.id;
+            return '/' + target.type + 's/' + target.id;
         },
 
         renameBoard(boardId, currentTitle) {

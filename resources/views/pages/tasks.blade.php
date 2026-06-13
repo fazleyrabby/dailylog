@@ -3,17 +3,19 @@
 @section('title', 'Tasks')
 @section('header_breadcrumbs', 'DAILYLOG // TASKS')
 
+@section('content_padding', 'p-0')
+
 @section('content')
 <div
     x-data="Object.assign(tasksComponent({{ json_encode($tasks) }}), panelResizer({key:'tasks', initial:420, min:300, max:640}))"
     x-init="initPanelResizer()"
-    class="h-[calc(100vh-100px)] flex flex-col md:flex-row overflow-hidden border border-border rounded-sm bg-surface select-none"
+    class="h-[calc(100vh-48px)] flex flex-col md:flex-row overflow-hidden bg-surface select-none"
     :class="resizing ? 'cursor-col-resize' : ''"
 >
     <!-- MIDDLE COLUMN: Tasks List & Search (Pane 2) -->
     <div
         :style="isMobile ? '' : 'width:' + panelWidth + 'px'"
-        class="w-full md:flex-shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-border bg-surface-2/10 select-text max-h-[40vh] md:max-h-full"
+        class="w-full md:flex-shrink-0 flex flex-col border-b md:border-b-0 bg-surface-2/10 select-text max-h-[40vh] md:max-h-full"
     >
         <!-- Search & Quick Add Header -->
         <div class="p-3 border-b border-border bg-surface space-y-3">
@@ -116,9 +118,10 @@
     <!-- DRAG HANDLE RESIZER -->
     <div
         @mousedown="startPanelResize($event)"
-        class="hidden md:flex w-3 flex-shrink-0 h-full z-10 cursor-col-resize items-center justify-center group"
+        class="hidden md:flex w-2.5 flex-shrink-0 h-full z-10 cursor-col-resize items-center justify-center group relative"
     >
-        <div class="w-[2px] h-full bg-border group-hover:bg-accent transition-colors duration-150"></div>
+        <div class="w-[1px] h-full bg-border group-hover:bg-accent transition-colors duration-150"></div>
+        <div class="absolute top-1/2 -translate-y-1/2 w-1 h-7 rounded-full bg-border/60 group-hover:bg-accent transition-colors duration-150 shadow-xs"></div>
     </div>
 
     <!-- RIGHT COLUMN: Task Workspace & Detail Inspector (Pane 3) -->

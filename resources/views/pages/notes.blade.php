@@ -79,7 +79,7 @@
     <div 
         x-show="!isMobile || mobileView === 'folders'"
         :style="isMobile ? 'width: 100%' : 'width:' + folderPanelWidth + 'px'"
-        class="flex-shrink-0 flex flex-col bg-surface-2/10 border-r border-border h-full"
+        class="flex-shrink-0 flex flex-col bg-surface-2/10 h-full"
     >
         <!-- Folders title and action -->
         <div class="px-4 pt-3.5 pb-1 flex items-center justify-between">
@@ -196,16 +196,17 @@
     <div
         x-show="!isMobile"
         @mousedown="startFolderResize($event)"
-        class="hidden md:flex w-1.5 flex-shrink-0 h-full z-10 cursor-col-resize items-center justify-center group"
+        class="hidden md:flex w-2.5 flex-shrink-0 h-full z-10 cursor-col-resize items-center justify-center group relative"
     >
         <div class="w-[1px] h-full bg-border group-hover:bg-accent transition-colors duration-150"></div>
+        <div class="absolute top-1/2 -translate-y-1/2 w-1 h-7 rounded-full bg-border/60 group-hover:bg-accent transition-colors duration-150 shadow-xs"></div>
     </div>
 
     <!-- PANEL 2: NOTES LIST -->
     <div
         x-show="!isMobile || mobileView === 'notes'"
         :style="isMobile ? 'width: 100%' : 'width:' + notesPanelWidth + 'px'"
-        class="flex-shrink-0 flex flex-col bg-surface select-text border-r border-border h-full"
+        class="flex-shrink-0 flex flex-col bg-surface select-text h-full"
     >
         <!-- Search bar -->
         <div class="p-3 border-b border-border flex items-center space-x-2 bg-surface">
@@ -269,9 +270,10 @@
     <div
         x-show="!isMobile"
         @mousedown="startNotesResize($event)"
-        class="hidden md:flex w-1.5 flex-shrink-0 h-full z-10 cursor-col-resize items-center justify-center group"
+        class="hidden md:flex w-2.5 flex-shrink-0 h-full z-10 cursor-col-resize items-center justify-center group relative"
     >
         <div class="w-[1px] h-full bg-border group-hover:bg-accent transition-colors duration-150"></div>
+        <div class="absolute top-1/2 -translate-y-1/2 w-1 h-7 rounded-full bg-border/60 group-hover:bg-accent transition-colors duration-150 shadow-xs"></div>
     </div>
 
     <!-- PANEL 3: EDITOR / PREVIEW CANVAS -->
@@ -387,7 +389,14 @@ window.notesComponent = function(initialNotes, initialFolders) {
         searchQuery: '',
         selectedTag: '',
         selectedFolderId: null,
-        selectedNoteId: initialNotes.length > 0 ? initialNotes[0].id : null,
+        selectedNoteId: (() => {
+            const params = new URLSearchParams(window.location.search);
+            const noteId = parseInt(params.get('note'), 10);
+            if (noteId && initialNotes.some(n => n.id === noteId)) {
+                return noteId;
+            }
+            return initialNotes.length > 0 ? initialNotes[0].id : null;
+        })(),
         editMode: false,
 
         folderPanelWidth: (() => {
@@ -482,8 +491,18 @@ window.notesComponent = function(initialNotes, initialFolders) {
             window.addEventListener('resize', () => {
                 this.isMobile = window.innerWidth < 768;
             });
-            // Auto open first note on desktop
-            if (!this.isMobile && this.selectedNoteId === null && this.notes.length > 0) {
+
+            // If selectedNoteId was passed via query parameter, auto-select its folder
+            if (this.selectedNoteId) {
+                const note = this.notes.find(n => n.id === this.selectedNoteId);
+                if (note) {
+                    this.selectedFolderId = note.folder_id || 'none';
+                    if (this.isMobile) {
+                        this.mobileView = 'editor';
+                    }
+                }
+            } else if (!this.isMobile && this.notes.length > 0) {
+                // Auto open first note on desktop
                 this.selectedNoteId = this.notes[0].id;
             }
 

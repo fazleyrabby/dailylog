@@ -3,15 +3,17 @@
 @section('title', 'Journal')
 @section('header_breadcrumbs', 'DAILYLOG // JOURNAL')
 
+@section('content_padding', 'p-0')
+
 @section('content')
 <div
     x-data="Object.assign(journalComponent({{ json_encode($journalEntries) }}), panelResizer({key:'journal', initial:360, min:280, max:560}))"
     x-init="initPanelResizer()"
-    class="h-[calc(100vh-100px)] flex flex-col md:flex-row overflow-hidden border border-border rounded-sm bg-surface"
+    class="h-[calc(100vh-48px)] flex flex-row overflow-hidden bg-surface"
     :class="resizing ? 'cursor-col-resize' : ''"
 >
     <!-- LEFT SIDEBAR: Calendar & History -->
-    <div :style="isMobile ? '' : 'width:' + panelWidth + 'px'" class="w-full md:flex-shrink-0 border-b md:border-b-0 md:border-r border-border flex flex-col bg-surface-2/10 max-h-[45vh] md:max-h-full">
+    <div :style="isMobile ? '' : 'width:' + panelWidth + 'px'" class="w-full md:flex-shrink-0 border-b md:border-b-0 flex flex-col bg-surface-2/10 max-h-[45vh] md:max-h-full">
         <!-- Calendar Grid Header -->
         <div class="p-3 border-b border-border bg-surface">
             <div class="flex items-center justify-between mb-3">
@@ -74,9 +76,10 @@
     <!-- DRAG HANDLE RESIZER -->
     <div
         @mousedown="startPanelResize($event)"
-        class="hidden md:flex w-3 flex-shrink-0 h-full z-10 cursor-col-resize items-center justify-center group"
+        class="hidden md:flex w-2.5 flex-shrink-0 h-full z-10 cursor-col-resize items-center justify-center group relative"
     >
-        <div class="w-[2px] h-full bg-border group-hover:bg-accent transition-colors duration-150"></div>
+        <div class="w-[1px] h-full bg-border group-hover:bg-accent transition-colors duration-150"></div>
+        <div class="absolute top-1/2 -translate-y-1/2 w-1 h-7 rounded-full bg-border/60 group-hover:bg-accent transition-colors duration-150 shadow-xs"></div>
     </div>
 
     <!-- RIGHT SECTION: Journal Content Editor -->
