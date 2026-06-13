@@ -57,7 +57,7 @@
     border-left: 2px solid var(--color-accent) !important;
 }
 .CodeMirror-selected {
-    background: rgba(var(--color-accent-rgb), 0.2) !important;
+    background: rgba(94, 106, 210, 0.3) !important;
 }
 .editor-statusbar {
     display: none !important;
