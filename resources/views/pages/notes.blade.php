@@ -66,7 +66,7 @@
 <div
     x-data="notesComponent({{ json_encode($notes) }}, {{ json_encode($folders) }})"
     x-init="initMobile()"
-    class="h-[calc(100vh-48px)] flex flex-row overflow-hidden bg-surface select-none"
+    class="h-[calc(100vh-48px)] flex flex-row overflow-hidden bg-surface"
     :class="(resizingFolder || resizingNotes) ? 'cursor-col-resize' : ''"
 >
     <!-- PANEL 1: FOLDERS & TAGS SIDEBAR -->
