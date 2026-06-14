@@ -17,19 +17,7 @@ export const THEMES = [
     { id: 'neon-grid',       name: 'Neon Grid',        family: 'dark',  labels: {} },
     { id: 'macintosh',       name: 'Macintosh 1998',   family: 'light', labels: {} },
     { id: 'mission-control', name: 'Mission Control',  family: 'dark',  labels: {} },
-    {
-        id: 'quest',
-        name: 'Quest Mode',
-        family: 'dark',
-        labels: {
-            Tasks: 'Quests',
-            Learning: 'Skill Tree',
-            Projects: 'Campaigns',
-            Journal: 'Chronicle',
-            Notes: 'Codex',
-            Lab: 'Workshop',
-        },
-    },
+    { id: 'quest',           name: 'Quest Mode',       family: 'dark',  labels: {} },
 ];
 
 export const THEME_MAP = Object.fromEntries(THEMES.map(t => [t.id, t]));
