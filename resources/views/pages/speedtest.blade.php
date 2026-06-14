@@ -260,6 +260,15 @@ window.speedtestComponent = function(clientIp, initialLogs) {
 
         init() {
             this.measurePings();
+            // Fetch client's real public IP directly from the browser
+            fetch('https://api.ipify.org?format=json')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.ip) {
+                        this.ip = data.ip;
+                    }
+                })
+                .catch(err => console.warn('Could not determine public client IP client-side:', err));
         },
 
         setServer(srv) {
@@ -439,7 +448,8 @@ window.speedtestComponent = function(clientIp, initialLogs) {
                         server_name: this.selectedServer.toUpperCase(),
                         latency_ms: this.latency,
                         download_speed: this.downloadSpeed,
-                        upload_speed: this.uploadSpeed
+                        upload_speed: this.uploadSpeed,
+                        ip_address: this.ip
                     })
                 });
                 

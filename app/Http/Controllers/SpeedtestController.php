@@ -81,11 +81,12 @@ class SpeedtestController extends Controller
             'latency_ms' => ['required', 'numeric', 'min:0'],
             'download_speed' => ['required', 'numeric', 'min:0'],
             'upload_speed' => ['required', 'numeric', 'min:0'],
+            'ip_address' => ['nullable', 'string', 'max:45'],
         ]);
 
         $log = SpeedtestLog::create([
             'user_id' => auth()->id(),
-            'ip_address' => $request->ip(),
+            'ip_address' => $validated['ip_address'] ?? $request->ip(),
             'server_name' => $validated['server_name'],
             'latency_ms' => $validated['latency_ms'],
             'download_speed' => $validated['download_speed'],

@@ -71,6 +71,7 @@ class SpeedtestControllerTest extends TestCase
                 'latency_ms' => 45.2,
                 'download_speed' => 95.5,
                 'upload_speed' => 48.7,
+                'ip_address' => '103.153.171.97',
             ])
             ->assertOk()
             ->assertJson([
@@ -83,6 +84,7 @@ class SpeedtestControllerTest extends TestCase
             'latency_ms' => 45.2,
             'download_speed' => 95.5,
             'upload_speed' => 48.7,
+            'ip_address' => '103.153.171.97',
         ]);
     }
 
