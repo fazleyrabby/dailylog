@@ -230,6 +230,7 @@
     </div>
 </div>
 
+<script src="{{ asset('js/speedtest.js') }}"></script>
 <script>
 window.speedtestComponent = function(clientIp, initialLogs) {
     return {
@@ -241,6 +242,7 @@ window.speedtestComponent = function(clientIp, initialLogs) {
         statusText: 'IDLE',
         currentSpeed: '0.0',
         currentTestType: 'none', // 'download' | 'upload' | 'none'
+        speedtest: null,
         
         pings: {
             singapore: null,
@@ -321,7 +323,14 @@ window.speedtestComponent = function(clientIp, initialLogs) {
         },
 
         resetTest() {
-            if (this.running) return;
+            if (this.running) {
+                if (this.speedtest) {
+                    try {
+                        this.speedtest.abort();
+                    } catch (e) {}
+                }
+                this.running = false;
+            }
             this.stage = 'IDLE';
             this.statusText = 'IDLE';
             this.currentSpeed = '0.0';
@@ -350,143 +359,124 @@ window.speedtestComponent = function(clientIp, initialLogs) {
             this.uploadSpeed = null;
             
             try {
-                // 1. Latency check
-                this.stage = 'LATENCY';
-                this.statusText = 'PINGING';
-                await this.measurePings();
-                this.latency = this.pings[this.selectedServer];
+                // Initialize LibreSpeed
+                this.speedtest = new Speedtest();
                 
-                // 2. Download speed test
-                this.stage = 'DOWNLOAD';
-                this.statusText = 'DOWNLOADING';
-                this.currentTestType = 'download';
+                // Configure parameters
+                this.speedtest.setParameter("time_dl_max", 8); // 8 seconds max for download
+                this.speedtest.setParameter("time_ul_max", 8); // 8 seconds max for upload
+                this.speedtest.setParameter("count_ping", 3);  // 3 pings
+                this.speedtest.setParameter("xhr_dlMultistream", 1); // 1 thread to prevent VPS worker saturation
+                this.speedtest.setParameter("xhr_ulMultistream", 1); // 1 thread to prevent VPS worker saturation
                 
-                const dlStart = performance.now();
-                const testSizeMB = 4; // 4MB is lightweight and sufficient for speed checks
-                let downloadedBytes = 0;
+                // Setup URLs based on the selected server/region
+                this.speedtest.setParameter("url_dl", "/speedtest/download");
+                this.speedtest.setParameter("url_ul", "/speedtest/upload");
                 
-                const response = await fetch(`/speedtest/download?size=${testSizeMB}&nocache=${Date.now()}`);
-                if (!response.ok) throw new Error('Download failed');
-                
-                const reader = response.body.getReader();
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    
-                    downloadedBytes += value.length;
-                    const elapsed = (performance.now() - dlStart) / 1000;
-                    if (elapsed > 0) {
-                        const speedMbps = (downloadedBytes * 8) / (elapsed * 1024 * 1024);
-                        this.updateGauge(speedMbps, 100);
-                    }
+                // Set the ping URL dynamically
+                let pingUrl = "/robots.txt";
+                if (this.selectedServer === 'malaysia') {
+                    pingUrl = "https://dynamodb.ap-southeast-4.amazonaws.com";
+                } else if (this.selectedServer === 'hongkong') {
+                    pingUrl = "https://dynamodb.ap-east-1.amazonaws.com";
                 }
+                this.speedtest.setParameter("url_ping", pingUrl);
+                this.speedtest.setParameter("url_getIp", "/speedtest/upload");
                 
-                const dlDuration = (performance.now() - dlStart) / 1000;
-                this.downloadSpeed = (downloadedBytes * 8) / (dlDuration * 1024 * 1024);
-                this.updateGauge(this.downloadSpeed, 100);
-                
-                // Pause briefly to show completion
-                await new Promise(r => setTimeout(r, 800));
-                
-                // 3. Upload speed test
-                this.stage = 'UPLOAD';
-                this.statusText = 'UPLOADING';
-                this.currentTestType = 'upload';
-                
-                const uploadSize = 1.5 * 1024 * 1024; // 1.5MB upload payload
-                const randomData = new Uint8Array(uploadSize);
-                // Fill with random values to make it completely uncompressible
-                try {
-                    crypto.getRandomValues(randomData);
-                } catch (e) {
-                    for (let i = 0; i < uploadSize; i += 256) {
-                        const val = Math.floor(Math.random() * 256);
-                        for (let j = 0; j < 16 && (i + j) < uploadSize; j++) {
-                            randomData[i + j] = val;
+                this.speedtest.onupdate = (data) => {
+                    // testState values:
+                    // -1 = not started, 0 = starting, 1 = download test, 2 = ping+jitter, 3 = upload, 4 = finished, 5 = aborted
+                    if (data.testState === 0) {
+                        this.stage = 'STARTING';
+                        this.statusText = 'PREPARING';
+                    } else if (data.testState === 2) {
+                        this.stage = 'LATENCY';
+                        this.statusText = 'PINGING';
+                        if (data.pingStatus) {
+                            this.latency = Math.round(parseFloat(data.pingStatus));
+                        }
+                    } else if (data.testState === 1) {
+                        this.stage = 'DOWNLOAD';
+                        this.statusText = 'DOWNLOADING';
+                        this.currentTestType = 'download';
+                        if (data.dlStatus) {
+                            const speed = parseFloat(data.dlStatus);
+                            this.updateGauge(speed, 100);
+                            this.downloadSpeed = speed;
+                        }
+                    } else if (data.testState === 3) {
+                        this.stage = 'UPLOAD';
+                        this.statusText = 'UPLOADING';
+                        this.currentTestType = 'upload';
+                        if (data.ulStatus) {
+                            const speed = parseFloat(data.ulStatus);
+                            this.updateGauge(speed, 50);
+                            this.uploadSpeed = speed;
                         }
                     }
-                }
+                };
                 
-                const upStart = performance.now();
-                
-                await new Promise((resolve, reject) => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('POST', '/speedtest/upload', true);
-                    const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                    xhr.setRequestHeader('X-CSRF-TOKEN', csrf);
+                this.speedtest.onend = async (aborted) => {
+                    if (aborted) {
+                        this.stage = 'FAILED';
+                        this.statusText = 'ABORTED';
+                        this.currentTestType = 'none';
+                        this.running = false;
+                        return;
+                    }
                     
-                    xhr.upload.onprogress = (e) => {
-                        if (e.lengthComputable) {
-                            const elapsed = (performance.now() - upStart) / 1000;
-                            if (elapsed > 0) {
-                                const speedMbps = (e.loaded * 8) / (elapsed * 1024 * 1024);
-                                this.updateGauge(speedMbps, 50);
+                    this.stage = 'LOGGING';
+                    this.statusText = 'LOGGING';
+                    
+                    try {
+                        const logRes = await fetch('/speedtest/log', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                server_name: this.selectedServer.toUpperCase(),
+                                latency_ms: this.latency || 0,
+                                download_speed: this.downloadSpeed || 0,
+                                upload_speed: this.uploadSpeed || 0,
+                                ip_address: this.ip
+                            })
+                        });
+                        
+                        if (logRes.ok) {
+                            const resData = await logRes.json();
+                            if (resData.success) {
+                                this.logs.unshift(resData.log);
+                                if (this.logs.length > 10) this.logs.pop();
                             }
                         }
-                    };
-                    
-                    xhr.onload = () => {
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            resolve();
-                        } else {
-                            reject(new Error('Upload failed'));
-                        }
-                    };
-                    
-                    xhr.onerror = () => reject(new Error('Upload network error'));
-                    xhr.send(randomData);
-                });
-                
-                const upDuration = (performance.now() - upStart) / 1000;
-                this.uploadSpeed = (uploadSize * 8) / (upDuration * 1024 * 1024);
-                this.updateGauge(this.uploadSpeed, 50);
-                
-                // 4. Log results
-                this.stage = 'LOGGING';
-                this.statusText = 'LOGGING';
-                
-                const logRes = await fetch('/speedtest/log', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        server_name: this.selectedServer.toUpperCase(),
-                        latency_ms: this.latency,
-                        download_speed: this.downloadSpeed,
-                        upload_speed: this.uploadSpeed,
-                        ip_address: this.ip
-                    })
-                });
-                
-                if (logRes.ok) {
-                    const data = await logRes.json();
-                    if (data.success) {
-                        this.logs.unshift(data.log);
-                        if (this.logs.length > 10) this.logs.pop();
+                    } catch (e) {
+                        console.error("Failed to log results:", e);
                     }
-                }
+                    
+                    this.stage = 'DONE';
+                    this.statusText = 'COMPLETE';
+                    this.currentTestType = 'none';
+                    this.running = false;
+                    
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: 'Speedtest completed and logged!' }
+                    }));
+                };
                 
-                this.stage = 'DONE';
-                this.statusText = 'COMPLETE';
-                this.currentTestType = 'none';
-                
-                window.dispatchEvent(new CustomEvent('show-toast', { 
-                    detail: { message: 'Speedtest completed and logged!' }
-                }));
+                this.speedtest.start();
                 
             } catch (e) {
                 console.error(e);
                 this.stage = 'FAILED';
                 this.statusText = 'ERROR';
                 this.currentTestType = 'none';
+                this.running = false;
                 window.dispatchEvent(new CustomEvent('show-toast', { 
                     detail: { message: 'Speedtest failed. Please retry.' }
                 }));
-            } finally {
-                this.running = false;
             }
         },
 
