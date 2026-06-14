@@ -33,19 +33,21 @@ class SpeedtestController extends Controller
 
     public function download(Request $request): StreamedResponse
     {
-        // Set higher limits for large chunk generation
         ini_set('max_execution_time', 120);
 
-        // Allow up to 25MB, default to 5MB
-        $sizeMB = min((int) $request->query('size', 5), 25);
-        $chunk = str_repeat('0', 1024 * 64); // 64KB chunk of zeros
+        // Allow up to 25MB, default to 8MB for a thorough test
+        $sizeMB = min((int) $request->query('size', 8), 25);
+        $chunkSize = 1024 * 64; // 64KB chunk
         $totalBytes = $sizeMB * 1024 * 1024;
-        $chunksCount = (int) ($totalBytes / (1024 * 64));
+        $chunksCount = (int) ($totalBytes / $chunkSize);
+
+        // Pre-generate a random chunk of bytes to speed up generation while maintaining uncompressibility
+        $chunk = random_bytes($chunkSize);
 
         return response()->stream(function () use ($chunk, $chunksCount) {
             for ($i = 0; $i < $chunksCount; $i++) {
                 echo $chunk;
-                // Flush the output buffer to send it over the wire immediately
+                
                 if (ob_get_level() > 0) {
                     ob_flush();
                 }
@@ -62,6 +64,8 @@ class SpeedtestController extends Controller
             'Cache-Control' => 'no-cache, no-store, must-revalidate',
             'Pragma' => 'no-cache',
             'Expires' => '0',
+            'Content-Encoding' => 'identity', // Request proxy not to compress
+            'X-Accel-Buffering' => 'no', // Disable buffering in Nginx
         ]);
     }
 

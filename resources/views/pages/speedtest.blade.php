@@ -393,9 +393,21 @@ window.speedtestComponent = function(clientIp, initialLogs) {
                 this.statusText = 'UPLOADING';
                 this.currentTestType = 'upload';
                 
-                // Generate a 2MB chunk of random data
+                // Generate a 2.5MB chunk of random data
                 const uploadSize = 2.5 * 1024 * 1024; // 2.5MB
                 const randomData = new Uint8Array(uploadSize);
+                // Fill with random values to make it completely uncompressible
+                try {
+                    crypto.getRandomValues(randomData);
+                } catch (e) {
+                    // Fallback for non-secure contexts (e.g. HTTP localhost development)
+                    for (let i = 0; i < uploadSize; i += 256) {
+                        const val = Math.floor(Math.random() * 256);
+                        for (let j = 0; j < 16 && (i + j) < uploadSize; j++) {
+                            randomData[i + j] = val;
+                        }
+                    }
+                }
                 
                 const upStart = performance.now();
                 
