@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "/Users/rabbi/Library/Application Support/Herd/bin/php83",
+            "args": [
+                "/Users/rabbi/Desktop/Projects/Laravel/DailyLOG/artisan",
+                "boost:mcp"
+            ]
+        }
+    }
+}
