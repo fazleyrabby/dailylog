@@ -330,8 +330,7 @@ html[data-theme="quest"] .ui-sidebar-item {
     border-radius: 6px;
 }
 html[data-theme="quest"] .ui-sidebar-item.bg-accent-subtle-bg\/40 {
-    background: linear-gradient(90deg, rgba(224, 180, 60, 0.22), rgba(224, 180, 60, 0.04));
-    box-shadow: inset 3px 0 0 var(--color-accent-app), 0 0 14px rgba(224, 180, 60, 0.18);
+    background: linear-gradient(90deg, rgba(224, 180, 60, 0.18), rgba(224, 180, 60, 0.03));
     color: var(--color-accent-app);
 }
 
