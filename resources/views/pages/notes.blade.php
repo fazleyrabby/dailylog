@@ -33,7 +33,7 @@
     border: none !important;
 }
 .editor-toolbar button:hover, .editor-toolbar button.active {
-    background: var(--color-surface-3) !important;
+    background: var(--color-surface-2) !important;
     color: var(--color-accent) !important;
 }
 .editor-toolbar i.separator {
@@ -46,7 +46,7 @@
     border: 1px solid var(--color-border) !important;
     border-top: none !important;
     border-radius: 0 0 4px 4px !important;
-    font-family: var(--font-serif-reading) !important;
+    font-family: var(--font-reading) !important;
     font-size: 14px !important;
     line-height: 1.6 !important;
 }
@@ -517,6 +517,11 @@ window.notesComponent = function(initialNotes, initialFolders) {
                     toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen"],
                     nativeSpellcheck: true
                 });
+
+                // Disable CodeMirror's text drag-and-drop. With the app-wide
+                // `select-none`, dragging text would move it instead of
+                // selecting; turning this off restores normal drag-to-select.
+                this.easymde.codemirror.setOption('dragDrop', false);
 
                 // Sync EasyMDE changes to Alpine state
                 this.easymde.codemirror.on("change", () => {
