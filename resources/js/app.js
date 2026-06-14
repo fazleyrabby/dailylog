@@ -13,6 +13,7 @@ window.DailyLogThemes = { list: THEMES, map: THEME_MAP, normalizeThemeId, themeF
 document.addEventListener('alpine:init', () => {
     Alpine.store('themes', {
         list: THEMES,
+        map: THEME_MAP,
         current: normalizeThemeId(localStorage.getItem('theme')),
         label(key) {
             const t = THEME_MAP[this.current];

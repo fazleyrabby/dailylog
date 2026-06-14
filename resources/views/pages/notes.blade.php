@@ -5,70 +5,9 @@
 @section('content_padding', 'p-0')
 
 @section('content')
-<!-- EasyMDE editor assets -->
-<link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
-<script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
-
 <style>
-/* Theme overrides for EasyMDE to match DailyLOG modern dark/light system */
-.EasyMDEContainer {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    border: none !important;
-    height: calc(100% - 40px);
-}
-.editor-toolbar {
-    background: var(--color-surface-2) !important;
-    border: 1px solid var(--color-border) !important;
-    border-radius: 4px 4px 0 0 !important;
-    opacity: 0.95;
-    padding: 4px 8px !important;
-}
-.editor-toolbar button {
-    color: var(--color-text-muted) !important;
-    border-radius: 4px !important;
-    transition: all 0.15s ease !important;
-    background: transparent !important;
-    border: none !important;
-}
-.editor-toolbar button:hover, .editor-toolbar button.active {
-    background: var(--color-surface-2) !important;
-    color: var(--color-accent) !important;
-}
-.editor-toolbar i.separator {
-    border-left: 1px solid var(--color-border) !important;
-}
-.CodeMirror {
-    flex-grow: 1;
-    background: var(--color-surface) !important;
-    color: var(--color-text-main) !important;
-    border: 1px solid var(--color-border) !important;
-    border-top: none !important;
-    border-radius: 0 0 4px 4px !important;
-    /* CodeMirror measures glyph widths assuming a monospace font, and must
-       measure with a font that is already loaded. A web font (loaded async)
-       corrupts cursor/click/line math until it swaps in, so use a system
-       monospace stack here. The preview pane keeps the reading serif. */
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace !important;
-    font-size: 13px !important;
-    line-height: 1.6 !important;
-}
-.CodeMirror-scroll {
-    min-height: 250px;
-}
-.CodeMirror-cursor {
-    border-left: 2px solid var(--color-accent) !important;
-}
-.CodeMirror-selected {
-    background: rgba(94, 106, 210, 0.3) !important;
-}
-.editor-statusbar {
-    display: none !important;
-}
 /* Enable text selection inside the editor and preview panels, overriding parent select-none */
-.CodeMirror, .CodeMirror *, .CodeMirror-scroll, .CodeMirror-lines, .CodeMirror-line, .CodeMirror-line *,
-.prose, .prose * {
+.prose, .prose *, textarea {
     user-select: text !important;
     -webkit-user-select: text !important;
 }
@@ -132,7 +71,7 @@
                     @dragend="handleDragEnd($event)"
                     @dragover.prevent
                     @drop="handleDrop($event, folder.id)"
-                    @click="folder.hasChildren ? toggleFolder(folder.id) : (selectedFolderId = folder.id; if (isMobile) mobileView = 'notes';)"
+                    @click="if (folder.hasChildren) { toggleFolder(folder.id) } else { selectedFolderId = folder.id; if (isMobile) { mobileView = 'notes' } }"
                     :class="selectedFolderId === folder.id ? 'bg-accent/10 text-accent font-semibold' : 'text-text-muted hover:bg-surface-2/30'"
                     class="group w-full flex items-center justify-between pr-3 py-1.5 text-xxs cursor-pointer select-none border-b border-border/10"
                     :style="'padding-left:' + (12 + folder.depth * 14) + 'px'"
@@ -347,7 +286,9 @@
                 />
                 <textarea 
                     x-ref="noteBodyEditor"
-                    class="hidden"
+                    x-model="activeNote.body"
+                    class="w-full flex-grow bg-transparent border-0 focus:ring-0 focus:outline-none text-text-main font-mono text-sm leading-relaxed resize-none select-text"
+                    placeholder="Write in markdown... (supports bold, headings, links, lists, etc.)"
                 ></textarea>
             </div>
 
@@ -413,7 +354,6 @@ window.notesComponent = function(initialNotes, initialFolders) {
         })(),
         resizingFolder: false,
         resizingNotes: false,
-        easymde: null,
 
         notes: initialNotes,
         folders: initialFolders || [],
@@ -510,55 +450,11 @@ window.notesComponent = function(initialNotes, initialFolders) {
                 this.selectedNoteId = this.notes[0].id;
             }
 
-            // Initialize EasyMDE Editor
-            this.$nextTick(() => {
-                this.easymde = new EasyMDE({
-                    element: this.$refs.noteBodyEditor,
-                    spellChecker: false,
-                    autosave: { enabled: false },
-                    status: false,
-                    placeholder: "Write in markdown... (supports bold, headings, links, lists, etc.)",
-                    toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen"],
-                    nativeSpellcheck: true
-                });
-
-                // Disable CodeMirror's text drag-and-drop. With the app-wide
-                // `select-none`, dragging text would move it instead of
-                // selecting; turning this off restores normal drag-to-select.
-                this.easymde.codemirror.setOption('dragDrop', false);
-
-                // Re-measure once web fonts have loaded, otherwise CodeMirror's
-                // cached glyph metrics are stale and the cursor/clicks land on
-                // the wrong line.
-                if (document.fonts && document.fonts.ready) {
-                    document.fonts.ready.then(() => this.easymde && this.easymde.codemirror.refresh());
-                }
-
-                // Sync EasyMDE changes to Alpine state
-                this.easymde.codemirror.on("change", () => {
-                    this.activeNote.body = this.easymde.value();
-                });
-
-                // Set initial value
-                if (this.activeNote && this.activeNote.id) {
-                    this.easymde.value(this.activeNote.body || "");
-                }
-            });
-
-            // Watch for note selection changes
-            this.$watch('selectedNoteId', (newId) => {
-                if (this.easymde) {
-                    const note = this.notes.find(n => n.id === newId);
-                    this.easymde.value(note ? (note.body || "") : "");
-                }
-            });
-
-            // Watch for editMode toggles to refresh layout
+            // Watch for editMode toggles to focus native textarea
             this.$watch('editMode', (val) => {
-                if (val && this.easymde) {
+                if (val) {
                     this.$nextTick(() => {
-                        this.easymde.codemirror.refresh();
-                        this.easymde.codemirror.focus();
+                        this.$refs.noteBodyEditor && this.$refs.noteBodyEditor.focus();
                     });
                 }
             });
