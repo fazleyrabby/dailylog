@@ -14,7 +14,7 @@ export const THEMES = [
     { id: 'dark',            name: 'DailyLOG Dark',    family: 'dark',  labels: {} },
     { id: 'paper',           name: 'DailyLOG Paper',   family: 'light', labels: {} },
     { id: 'neo-brutalist',   name: 'Neo Brutalist OS', family: 'light', labels: {} },
-    { id: 'neon-grid',       name: 'Neon Grid',        family: 'dark',  labels: {} },
+    { id: 'retro',           name: 'Retro 8-Bit',      family: 'light', labels: {} },
     { id: 'macintosh',       name: 'Macintosh 1998',   family: 'light', labels: {} },
     { id: 'mission-control', name: 'Mission Control',  family: 'dark',  labels: {} },
     { id: 'quest',           name: 'Quest Mode',       family: 'dark',  labels: {} },

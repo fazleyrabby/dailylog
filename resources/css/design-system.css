@@ -104,30 +104,33 @@ html[data-theme="neo-brutalist"] {
     --shadow-button: 3px 3px 0 var(--color-border-strong-app);
 }
 
-/* ---- Neon Grid (cyberpunk dark, neon purple + electric blue, glow) ---- */
-html[data-theme="neon-grid"] {
-    --color-bg-app: #070710;
-    --color-surface-app: #0D0D1A;
-    --color-surface-2-app: #15152A;
-    --color-border-app: #2A2A55;
-    --color-border-strong-app: #3D3D7A;
-    --color-text-app: #E8E8FF;
-    --color-text-muted-app: #9A9AD0;
-    --color-text-subtle-app: #5A5A8A;
+/* ---- Retro 8-Bit (arcade pixel UI, chunky borders, hard shadows) ---- */
+html[data-theme="retro"] {
+    --color-bg-app: #E6E2D3;
+    --color-surface-app: #F4F1E4;
+    --color-surface-2-app: #D8D2BC;
+    --color-border-app: #1A1423;
+    --color-border-strong-app: #1A1423;
+    --color-text-app: #1A1423;
+    --color-text-muted-app: #4A4453;
+    --color-text-subtle-app: #7A7466;
 
-    --color-accent-app: #B026FF;
-    --color-accent-hover-app: #C44DFF;
-    --color-accent-subtle-bg-app: rgba(176, 38, 255, 0.16);
+    --color-accent-app: #E84855;
+    --color-accent-hover-app: #D7263D;
+    --color-accent-subtle-bg-app: #F7D8DA;
     --color-accent-fg-app: #FFFFFF;
 
-    --color-success-app: #34D399;
-    --color-warning-app: #FBBF24;
-    --color-danger-app: #FF4D6D;
-    --color-info-app: #00E5FF;
+    --color-success-app: #1B998B;
+    --color-warning-app: #E8A53D;
+    --color-danger-app: #C42B2B;
+    --color-info-app: #2D6BE0;
 
-    --font-ui: 'Space Grotesk', 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
-    --shadow-card: 0 0 0 1px rgba(176, 38, 255, 0.18), 0 0 22px rgba(176, 38, 255, 0.08);
-    --shadow-button: 0 0 12px rgba(176, 38, 255, 0.45);
+    --radius-card: 0;
+    --border-width: 2px;
+    --shadow-card: 4px 4px 0 var(--color-border-strong-app);
+    --shadow-button: 3px 3px 0 var(--color-border-strong-app);
+    --font-ui: 'VT323', ui-monospace, 'JetBrains Mono', monospace;
+    --font-display: 'Press Start 2P', 'VT323', monospace;
 }
 
 /* ---- Macintosh 1998 (classic Mac OS desktop, beveled chrome) ---- */
@@ -239,15 +242,34 @@ html[data-theme="neo-brutalist"] .ui-sidebar-item {
     border-radius: 0;
 }
 
-/* ---- Neon Grid: glowing edges + scanline grid backdrop ---- */
-html[data-theme="neon-grid"] body {
-    background-image:
-        linear-gradient(rgba(176, 38, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(176, 38, 255, 0.05) 1px, transparent 1px);
-    background-size: 32px 32px;
+/* ---- Retro 8-Bit: pixel chrome, hard shadows, CRT scanlines ---- */
+html[data-theme="retro"] body {
+    background-image: repeating-linear-gradient(
+        0deg, rgba(26, 20, 35, 0.05) 0 2px, transparent 2px 4px);
 }
-html[data-theme="neon-grid"] .ui-button {
+html[data-theme="retro"] h1,
+html[data-theme="retro"] h2,
+html[data-theme="retro"] h3 {
+    font-family: var(--font-display);
+    line-height: 1.4;
+    letter-spacing: 0;
+}
+html[data-theme="retro"] .ui-button {
+    border-radius: 0;
+    border-width: var(--border-width);
     box-shadow: var(--shadow-button);
+    text-transform: uppercase;
+}
+html[data-theme="retro"] .ui-button:active {
+    box-shadow: 1px 1px 0 var(--color-border-strong-app);
+    transform: translate(2px, 2px);
+}
+html[data-theme="retro"] .ui-input {
+    border-radius: 0;
+    border-width: var(--border-width);
+}
+html[data-theme="retro"] .ui-sidebar-item {
+    border-radius: 0;
 }
 
 /* ---- Macintosh 1998: beveled chrome on surfaces and buttons ---- */

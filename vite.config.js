@@ -24,13 +24,16 @@ export default defineConfig({
                 bunny('JetBrains Mono', {
                     weights: [400, 500, 700],
                 }),
-                // Display typeface used by the Neon Grid theme.
-                bunny('Space Grotesk', {
-                    weights: [400, 500, 600, 700],
-                }),
                 // Fantasy display typeface used by the Quest Mode theme.
                 bunny('Cinzel', {
                     weights: [500, 600, 700],
+                }),
+                // Pixel typefaces used by the Retro 8-Bit theme.
+                bunny('VT323', {
+                    weights: [400],
+                }),
+                bunny('Press Start 2P', {
+                    weights: [400],
                 }),
             ],
         }),
