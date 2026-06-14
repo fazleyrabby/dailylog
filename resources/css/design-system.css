@@ -243,9 +243,28 @@ html[data-theme="neo-brutalist"] .ui-sidebar-item {
 }
 
 /* ---- Retro 8-Bit: pixel chrome, hard shadows, CRT scanlines ---- */
+html[data-theme="retro"] {
+    font-size: 17px;
+}
 html[data-theme="retro"] body {
     background-image: repeating-linear-gradient(
         0deg, rgba(26, 20, 35, 0.05) 0 2px, transparent 2px 4px);
+    font-size: 1.1rem;
+}
+html[data-theme="retro"] .text-xxs {
+    font-size: 13px;
+}
+html[data-theme="retro"] .text-xs {
+    font-size: 14px;
+}
+html[data-theme="retro"] .prose,
+html[data-theme="retro"] .prose * {
+    font-size: 1.1rem !important;
+    line-height: 1.6 !important;
+}
+html[data-theme="retro"] textarea,
+html[data-theme="retro"] input {
+    font-size: 1.1rem !important;
 }
 html[data-theme="retro"] h1,
 html[data-theme="retro"] h2,
