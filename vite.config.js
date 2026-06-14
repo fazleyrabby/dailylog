@@ -28,6 +28,10 @@ export default defineConfig({
                 bunny('Space Grotesk', {
                     weights: [400, 500, 600, 700],
                 }),
+                // Fantasy display typeface used by the Quest Mode theme.
+                bunny('Cinzel', {
+                    weights: [500, 600, 700],
+                }),
             ],
         }),
         tailwindcss(),

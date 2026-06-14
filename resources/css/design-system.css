@@ -17,6 +17,7 @@
     --font-ui: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
     --font-reading: 'Newsreader', Georgia, 'Times New Roman', serif;
     --font-mono-code: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --font-display: var(--font-ui);
 
     /* Entry-type identity colours — shared across all themes */
     --color-type-task: #64748B;     /* slate */
@@ -201,9 +202,10 @@ html[data-theme="quest"] {
     --color-danger-app: #E5604D;
     --color-info-app: #8AB4F8;
 
-    --radius-card: 6px;
-    --shadow-card: 0 0 0 1px rgba(224, 180, 60, 0.14);
-    --shadow-button: 0 2px 0 rgba(224, 180, 60, 0.25);
+    --radius-card: 8px;
+    --shadow-card: 0 0 0 1px rgba(224, 180, 60, 0.25), 0 6px 18px rgba(0, 0, 0, 0.45);
+    --shadow-button: 0 0 14px rgba(224, 180, 60, 0.35);
+    --font-display: 'Cinzel', 'Newsreader', Georgia, serif;
 }
 
 /* =========================================================================
@@ -262,9 +264,85 @@ html[data-theme="macintosh"] .ui-input {
     box-shadow: inset 1px 1px 0 #808080, inset -1px -1px 0 #FFFFFF;
 }
 
-/* ---- Quest Mode: soft gilded panels ---- */
+/* ---- Quest Mode: full gamified RPG skin ----------------------------------
+   Parchment-dark backdrop, gilded panels, glowing gold actions, XP-pill
+   counters and an engraved fantasy display face on titles & nav. All scoped
+   to [data-theme="quest"] so no other theme or page markup is affected. */
+
+/* Atmospheric backdrop — radial vignette + faint diagonal weave */
+html[data-theme="quest"] body {
+    background-color: var(--color-bg-app);
+    background-image:
+        radial-gradient(120% 80% at 50% -10%, rgba(224, 180, 60, 0.10), transparent 60%),
+        repeating-linear-gradient(45deg, rgba(224, 180, 60, 0.03) 0 2px, transparent 2px 8px);
+}
+
+/* Engraved display face on titles, nav labels and primary chrome */
+html[data-theme="quest"] h1,
+html[data-theme="quest"] h2,
+html[data-theme="quest"] h3,
+html[data-theme="quest"] h4,
+html[data-theme="quest"] .ui-sidebar-item span,
 html[data-theme="quest"] .ui-button {
+    font-family: var(--font-display);
+    letter-spacing: 0.04em;
+}
+html[data-theme="quest"] h1,
+html[data-theme="quest"] h2 {
+    text-shadow: 0 0 12px rgba(224, 180, 60, 0.25);
+}
+
+/* Gilded panels with an inner ring and a banner light along the top edge */
+html[data-theme="quest"] .ui-card {
+    background-image: linear-gradient(180deg, rgba(224, 180, 60, 0.06), transparent 40%);
+    border-color: var(--color-accent-app);
+    position: relative;
+}
+html[data-theme="quest"] .ui-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--color-accent-app), transparent);
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Quest-giver buttons: gold gradient + glow + lift; primary is the hero action */
+html[data-theme="quest"] .ui-button {
+    text-transform: uppercase;
     box-shadow: var(--shadow-button);
+}
+html[data-theme="quest"] .ui-button.bg-accent {
+    background-image: linear-gradient(180deg, #F4D06A, #D9A52C);
+    border-color: #B8861F !important;
+    color: #2A1E12;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+    box-shadow: 0 0 16px rgba(224, 180, 60, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+html[data-theme="quest"] .ui-button.bg-accent:hover {
+    filter: brightness(1.06);
+    box-shadow: 0 0 22px rgba(224, 180, 60, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Active quest in the log — illuminated rune with a gold rail */
+html[data-theme="quest"] .ui-sidebar-item {
+    border-radius: 6px;
+}
+html[data-theme="quest"] .ui-sidebar-item.bg-accent-subtle-bg\/40 {
+    background: linear-gradient(90deg, rgba(224, 180, 60, 0.22), rgba(224, 180, 60, 0.04));
+    box-shadow: inset 3px 0 0 var(--color-accent-app), 0 0 14px rgba(224, 180, 60, 0.18);
+    color: var(--color-accent-app);
+}
+
+/* Nav counters reskinned as round XP pills */
+html[data-theme="quest"] .ui-sidebar-item > span {
+    background: linear-gradient(180deg, #F4D06A, #D9A52C);
+    color: #2A1E12;
+    border-color: #B8861F;
+    border-radius: 9999px;
+    font-weight: 700;
+    box-shadow: 0 0 8px rgba(224, 180, 60, 0.4);
 }
 
 /* Custom classes for typography selection */
