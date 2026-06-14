@@ -46,8 +46,11 @@
     border: 1px solid var(--color-border) !important;
     border-top: none !important;
     border-radius: 0 0 4px 4px !important;
-    font-family: var(--font-reading) !important;
-    font-size: 14px !important;
+    /* CodeMirror measures glyph widths assuming a monospace font; a
+       proportional face corrupts cursor/line layout. Source editing uses
+       the technical typeface, while the preview pane stays in reading serif. */
+    font-family: var(--font-mono-code) !important;
+    font-size: 13px !important;
     line-height: 1.6 !important;
 }
 .CodeMirror-scroll {
