@@ -23,10 +23,10 @@ ssh signalstack "cd /home/fazley/apps/dailylog && git pull"
 echo -e "${YELLOW}[3/4] Rebuilding production containers on VPS...${NC}"
 ssh signalstack "cd /home/fazley/apps/dailylog && docker compose -f docker-compose.prod.yml up -d --build"
 
-# 4. Clear Laravel Application Cache
-echo -e "${YELLOW}[4/4] Optimizing and clearing cache on VPS application container...${NC}"
-ssh signalstack "docker exec dailylog_prod_app php artisan view:clear"
-ssh signalstack "docker exec dailylog_prod_app php artisan route:clear"
-ssh signalstack "docker exec dailylog_prod_app php artisan config:clear"
+# 4. Clear and Cache Laravel Application Assets
+echo -e "${YELLOW}[4/4] Optimizing and caching application config, routes, and views on VPS...${NC}"
+ssh signalstack "docker exec dailylog_prod_app php artisan config:cache"
+ssh signalstack "docker exec dailylog_prod_app php artisan route:cache"
+ssh signalstack "docker exec dailylog_prod_app php artisan view:cache"
 
 echo -e "${GREEN}=== Deployment Completed Successfully! ===${NC}"

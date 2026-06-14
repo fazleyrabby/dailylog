@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         $middleware->redirectGuestsTo(fn () => route('auth.login'));
         $middleware->redirectUsersTo(fn () => route('dashboard.index'));
+        $middleware->validateCsrfTokens(except: [
+            'speedtest/upload',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
