@@ -280,9 +280,9 @@ window.speedtestComponent = function(clientIp, initialLogs) {
 
         async measurePings() {
             const targets = {
-                singapore: '/speedtest/ping',
-                malaysia: 'https://ec2.ap-southeast-3.amazonaws.com/ping',
-                hongkong: 'https://ec2.ap-east-1.amazonaws.com/ping'
+                singapore: '/robots.txt', // Static asset bypassing PHP/Laravel boot lifecycle
+                malaysia: 'https://s3.ap-southeast-3.amazonaws.com', // AWS S3 Malaysia (Kuala Lumpur)
+                hongkong: 'https://s3.ap-east-1.amazonaws.com' // AWS S3 Hong Kong
             };
 
             for (const [key, url] of Object.entries(targets)) {

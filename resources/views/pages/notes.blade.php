@@ -153,7 +153,7 @@
                             </svg>
                             <!-- Open Folder SVG (when expanded) -->
                             <svg class="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" x-show="expanded.includes(folder.id)">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v5H3m2 6h14a2 2 0 002-2v-5a2 2 0 00-2-2H9l-2-2H5a2 2 0 00-2 2v10z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2zm0 3h16" />
                             </svg>
                             <span x-text="folder.name"></span>
                         </span>
