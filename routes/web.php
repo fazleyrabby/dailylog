@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BookmarksController;
 use App\Http\Controllers\CaptureController;
 use App\Http\Controllers\DashboardController;
@@ -93,7 +94,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/slipping/{snapshot}/schedule', [SlippingController::class, 'schedule'])->name('slipping.schedule');
     Route::post('/slipping/{snapshot}/snooze', [SlippingController::class, 'snooze'])->name('slipping.snooze');
     Route::post('/slipping/{snapshot}/let-go', [SlippingController::class, 'letGo'])->name('slipping.let-go');
-    Route::get('/settings', fn () => view('pages.settings', ['data' => MockData::all()]))->name('settings.profile');
+    Route::get('/settings', fn () => view('pages.settings', [
+        'data' => MockData::all(),
+        'lastBackupAt' => cache('supabase_backup_last_at'),
+    ]))->name('settings.profile');
+    Route::post('/settings/backup-supabase', [BackupController::class, 'toSupabase'])->name('settings.backup.supabase');
 
     // Lab Routes
     Route::get('/lab', [LabController::class, 'index'])->name('lab.index');

@@ -99,6 +99,23 @@ return [
             'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 
+        // Remote Supabase database, used only as a periodic backup target
+        // (see App\Console\Commands\BackupToSupabase). Point DB_* at the local
+        // Postgres for normal app traffic and keep these for the mirror.
+        'supabase' => [
+            'driver' => 'pgsql',
+            'host' => env('SUPABASE_DB_HOST'),
+            'port' => env('SUPABASE_DB_PORT', '5432'),
+            'database' => env('SUPABASE_DB_DATABASE', 'postgres'),
+            'username' => env('SUPABASE_DB_USERNAME'),
+            'password' => env('SUPABASE_DB_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => env('SUPABASE_DB_SSLMODE', 'require'),
+        ],
+
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DB_URL'),

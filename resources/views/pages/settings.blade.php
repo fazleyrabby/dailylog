@@ -11,6 +11,35 @@
     <!-- Settings Forms Grid -->
     <div class="space-y-6">
         
+        <!-- DATABASE BACKUP -->
+        <x-ui.card title="Database Backup">
+            <div class="space-y-3 text-xs">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <span class="font-bold text-text-main block">Back up to Supabase</span>
+                        <span class="text-text-muted mt-0.5">Mirror the live database to the off-site Supabase copy. Runs automatically every week; you can also trigger it manually.</span>
+                    </div>
+                    <form method="POST" action="{{ route('settings.backup.supabase') }}" x-data="{ busy: false }" @submit="busy = true" class="flex-shrink-0">
+                        @csrf
+                        <x-ui.button type="submit" variant="secondary" size="sm" ::disabled="busy">
+                            <span x-show="!busy">Back up now</span>
+                            <span x-show="busy" style="display:none;">Backing up…</span>
+                        </x-ui.button>
+                    </form>
+                </div>
+                <div class="text-text-subtle">
+                    Last backup:
+                    <span class="font-mono text-text-muted">{{ $lastBackupAt ? \Illuminate\Support\Carbon::parse($lastBackupAt)->diffForHumans() : 'never' }}</span>
+                </div>
+                @if(session('status'))
+                    <div class="text-success font-medium">{{ session('status') }}</div>
+                @endif
+                @if(session('error'))
+                    <div class="text-danger font-medium break-words">{{ session('error') }}</div>
+                @endif
+            </div>
+        </x-ui.card>
+
         <!-- APPEARANCE & THEME -->
         <x-ui.card title="Appearance & Layout Mode">
             <div class="space-y-4 text-xs">
