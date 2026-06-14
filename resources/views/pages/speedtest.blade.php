@@ -362,29 +362,24 @@ window.speedtestComponent = function(clientIp, initialLogs) {
                 this.currentTestType = 'download';
                 
                 const dlStart = performance.now();
-                const threadCount = 4;
-                const sizePerThread = 2; // total 8MB across 4 threads
+                const testSizeMB = 4; // 4MB is lightweight and sufficient for speed checks
                 let downloadedBytes = 0;
                 
-                const downloadThreads = Array.from({ length: threadCount }, async () => {
-                    const response = await fetch(`/speedtest/download?size=${sizePerThread}&nocache=${Date.now()}_${Math.random()}`);
-                    if (!response.ok) throw new Error('Download thread failed');
-                    
-                    const reader = response.body.getReader();
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-                        
-                        downloadedBytes += value.length;
-                        const elapsed = (performance.now() - dlStart) / 1000;
-                        if (elapsed > 0) {
-                            const speedMbps = (downloadedBytes * 8) / (elapsed * 1024 * 1024);
-                            this.updateGauge(speedMbps, 100);
-                        }
-                    }
-                });
+                const response = await fetch(`/speedtest/download?size=${testSizeMB}&nocache=${Date.now()}`);
+                if (!response.ok) throw new Error('Download failed');
                 
-                await Promise.all(downloadThreads);
+                const reader = response.body.getReader();
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    downloadedBytes += value.length;
+                    const elapsed = (performance.now() - dlStart) / 1000;
+                    if (elapsed > 0) {
+                        const speedMbps = (downloadedBytes * 8) / (elapsed * 1024 * 1024);
+                        this.updateGauge(speedMbps, 100);
+                    }
+                }
                 
                 const dlDuration = (performance.now() - dlStart) / 1000;
                 this.downloadSpeed = (downloadedBytes * 8) / (dlDuration * 1024 * 1024);
@@ -398,60 +393,52 @@ window.speedtestComponent = function(clientIp, initialLogs) {
                 this.statusText = 'UPLOADING';
                 this.currentTestType = 'upload';
                 
-                const uploadSizePerThread = 1 * 1024 * 1024; // 1MB per thread, total 4MB
-                const loadedBytesArray = new Array(threadCount).fill(0);
+                const uploadSize = 1.5 * 1024 * 1024; // 1.5MB upload payload
+                const randomData = new Uint8Array(uploadSize);
+                // Fill with random values to make it completely uncompressible
+                try {
+                    crypto.getRandomValues(randomData);
+                } catch (e) {
+                    for (let i = 0; i < uploadSize; i += 256) {
+                        const val = Math.floor(Math.random() * 256);
+                        for (let j = 0; j < 16 && (i + j) < uploadSize; j++) {
+                            randomData[i + j] = val;
+                        }
+                    }
+                }
+                
                 const upStart = performance.now();
                 
-                const uploadThreads = Array.from({ length: threadCount }, (_, threadIndex) => {
-                    return new Promise((resolve, reject) => {
-                        const randomData = new Uint8Array(uploadSizePerThread);
-                        try {
-                            crypto.getRandomValues(randomData);
-                        } catch (e) {
-                            // Fallback for non-secure contexts (e.g. HTTP localhost development)
-                            for (let i = 0; i < uploadSizePerThread; i += 256) {
-                                const val = Math.floor(Math.random() * 256);
-                                for (let j = 0; j < 16 && (i + j) < uploadSizePerThread; j++) {
-                                    randomData[i + j] = val;
-                                }
+                await new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', '/speedtest/upload', true);
+                    const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    xhr.setRequestHeader('X-CSRF-TOKEN', csrf);
+                    
+                    xhr.upload.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            const elapsed = (performance.now() - upStart) / 1000;
+                            if (elapsed > 0) {
+                                const speedMbps = (e.loaded * 8) / (elapsed * 1024 * 1024);
+                                this.updateGauge(speedMbps, 50);
                             }
                         }
-                        
-                        const xhr = new XMLHttpRequest();
-                        xhr.open('POST', '/speedtest/upload', true);
-                        const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                        xhr.setRequestHeader('X-CSRF-TOKEN', csrf);
-                        
-                        xhr.upload.onprogress = (e) => {
-                            if (e.lengthComputable) {
-                                loadedBytesArray[threadIndex] = e.loaded;
-                                const totalUploaded = loadedBytesArray.reduce((sum, val) => sum + val, 0);
-                                const elapsed = (performance.now() - upStart) / 1000;
-                                if (elapsed > 0) {
-                                    const speedMbps = (totalUploaded * 8) / (elapsed * 1024 * 1024);
-                                    this.updateGauge(speedMbps, 50);
-                                }
-                            }
-                        };
-                        
-                        xhr.onload = () => {
-                            if (xhr.status >= 200 && xhr.status < 300) {
-                                resolve();
-                            } else {
-                                reject(new Error('Upload thread failed'));
-                            }
-                        };
-                        
-                        xhr.onerror = () => reject(new Error('Upload thread network error'));
-                        xhr.send(randomData);
-                    });
+                    };
+                    
+                    xhr.onload = () => {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            resolve();
+                        } else {
+                            reject(new Error('Upload failed'));
+                        }
+                    };
+                    
+                    xhr.onerror = () => reject(new Error('Upload network error'));
+                    xhr.send(randomData);
                 });
                 
-                await Promise.all(uploadThreads);
-                
                 const upDuration = (performance.now() - upStart) / 1000;
-                const totalBytesUploaded = uploadSizePerThread * threadCount;
-                this.uploadSpeed = (totalBytesUploaded * 8) / (upDuration * 1024 * 1024);
+                this.uploadSpeed = (uploadSize * 8) / (upDuration * 1024 * 1024);
                 this.updateGauge(this.uploadSpeed, 50);
                 
                 // 4. Log results
