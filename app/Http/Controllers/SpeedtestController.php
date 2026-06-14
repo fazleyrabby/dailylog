@@ -41,12 +41,10 @@ class SpeedtestController extends Controller
         $totalBytes = $sizeMB * 1024 * 1024;
         $chunksCount = (int) ($totalBytes / $chunkSize);
 
-        // Pre-generate a random chunk of bytes to speed up generation while maintaining uncompressibility
-        $chunk = random_bytes($chunkSize);
-
-        return response()->stream(function () use ($chunk, $chunksCount) {
+        return response()->stream(function () use ($chunkSize, $chunksCount) {
             for ($i = 0; $i < $chunksCount; $i++) {
-                echo $chunk;
+                // Generate a fresh random chunk every time so it is 100% uncompressible
+                echo random_bytes($chunkSize);
                 
                 if (ob_get_level() > 0) {
                     ob_flush();
