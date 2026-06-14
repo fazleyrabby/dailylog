@@ -322,7 +322,7 @@ window.speedtestComponent = function(clientIp, initialLogs) {
             this.dasharrayVal = `${val} 276`;
         },
 
-        resetTest() {
+        resetTest(keepResults = false) {
             if (this.running) {
                 if (this.speedtest) {
                     try {
@@ -337,8 +337,10 @@ window.speedtestComponent = function(clientIp, initialLogs) {
             this.currentTestType = 'none';
             this.dasharrayVal = '0 276';
             this.latency = this.pings[this.selectedServer];
-            this.downloadSpeed = null;
-            this.uploadSpeed = null;
+            if (!keepResults) {
+                this.downloadSpeed = null;
+                this.uploadSpeed = null;
+            }
             this.measurePings();
         },
 
@@ -464,6 +466,12 @@ window.speedtestComponent = function(clientIp, initialLogs) {
                     window.dispatchEvent(new CustomEvent('show-toast', { 
                         detail: { message: 'Speedtest completed and logged!' }
                     }));
+
+                    // Automatically reset the circular speedometer gauge UI after 4 seconds
+                    // but preserve the speed test results on the right side cards.
+                    setTimeout(() => {
+                        this.resetTest(true);
+                    }, 4000);
                 };
                 
                 this.speedtest.start();
