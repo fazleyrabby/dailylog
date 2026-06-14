@@ -20,6 +20,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SlippingController;
 use App\Http\Controllers\TasksController;
 use App\Http\Controllers\WalletController;
+use App\Http\Controllers\SpeedtestController;
 use App\Support\MockData;
 use Illuminate\Support\Facades\Route;
 
@@ -116,4 +117,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/wallet/recurring/{recurring}/post', [WalletController::class, 'postRecurring'])->name('wallet.recurring.post');
     Route::post('/wallet/budget', [WalletController::class, 'storeBudget'])->name('wallet.budget.store');
     Route::post('/wallet/settings', [WalletController::class, 'updateCurrencySettings'])->name('wallet.settings.update');
+
+    // Speedtest Routes
+    Route::get('/speedtest', [SpeedtestController::class, 'index'])->name('speedtest.index');
+    Route::get('/speedtest/ping', [SpeedtestController::class, 'ping'])->name('speedtest.ping');
+    Route::get('/speedtest/download', [SpeedtestController::class, 'download'])->name('speedtest.download');
+    Route::post('/speedtest/upload', [SpeedtestController::class, 'upload'])->name('speedtest.upload');
+    Route::post('/speedtest/log', [SpeedtestController::class, 'logResult'])->name('speedtest.log');
+    Route::get('/speedtest/history', [SpeedtestController::class, 'history'])->name('speedtest.history');
 });

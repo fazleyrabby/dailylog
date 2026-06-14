@@ -61,6 +61,7 @@
                       else if (event.key === 's') window.location.href = '/slipping';
                       else if (event.key === 'i') window.location.href = '/inbox';
                       else if (event.key === 'w') window.location.href = '/wallet';
+                      else if (event.key === 'v') window.location.href = '/speedtest';
                       window.removeEventListener('keydown', handler);
                   };
                   window.addEventListener('keydown', handler, { once: true });
@@ -286,6 +287,15 @@
                                     <svg class="h-4 w-4 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
                                 </x-slot>
                                 Slipping
+                            </x-ui.sidebar-item>
+
+                            <x-ui.sidebar-item href="/speedtest" :active="request()->is('speedtest*')">
+                                <x-slot name="icon">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v5.625c0 .621-.504 1.125-1.125 1.125h-2.25A1.125 1.125 0 013 18.75v-5.625zM16.5 13.125c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v5.625c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125v-5.625zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v10.125c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625z" />
+                                    </svg>
+                                </x-slot>
+                                Speed Test
                             </x-ui.sidebar-item>
                         </div>
                     </div>

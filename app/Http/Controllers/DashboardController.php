@@ -189,6 +189,11 @@ class DashboardController extends Controller
             }
         }
 
+        $lastSpeedtest = \App\Models\SpeedtestLog::query()
+            ->where('user_id', auth()->id())
+            ->orderByDesc('created_at')
+            ->first();
+
         return view('pages.dashboard', [
             'greetingDate' => now()->format('l, F j'),
             'todayTasksCount' => $todayTasksCount,
@@ -201,6 +206,7 @@ class DashboardController extends Controller
             'timeline' => $timeline,
             'streak' => $streak,
             'recentNotes' => $recentNotesRaw,
+            'lastSpeedtest' => $lastSpeedtest,
         ]);
     }
 

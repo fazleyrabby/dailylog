@@ -239,6 +239,51 @@
                 </div>
             </x-ui.card>
 
+            <!-- SPEED TEST DIAGNOSTICS -->
+            <x-ui.card>
+                <x-slot name="header">
+                    <div class="flex items-center space-x-1.5">
+                        <span class="text-accent text-sm font-mono">🛜</span>
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-text-main font-mono">Network Health</h4>
+                    </div>
+                    <a href="/speedtest" class="text-xxs text-accent hover:underline font-mono">Full Test &rarr;</a>
+                </x-slot>
+
+                <div class="space-y-3">
+                    @if($lastSpeedtest)
+                        <div class="p-2.5 bg-surface-2/20 border border-border rounded-sm text-xs space-y-2">
+                            <div class="flex items-center justify-between text-[10px] font-mono text-text-subtle">
+                                <span class="font-bold uppercase" x-text="'{{ $lastSpeedtest->server_name }} Server'"></span>
+                                <span>{{ $lastSpeedtest->created_at->diffForHumans() }}</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-1 text-[11px] font-mono">
+                                <div>
+                                    <span class="text-accent font-bold">↓</span> {{ number_format($lastSpeedtest->download_speed, 1) }} <span class="text-[9px] text-text-muted">M</span>
+                                </div>
+                                <div>
+                                    <span class="text-purple-400 font-bold">↑</span> {{ number_format($lastSpeedtest->upload_speed, 1) }} <span class="text-[9px] text-text-muted">M</span>
+                                </div>
+                                <div>
+                                    <span class="text-blue-400 font-bold">~</span> {{ round($lastSpeedtest->latency_ms) }}<span class="text-[9px] text-text-muted">ms</span>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="py-4 text-center text-xs text-text-muted border border-dashed border-border rounded-sm bg-surface">
+                            No speed tests run yet.
+                        </div>
+                    @endif
+
+                    <a 
+                        href="/speedtest" 
+                        class="w-full py-2 bg-surface hover:bg-surface-2/30 border border-border hover:border-accent/30 rounded-sm flex items-center justify-center space-x-2 text-xs font-mono font-bold text-text-main transition-colors text-center"
+                    >
+                        <span>⚡</span>
+                        <span>RUN NEW SPEED TEST</span>
+                    </a>
+                </div>
+            </x-ui.card>
+
         </div>
 
 </div>
