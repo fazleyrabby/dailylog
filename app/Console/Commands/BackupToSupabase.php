@@ -56,9 +56,16 @@ class BackupToSupabase extends Command
                 }
 
                 foreach ($tables as $table) {
-                    $orderBy = $this->firstColumn($local, $table);
+                    // Exclude GENERATED ALWAYS columns (e.g. tsvector search
+                    // columns) — Postgres rejects inserting values into them
+                    // and recomputes them automatically.
+                    $columns = $this->insertableColumns($local, $table);
+                    if ($columns === []) {
+                        continue;
+                    }
+                    $orderBy = $columns[0];
                     $rows = 0;
-                    $local->table($table)->orderBy($orderBy)->chunk($chunk, function ($batch) use ($remote, $table, &$rows) {
+                    $local->table($table)->select($columns)->orderBy($orderBy)->chunk($chunk, function ($batch) use ($remote, $table, &$rows) {
                         $remote->table($table)->insert(
                             $batch->map(fn ($r) => (array) $r)->all()
                         );
@@ -83,14 +90,18 @@ class BackupToSupabase extends Command
         return self::SUCCESS;
     }
 
-    /** First column of a table, used as a stable order key for chunking. */
-    private function firstColumn($connection, string $table): string
+    /**
+     * Columns that can be written, in ordinal order. Excludes GENERATED ALWAYS
+     * columns (Postgres rejects values for them). The first entry doubles as a
+     * stable order key for chunking.
+     *
+     * @return array<int, string>
+     */
+    private function insertableColumns($connection, string $table): array
     {
-        $col = $connection->selectOne(
-            'select column_name from information_schema.columns where table_schema = ? and table_name = ? order by ordinal_position limit 1',
-            ['public', $table]
-        );
-
-        return $col->column_name ?? 'ctid';
+        return collect($connection->select(
+            "select column_name from information_schema.columns where table_schema = 'public' and table_name = ? and is_generated <> 'ALWAYS' order by ordinal_position",
+            [$table]
+        ))->pluck('column_name')->all();
     }
 }
