@@ -12,6 +12,7 @@ services:
       - APP_DEBUG=false
       - REDIS_HOST=redis
       - SERVER_NAME=:80
+      - FRANKENPHP_MAX_REQUESTS=500
       - DB_CONNECTION=pgsql
       - DB_HOST=aws-1-ap-southeast-1.pooler.supabase.com
       - DB_PORT=6543

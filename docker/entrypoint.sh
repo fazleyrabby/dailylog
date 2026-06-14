@@ -9,5 +9,5 @@ php artisan view:cache
 # Run database migrations automatically on deployment
 php artisan migrate --force
 
-# Start FrankenPHP using the base image's entrypoint
-exec docker-php-entrypoint frankenphp run --config /etc/caddy/Caddyfile
+# Start FrankenPHP in worker mode to keep Laravel in memory
+exec docker-php-entrypoint frankenphp run --config /etc/caddy/Caddyfile --worker public/index.php
