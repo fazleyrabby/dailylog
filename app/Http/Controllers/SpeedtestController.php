@@ -41,10 +41,16 @@ class SpeedtestController extends Controller
         $totalBytes = $sizeMB * 1024 * 1024;
         $chunksCount = (int) ($totalBytes / $chunkSize);
 
-        return response()->stream(function () use ($chunkSize, $chunksCount) {
+        // Generate a 256KB random buffer once in memory.
+        // Reusing this buffer avoids the high CPU overhead of calling random_bytes() in a loop.
+        // 256KB is large enough to be uncompressible by standard Gzip/Brotli window sizes.
+        $randomBuffer = random_bytes(256 * 1024);
+        $bufferLength = strlen($randomBuffer);
+
+        return response()->stream(function () use ($chunkSize, $chunksCount, $randomBuffer, $bufferLength) {
             for ($i = 0; $i < $chunksCount; $i++) {
-                // Generate a fresh random chunk every time so it is 100% uncompressible
-                echo random_bytes($chunkSize);
+                $offset = ($i * $chunkSize) % $bufferLength;
+                echo substr($randomBuffer, $offset, $chunkSize);
                 
                 if (ob_get_level() > 0) {
                     ob_flush();

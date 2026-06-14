@@ -281,8 +281,8 @@ window.speedtestComponent = function(clientIp, initialLogs) {
         async measurePings() {
             const targets = {
                 singapore: '/robots.txt', // Static asset bypassing PHP/Laravel boot lifecycle
-                malaysia: 'https://s3.ap-southeast-3.amazonaws.com', // AWS S3 Malaysia (Kuala Lumpur)
-                hongkong: 'https://s3.ap-east-1.amazonaws.com' // AWS S3 Hong Kong
+                malaysia: 'https://dynamodb.ap-southeast-4.amazonaws.com', // AWS DynamoDB Malaysia (Kuala Lumpur)
+                hongkong: 'https://dynamodb.ap-east-1.amazonaws.com' // AWS DynamoDB Hong Kong
             };
 
             for (const [key, url] of Object.entries(targets)) {
