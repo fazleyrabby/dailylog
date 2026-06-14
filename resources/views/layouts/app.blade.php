@@ -357,37 +357,18 @@
                 </div>
                 
                 <div class="flex items-center space-x-3">
-                    <!-- Theme Picker -->
-                    <div x-data="{ themeOpen: false }" class="relative">
-                        <button
-                            @click="themeOpen = !themeOpen"
-                            class="text-text-subtle hover:text-text-main p-1 rounded-sm focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer"
-                            aria-label="Switch Theme"
+                    <!-- Theme Selector -->
+                    <div class="flex items-center">
+                        <select
+                            :value="theme"
+                            @change="setTheme($event.target.value)"
+                            class="text-xxs bg-surface-2 hover:bg-surface border border-border rounded-xs px-2 py-1 text-text-main focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer font-mono font-bold uppercase tracking-wider"
+                            aria-label="Select Theme"
                         >
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-                            </svg>
-                        </button>
-                        <div
-                            x-show="themeOpen"
-                            @click.away="themeOpen = false"
-                            x-transition.opacity
-                            class="absolute right-0 top-8 z-30 w-52 bg-surface border border-border rounded-sm shadow-xl py-1 text-xs text-text-main"
-                            style="display:none;"
-                        >
-                            <div class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-text-subtle font-mono">Theme</div>
                             <template x-for="t in $store.themes.list" :key="t.id">
-                                <button
-                                    @click="setTheme(t.id); themeOpen = false"
-                                    class="w-full text-left flex items-center justify-between px-3 py-2 hover:bg-surface-2 cursor-pointer"
-                                >
-                                    <span x-text="t.name"></span>
-                                    <svg x-show="theme === t.id" class="h-3.5 w-3.5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                    </svg>
-                                </button>
+                                <option :value="t.id" x-text="t.name" :selected="theme === t.id"></option>
                             </template>
-                        </div>
+                        </select>
                     </div>
                     
                     <!-- Quick Cheatsheet link -->
