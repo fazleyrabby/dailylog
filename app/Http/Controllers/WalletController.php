@@ -22,27 +22,45 @@ class WalletController extends Controller
             ->with(['walletDetails', 'project'])
             ->get();
 
+        $walletIds = $wallets->pluck('id')->toArray();
+
+        $incomeSums = WalletTransaction::query()
+            ->whereIn('wallet_id', $walletIds)
+            ->where('type', 'income')
+            ->groupBy('wallet_id')
+            ->select('wallet_id', DB::raw('SUM(amount) as total'))
+            ->pluck('total', 'wallet_id');
+
+        $expenseSums = WalletTransaction::query()
+            ->whereIn('wallet_id', $walletIds)
+            ->where('type', 'expense')
+            ->groupBy('wallet_id')
+            ->select('wallet_id', DB::raw('SUM(amount) as total'))
+            ->pluck('total', 'wallet_id');
+
+        $transfersOut = WalletTransaction::query()
+            ->whereIn('wallet_id', $walletIds)
+            ->where('type', 'transfer')
+            ->groupBy('wallet_id')
+            ->select('wallet_id', DB::raw('SUM(amount) as total'))
+            ->pluck('total', 'wallet_id');
+
+        $transfersIn = WalletTransaction::query()
+            ->whereIn('target_wallet_id', $walletIds)
+            ->where('type', 'transfer')
+            ->groupBy('target_wallet_id')
+            ->select('target_wallet_id', DB::raw('SUM(amount) as total'))
+            ->pluck('total', 'target_wallet_id');
+
         // Calculate balances dynamically
-        $calculatedWallets = $wallets->map(function (Entry $wallet) {
+        $calculatedWallets = $wallets->map(function (Entry $wallet) use ($incomeSums, $expenseSums, $transfersOut, $transfersIn) {
             $initial = (float) ($wallet->walletDetails?->initial_balance ?? 0.0);
+            $incomeSum = (float) ($incomeSums[$wallet->id] ?? 0.0);
+            $expenseSum = (float) ($expenseSums[$wallet->id] ?? 0.0);
+            $transferOut = (float) ($transfersOut[$wallet->id] ?? 0.0);
+            $transferIn = (float) ($transfersIn[$wallet->id] ?? 0.0);
 
-            $incomeSum = (float) WalletTransaction::where('wallet_id', $wallet->id)
-                ->where('type', 'income')
-                ->sum('amount');
-
-            $expenseSum = (float) WalletTransaction::where('wallet_id', $wallet->id)
-                ->where('type', 'expense')
-                ->sum('amount');
-
-            $transfersOut = (float) WalletTransaction::where('wallet_id', $wallet->id)
-                ->where('type', 'transfer')
-                ->sum('amount');
-
-            $transfersIn = (float) WalletTransaction::where('target_wallet_id', $wallet->id)
-                ->where('type', 'transfer')
-                ->sum('amount');
-
-            $wallet->current_balance = $initial + $incomeSum - $expenseSum - $transfersOut + $transfersIn;
+            $wallet->current_balance = $initial + $incomeSum - $expenseSum - $transferOut + $transferIn;
             return $wallet;
         });
 

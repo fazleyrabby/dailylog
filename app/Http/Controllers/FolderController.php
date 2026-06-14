@@ -17,6 +17,8 @@ class FolderController extends Controller
 
         $folder = Folder::create($validated);
 
+        cache()->forget("user:" . auth()->id() . ":folders");
+
         return response()->json([
             'folder' => $this->formatFolder($folder),
         ], 201);
@@ -31,6 +33,8 @@ class FolderController extends Controller
 
         $folder->update($validated);
 
+        cache()->forget("user:" . auth()->id() . ":folders");
+
         return response()->json([
             'folder' => $this->formatFolder($folder),
         ]);
@@ -39,6 +43,8 @@ class FolderController extends Controller
     public function destroy(Folder $folder): JsonResponse
     {
         $this->destroyRecursive($folder);
+
+        cache()->forget("user:" . auth()->id() . ":folders");
 
         return response()->json(['success' => true]);
     }

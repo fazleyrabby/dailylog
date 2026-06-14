@@ -28,15 +28,17 @@ class NotesController extends Controller
 
         $formatted = $entries->map(fn (Entry $entry) => $this->formatNote($entry))->toArray();
 
-        $folders = Folder::query()
-            ->orderBy('name')
-            ->get()
-            ->map(fn (Folder $folder) => [
-                'id' => $folder->id,
-                'name' => $folder->name,
-                'parent_id' => $folder->parent_id,
-            ])
-            ->toArray();
+        $folders = cache()->remember("user:" . auth()->id() . ":folders", now()->addDay(), function () {
+            return Folder::query()
+                ->orderBy('name')
+                ->get()
+                ->map(fn (Folder $folder) => [
+                    'id' => $folder->id,
+                    'name' => $folder->name,
+                    'parent_id' => $folder->parent_id,
+                ])
+                ->toArray();
+        });
 
         return view('pages.notes', [
             'notes' => $formatted,
