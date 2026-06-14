@@ -46,10 +46,11 @@
     border: 1px solid var(--color-border) !important;
     border-top: none !important;
     border-radius: 0 0 4px 4px !important;
-    /* CodeMirror measures glyph widths assuming a monospace font; a
-       proportional face corrupts cursor/line layout. Source editing uses
-       the technical typeface, while the preview pane stays in reading serif. */
-    font-family: var(--font-mono-code) !important;
+    /* CodeMirror measures glyph widths assuming a monospace font, and must
+       measure with a font that is already loaded. A web font (loaded async)
+       corrupts cursor/click/line math until it swaps in, so use a system
+       monospace stack here. The preview pane keeps the reading serif. */
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace !important;
     font-size: 13px !important;
     line-height: 1.6 !important;
 }
@@ -525,6 +526,13 @@ window.notesComponent = function(initialNotes, initialFolders) {
                 // `select-none`, dragging text would move it instead of
                 // selecting; turning this off restores normal drag-to-select.
                 this.easymde.codemirror.setOption('dragDrop', false);
+
+                // Re-measure once web fonts have loaded, otherwise CodeMirror's
+                // cached glyph metrics are stale and the cursor/clicks land on
+                // the wrong line.
+                if (document.fonts && document.fonts.ready) {
+                    document.fonts.ready.then(() => this.easymde && this.easymde.codemirror.refresh());
+                }
 
                 // Sync EasyMDE changes to Alpine state
                 this.easymde.codemirror.on("change", () => {
