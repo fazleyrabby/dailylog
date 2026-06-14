@@ -18,23 +18,17 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <span class="font-bold text-text-main block">UI Color Theme</span>
-                        <span class="text-text-muted mt-0.5">Toggle between dark and light workspace skins.</span>
+                        <span class="text-text-muted mt-0.5">Choose a workspace skin. Each theme has its own design language.</span>
                     </div>
-                    <div class="flex space-x-1">
-                        <button 
-                            @click="setTheme('dark')" 
-                            :class="theme === 'dark' ? 'bg-accent/15 border-accent text-accent font-semibold' : 'bg-surface border-border text-text-muted hover:text-text-main'"
-                            class="px-3 py-1 border text-xxs font-mono rounded cursor-pointer select-none"
-                        >
-                            DARK
-                        </button>
-                        <button 
-                            @click="setTheme('light')" 
-                            :class="theme === 'light' ? 'bg-accent/15 border-accent text-accent font-semibold' : 'bg-surface border-border text-text-muted hover:text-text-main'"
-                            class="px-3 py-1 border text-xxs font-mono rounded cursor-pointer select-none"
-                        >
-                            LIGHT
-                        </button>
+                    <div class="flex flex-wrap justify-end gap-1 max-w-[60%]">
+                        <template x-for="t in $store.themes.list" :key="t.id">
+                            <button
+                                @click="setTheme(t.id)"
+                                :class="theme === t.id ? 'bg-accent/15 border-accent text-accent font-semibold' : 'bg-surface border-border text-text-muted hover:text-text-main'"
+                                class="px-3 py-1 border text-xxs font-mono rounded cursor-pointer select-none"
+                                x-text="t.name"
+                            ></button>
+                        </template>
                     </div>
                 </div>
 

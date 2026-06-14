@@ -13,15 +13,12 @@
           },
           
           setTheme(val) {
-              this.theme = val;
-              localStorage.setItem('theme', val);
-              if (val === 'dark') {
-                  document.documentElement.classList.add('dark');
-                  document.documentElement.setAttribute('data-theme', 'dark');
-              } else {
-                  document.documentElement.classList.remove('dark');
-                  document.documentElement.removeAttribute('data-theme');
-              }
+              const id = window.DailyLogThemes.normalizeThemeId(val);
+              this.theme = id;
+              localStorage.setItem('theme', id);
+              document.documentElement.setAttribute('data-theme', id);
+              document.documentElement.classList.toggle('dark', window.DailyLogThemes.themeFamily(id) === 'dark');
+              if (this.$store.themes) this.$store.themes.current = id;
           },
 
           initTheme() {
@@ -170,35 +167,35 @@
                     <div>
                         <div x-show="!sidebarCollapsed" class="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-text-subtle/70 font-mono">Workspace</div>
                         <div class="space-y-0.5">
-                            <x-ui.sidebar-item href="/tasks" :active="request()->is('tasks*')" :badge="$sidebarCounts['tasks'] ?: null">
+                            <x-ui.sidebar-item href="/tasks" label-key="Tasks" :active="request()->is('tasks*')" :badge="$sidebarCounts['tasks'] ?: null">
                                 <x-slot name="icon">
                                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 </x-slot>
                                 Tasks
                             </x-ui.sidebar-item>
 
-                            <x-ui.sidebar-item href="/notes" :active="request()->is('notes*')">
+                            <x-ui.sidebar-item href="/notes" label-key="Notes" :active="request()->is('notes*')">
                                 <x-slot name="icon">
                                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                                 </x-slot>
                                 Notes
                             </x-ui.sidebar-item>
 
-                            <x-ui.sidebar-item href="/journal" :active="request()->is('journal*')">
+                            <x-ui.sidebar-item href="/journal" label-key="Journal" :active="request()->is('journal*')">
                                 <x-slot name="icon">
                                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" /></svg>
                                 </x-slot>
                                 Journal
                             </x-ui.sidebar-item>
 
-                            <x-ui.sidebar-item href="/projects" :active="request()->is('projects*')" :badge="$sidebarCounts['projects'] ?: null">
+                            <x-ui.sidebar-item href="/projects" label-key="Projects" :active="request()->is('projects*')" :badge="$sidebarCounts['projects'] ?: null">
                                 <x-slot name="icon">
                                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6.878V6a2.25 2.25 0 012.25-2.25h7.5A2.25 2.25 0 0118 6v.878m-12 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128m-12 0A2.25 2.25 0 004.5 9v.878m13.5-3A2.25 2.25 0 0119.5 9v.878m-15 0a2.25 2.25 0 00-2.25 2.25v6.75A2.25 2.25 0 004.5 21h15a2.25 2.25 0 002.25-2.25V12.128a2.25 2.25 0 00-2.25-2.25m-15 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128" /></svg>
                                 </x-slot>
                                 Projects
                             </x-ui.sidebar-item>
 
-                            <x-ui.sidebar-item href="/lab" :active="request()->is('lab*')">
+                            <x-ui.sidebar-item href="/lab" label-key="Lab" :active="request()->is('lab*')">
                                 <x-slot name="icon">
                                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v1.244c0 .506-.201 1-.56 1.358-.756.756-2.075 2.085-2.075 3.794a5 5 0 005 5h0a5 5 0 005-5c0-1.709-1.319-3.038-2.075-3.794-.359-.358-.56-.852-.56-1.358V3.104m-5.25 0h10.5" />
@@ -222,7 +219,7 @@
                     <div>
                         <div x-show="!sidebarCollapsed" class="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-text-subtle/70 font-mono">Knowledge</div>
                         <div class="space-y-0.5">
-                            <x-ui.sidebar-item href="/learning" :active="request()->is('learning*')" :badge="$sidebarCounts['learning'] ?: null">
+                            <x-ui.sidebar-item href="/learning" label-key="Learning" :active="request()->is('learning*')" :badge="$sidebarCounts['learning'] ?: null">
                                 <x-slot name="icon">
                                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>
                                 </x-slot>
@@ -329,8 +326,8 @@
                         style="display: none;"
                     >
                         <a href="{{ route('settings.profile') }}" class="block px-4 py-2 hover:bg-surface-2">⚙ Settings & Preferences</a>
-                        <button @click="setTheme(theme === 'dark' ? 'light' : 'dark')" class="w-full text-left block px-4 py-2 hover:bg-surface-2">
-                            🌓 Switch Theme (<span x-text="theme"></span>)
+                        <button @click="(() => { const l = $store.themes.list; const i = l.findIndex(t => t.id === theme); setTheme(l[(i + 1) % l.length].id); })()" class="w-full text-left block px-4 py-2 hover:bg-surface-2">
+                            🌓 Cycle Theme (<span x-text="$store.themes.map[theme]?.name ?? theme"></span>)
                         </button>
                         <div class="h-px bg-border my-1"></div>
                         <a href="{{ route('settings.profile') }}" class="block px-4 py-2 text-text-muted hover:bg-surface-2">📥 Export JSON / Markdown</a>
@@ -360,16 +357,38 @@
                 </div>
                 
                 <div class="flex items-center space-x-3">
-                    <!-- Theme Toggle -->
-                    <button 
-                        @click="setTheme(theme === 'dark' ? 'light' : 'dark')"
-                        class="text-text-subtle hover:text-text-main p-1 rounded-sm focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer"
-                        aria-label="Toggle Theme"
-                    >
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-                        </svg>
-                    </button>
+                    <!-- Theme Picker -->
+                    <div x-data="{ themeOpen: false }" class="relative">
+                        <button
+                            @click="themeOpen = !themeOpen"
+                            class="text-text-subtle hover:text-text-main p-1 rounded-sm focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer"
+                            aria-label="Switch Theme"
+                        >
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+                            </svg>
+                        </button>
+                        <div
+                            x-show="themeOpen"
+                            @click.away="themeOpen = false"
+                            x-transition.opacity
+                            class="absolute right-0 top-8 z-30 w-52 bg-surface border border-border rounded-sm shadow-xl py-1 text-xs text-text-main"
+                            style="display:none;"
+                        >
+                            <div class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-text-subtle font-mono">Theme</div>
+                            <template x-for="t in $store.themes.list" :key="t.id">
+                                <button
+                                    @click="setTheme(t.id); themeOpen = false"
+                                    class="w-full text-left flex items-center justify-between px-3 py-2 hover:bg-surface-2 cursor-pointer"
+                                >
+                                    <span x-text="t.name"></span>
+                                    <svg x-show="theme === t.id" class="h-3.5 w-3.5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                    </svg>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
                     
                     <!-- Quick Cheatsheet link -->
                     <button 

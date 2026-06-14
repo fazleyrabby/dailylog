@@ -423,96 +423,94 @@
                 </div>
             </div>
             
-            <div class="bg-surface border border-border rounded-xs overflow-hidden shadow-xs">
-                <x-ui.table>
-                    <x-slot name="thead">
-                        <tr>
-                            <th class="w-24 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">Date</th>
-                            <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">Type</th>
-                            <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">Account</th>
-                            <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">Details</th>
-                            <th class="text-right px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">Amount</th>
-                            <th class="w-16 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-text-muted font-mono"></th>
-                        </tr>
-                    </x-slot>
-                    
-                    @if($transactions->isEmpty())
-                        <tr>
-                            <td colspan="6" class="px-4 py-12 text-center text-xs text-text-muted italic">
-                                No transactions logged yet. Click "Add Transaction" to create one.
+            <x-ui.table>
+                <x-slot name="thead">
+                    <tr>
+                        <th class="w-24 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">Date</th>
+                        <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">Type</th>
+                        <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">Account</th>
+                        <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">Details</th>
+                        <th class="text-right px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">Amount</th>
+                        <th class="w-16 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-text-muted font-mono"></th>
+                    </tr>
+                </x-slot>
+                
+                @if($transactions->isEmpty())
+                    <tr>
+                        <td colspan="6" class="px-4 py-12 text-center text-xs text-text-muted italic">
+                            No transactions logged yet. Click "Add Transaction" to create one.
+                        </td>
+                    </tr>
+                @else
+                    @foreach($transactions as $tx)
+                        <tr 
+                            x-show="matchesFilters('{{ $tx->occurred_on->format('Y-m-d') }}', '{{ $tx->type }}', {{ $tx->wallet_id }}, {{ $tx->target_wallet_id ?? 'null' }}, '{{ $tx->category ?? 'other' }}')"
+                            class="hover:bg-surface-2/10"
+                        >
+                            <td class="px-4 py-2.5 font-mono text-xxs whitespace-nowrap text-text-subtle align-middle">
+                                {{ $tx->occurred_on->format('Y-m-d') }}
+                            </td>
+                            <td class="px-4 py-2.5 align-middle">
+                                @if($tx->type === 'income')
+                                     <span class="bg-success/5 text-success border border-success/20 px-1.5 py-0.2 rounded-xs text-[9px] uppercase font-bold font-mono">Income</span>
+                                @elseif($tx->type === 'expense')
+                                     <span class="bg-danger/5 text-danger border border-danger/20 px-1.5 py-0.2 rounded-xs text-[9px] uppercase font-bold font-mono">Expense</span>
+                                @else
+                                     <span class="bg-info/5 text-info border border-info/20 px-1.5 py-0.2 rounded-xs text-[9px] uppercase font-bold font-mono">Transfer</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-2.5 text-xs font-semibold text-text-main truncate max-w-[150px] align-middle">
+                                @if($tx->type === 'transfer')
+                                    <div class="flex items-center space-x-1">
+                                        <span class="truncate">{{ $tx->wallet?->title }}</span>
+                                        <span class="text-text-subtle font-mono text-[9px]">&rarr;</span>
+                                        <span class="truncate">{{ $tx->targetWallet?->title }}</span>
+                                    </div>
+                                @else
+                                    {{ $tx->wallet?->title }}
+                                @endif
+                            </td>
+                            <td class="px-4 py-2.5 text-xs text-text-muted truncate max-w-[200px] align-middle" title="{{ $tx->description }}">
+                                @if($tx->category && $tx->category !== 'other')
+                                    <span class="bg-surface-2 text-text-subtle border border-border px-1.5 py-0.2 rounded-xs text-[8px] uppercase font-bold font-mono mr-1.5">{{ $tx->category }}</span>
+                                @endif
+                                {{ $tx->description ?: '-' }}
+                            </td>
+                            <td class="px-4 py-2.5 text-right font-mono text-xs font-bold whitespace-nowrap align-middle">
+                                @if($tx->type === 'income')
+                                    <span class="text-success">+{{ number_format($tx->amount, 2) }}</span>
+                                @elseif($tx->type === 'expense')
+                                    <span class="text-danger">-{{ number_format($tx->amount, 2) }}</span>
+                                @else
+                                    <span class="text-text-main">{{ number_format($tx->amount, 2) }}</span>
+                                @endif
+                                <span class="text-[9px] font-normal text-text-subtle ml-1 font-sans">
+                                    {{ $tx->wallet?->walletDetails?->currency }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2.5 text-right align-middle" @click.stop>
+                                <div class="flex items-center justify-end space-x-1.5">
+                                    <button 
+                                        @click="openEditTransaction(@js($tx))" 
+                                        class="text-text-subtle hover:text-accent cursor-pointer text-xs font-semibold focus:outline-none"
+                                        title="Edit transaction"
+                                    >
+                                        ✎
+                                    </button>
+                                    <span class="text-text-subtle/30 text-[10px]">|</span>
+                                    <form action="{{ route('wallet.transaction.destroy', $tx) }}" method="POST" onsubmit="return confirm('Delete this transaction?');" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-text-subtle hover:text-danger cursor-pointer text-xs font-semibold px-1 focus:outline-none">
+                                            &times;
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
-                    @else
-                        @foreach($transactions as $tx)
-                            <tr 
-                                x-show="matchesFilters('{{ $tx->occurred_on->format('Y-m-d') }}', '{{ $tx->type }}', {{ $tx->wallet_id }}, {{ $tx->target_wallet_id ?? 'null' }}, '{{ $tx->category ?? 'other' }}')"
-                                class="hover:bg-surface-2/10"
-                            >
-                                <td class="px-4 py-2.5 font-mono text-xxs whitespace-nowrap text-text-subtle align-middle">
-                                    {{ $tx->occurred_on->format('Y-m-d') }}
-                                </td>
-                                <td class="px-4 py-2.5 align-middle">
-                                    @if($tx->type === 'income')
-                                         <span class="bg-success/5 text-success border border-success/20 px-1.5 py-0.2 rounded-xs text-[9px] uppercase font-bold font-mono">Income</span>
-                                    @elseif($tx->type === 'expense')
-                                         <span class="bg-danger/5 text-danger border border-danger/20 px-1.5 py-0.2 rounded-xs text-[9px] uppercase font-bold font-mono">Expense</span>
-                                    @else
-                                         <span class="bg-info/5 text-info border border-info/20 px-1.5 py-0.2 rounded-xs text-[9px] uppercase font-bold font-mono">Transfer</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-2.5 text-xs font-semibold text-text-main truncate max-w-[150px] align-middle">
-                                    @if($tx->type === 'transfer')
-                                        <div class="flex items-center space-x-1">
-                                            <span class="truncate">{{ $tx->wallet?->title }}</span>
-                                            <span class="text-text-subtle font-mono text-[9px]">&rarr;</span>
-                                            <span class="truncate">{{ $tx->targetWallet?->title }}</span>
-                                        </div>
-                                    @else
-                                        {{ $tx->wallet?->title }}
-                                    @endif
-                                </td>
-                                <td class="px-4 py-2.5 text-xs text-text-muted truncate max-w-[200px] align-middle" title="{{ $tx->description }}">
-                                    @if($tx->category && $tx->category !== 'other')
-                                        <span class="bg-surface-2 text-text-subtle border border-border px-1.5 py-0.2 rounded-xs text-[8px] uppercase font-bold font-mono mr-1.5">{{ $tx->category }}</span>
-                                    @endif
-                                    {{ $tx->description ?: '-' }}
-                                </td>
-                                <td class="px-4 py-2.5 text-right font-mono text-xs font-bold whitespace-nowrap align-middle">
-                                    @if($tx->type === 'income')
-                                        <span class="text-success">+{{ number_format($tx->amount, 2) }}</span>
-                                    @elseif($tx->type === 'expense')
-                                        <span class="text-danger">-{{ number_format($tx->amount, 2) }}</span>
-                                    @else
-                                        <span class="text-text-main">{{ number_format($tx->amount, 2) }}</span>
-                                    @endif
-                                    <span class="text-[9px] font-normal text-text-subtle ml-1 font-sans">
-                                        {{ $tx->wallet?->walletDetails?->currency }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-2.5 text-right align-middle" @click.stop>
-                                    <div class="flex items-center justify-end space-x-1.5">
-                                        <button 
-                                            @click="openEditTransaction(@js($tx))" 
-                                            class="text-text-subtle hover:text-accent cursor-pointer text-xs font-semibold focus:outline-none"
-                                            title="Edit transaction"
-                                        >
-                                            ✎
-                                        </button>
-                                        <span class="text-text-subtle/30 text-[10px]">|</span>
-                                        <form action="{{ route('wallet.transaction.destroy', $tx) }}" method="POST" onsubmit="return confirm('Delete this transaction?');" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-text-subtle hover:text-danger cursor-pointer text-xs font-semibold px-1 focus:outline-none">
-                                                &times;
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    @endif
-                </x-ui.table>
-            </div>
+                    @endforeach
+                @endif
+            </x-ui.table>
         </div>
 
         <!-- Right: Recurring & Subscriptions (1/3 width) -->

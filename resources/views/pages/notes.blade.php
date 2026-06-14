@@ -282,8 +282,8 @@
         class="flex-grow flex flex-col h-full bg-surface overflow-hidden select-text min-w-0"
     >
         <!-- Editor Controls Header -->
-        <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between">
-            <div class="flex items-center space-x-2">
+        <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex flex-wrap items-center justify-between gap-y-2 gap-x-3">
+            <div class="flex items-center gap-2 min-w-0 flex-shrink">
                 <!-- Mobile back button to Notes -->
                 <button 
                     x-show="isMobile" 
@@ -300,7 +300,7 @@
                 <template x-if="activeNote.id">
                     <select
                         @change="moveNote(activeNote.id, $event.target.value)"
-                        class="text-[10px] font-mono bg-surface border border-border text-text-muted px-1.5 py-0.5 rounded-sm focus:ring-0 focus:outline-none cursor-pointer"
+                        class="text-[10px] font-mono bg-surface border border-border text-text-muted px-1.5 py-0.5 rounded-sm focus:ring-0 focus:outline-none cursor-pointer min-w-0 max-w-[130px] md:max-w-none truncate"
                     >
                         <option value="" :selected="!activeNote.folder_id">Unfiled</option>
                         <template x-for="folder in folderTree" :key="folder.id">
@@ -311,7 +311,7 @@
                 <span class="text-xxs text-text-subtle" x-show="activeNote.id">Saved</span>
             </div>
             
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center gap-2 flex-shrink-0">
                 <template x-if="activeNote.id">
                     <x-ui.button variant="danger" size="sm" @click="deleteNote(activeNote.id)">
                         Delete

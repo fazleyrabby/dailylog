@@ -17,7 +17,7 @@
         name="{{ $name }}" 
         value="{{ $value }}"
         {{ $attributes->merge([
-            'class' => "w-full h-8 px-2 bg-surface border rounded-sm text-sm focus:ring-1 focus:outline-none placeholder-text-subtle disabled:opacity-50 " . $errorClasses
+            'class' => "ui-input w-full h-8 px-2 bg-surface border rounded-sm text-sm focus:ring-1 focus:outline-none placeholder-text-subtle disabled:opacity-50 " . $errorClasses
         ]) }}
     />
     @if($error)

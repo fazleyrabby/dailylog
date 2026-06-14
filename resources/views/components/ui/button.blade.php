@@ -5,7 +5,7 @@
 ])
 
 @php
-    $baseClasses = 'inline-flex items-center justify-center font-bold rounded-md border border-b-[3px] transition-all hover:-translate-y-[0.5px] hover:border-b-[4px] hover:brightness-105 active:translate-y-[1px] active:border-b-[1px] active:brightness-95 focus:outline-none disabled:opacity-50 disabled:pointer-events-none cursor-pointer';
+    $baseClasses = 'ui-button inline-flex items-center justify-center font-bold rounded-md border border-b-[3px] transition-all hover:-translate-y-[0.5px] hover:border-b-[4px] hover:brightness-105 active:translate-y-[1px] active:border-b-[1px] active:brightness-95 focus:outline-none disabled:opacity-50 disabled:pointer-events-none cursor-pointer';
     
     $variants = [
         'primary' => 'bg-accent border-accent border-b-[color-mix(in_srgb,var(--color-accent-app)_85%,black)] text-white',

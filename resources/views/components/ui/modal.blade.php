@@ -59,7 +59,7 @@ $maxWidthClass = [
          x-transition:leave="ease-in duration-150"
          x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
          x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-         class="relative z-10 mb-6 bg-surface border border-border rounded-sm overflow-hidden shadow-lg transform transition-all sm:w-full sm:mx-auto {{ $maxWidthClass }} mt-[15vh]">
+         class="ui-modal relative z-10 mb-6 bg-surface border border-border rounded-sm overflow-hidden shadow-lg transform transition-all sm:w-full sm:mx-auto {{ $maxWidthClass }} mt-[15vh]">
         
         <div class="border-b border-border px-4 py-3 flex items-center justify-between">
             @if(isset($title))

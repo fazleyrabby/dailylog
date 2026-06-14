@@ -1,8 +1,25 @@
 import Alpine from 'alpinejs';
 import { marked } from 'marked';
+import { THEMES, THEME_MAP, normalizeThemeId, themeFamily } from './themes';
 
 window.marked = marked;
 window.Alpine = Alpine;
+
+// Expose the theme registry so the inline theme engine (layouts/app.blade.php)
+// can normalize ids and resolve a theme's family without importing modules.
+window.DailyLogThemes = { list: THEMES, map: THEME_MAP, normalizeThemeId, themeFamily };
+
+// Reactive store backing the theme picker UI and the themed-label helper.
+document.addEventListener('alpine:init', () => {
+    Alpine.store('themes', {
+        list: THEMES,
+        current: normalizeThemeId(localStorage.getItem('theme')),
+        label(key) {
+            const t = THEME_MAP[this.current];
+            return (t && t.labels && t.labels[key]) || key;
+        },
+    });
+});
 
 /**
  * panelResizer – reusable mixin for draggable column resizing.

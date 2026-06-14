@@ -16,7 +16,7 @@
         name="{{ $name }}" 
         rows="{{ $rows }}"
         {{ $attributes->merge([
-            'class' => "w-full p-2 bg-surface border rounded-sm text-sm focus:ring-1 focus:outline-none placeholder-text-subtle disabled:opacity-50 " . $errorClasses
+            'class' => "ui-input w-full p-2 bg-surface border rounded-sm text-sm focus:ring-1 focus:outline-none placeholder-text-subtle disabled:opacity-50 " . $errorClasses
         ]) }}
     >{{ $value ?? $slot }}</textarea>
     @if($error)

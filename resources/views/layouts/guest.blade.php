@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}"
-      x-data="{ theme: localStorage.getItem('theme') || 'dark' }"
-      x-init="document.documentElement.classList.toggle('dark', theme === 'dark'); document.documentElement.setAttribute('data-theme', theme)"
+      x-data="{ theme: window.DailyLogThemes.normalizeThemeId(localStorage.getItem('theme')) }"
+      x-init="document.documentElement.setAttribute('data-theme', theme); document.documentElement.classList.toggle('dark', window.DailyLogThemes.themeFamily(theme) === 'dark')"
       class="h-full">
 <head>
     <meta charset="utf-8">

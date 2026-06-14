@@ -1,55 +1,39 @@
+/* =========================================================================
+   THEME ENGINE
+   Each theme is a full variable block scoped by [data-theme="<id>"]. Colour
+   token names are shared across themes so no component needs editing for
+   colour. Structural tokens (radius / border / shadow / fonts) let a theme
+   change *shape*, consumed by the .ui-* hooks at the bottom of this file.
+   The active theme is set on <html> by the engine in layouts/app.blade.php.
+   ========================================================================= */
+
+/* Shared structural + typography defaults (overridden per theme as needed) */
 :root {
-    /* Theme values for light mode - Linear-inspired Slate/Indigo */
-    --color-bg-app: #F8F9FA;
-    --color-surface-app: #FFFFFF;
-    --color-surface-2-app: #F1F3F5;
-    --color-border-app: #E9ECEF;
-    --color-border-strong-app: #DEE2E6;
-    --color-text-app: #121416;
-    --color-text-muted-app: #495057;
-    --color-text-subtle-app: #ADB5BD;
+    --radius-card: 0.125rem;
+    --border-width: 1px;
+    --shadow-card: none;
+    --shadow-button: none;
 
-    --color-accent-app: #5E6AD2;
-    /* Linear Indigo */
-    --color-accent-hover-app: #4D5BC2;
-    --color-accent-subtle-bg-app: #F0F1FA;
-    --color-accent-fg-app: #FFFFFF;
+    --font-ui: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-reading: 'Newsreader', Georgia, 'Times New Roman', serif;
+    --font-mono-code: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-    /* Semantic / status colors */
-    --color-success-app: #15803D;
-    /* green-700 */
-    --color-warning-app: #B45309;
-    /* amber-700 */
-    --color-danger-app: #B91C1C;
-    /* red-700 */
-    --color-info-app: #1D4ED8;
-    /* blue-700 */
-
-    /* Type Accent Dots (entry-type identity) */
-    --color-type-task: #64748B;
-    /* slate */
-    --color-type-note: #78716C;
-    /* stone */
-    --color-type-journal: #8B5CF6;
-    /* violet */
-    --color-type-bookmark: #0EA5E9;
-    /* sky */
-    --color-type-learning: #10B981;
-    /* emerald */
-    --color-type-project: #F97316;
-    /* orange */
-    --color-type-quote: #F43F5E;
-    /* rose */
-    --color-type-resource: #06B6D4;
-    /* cyan */
-    --color-type-idea: #F59E0B;
-    /* amber */
+    /* Entry-type identity colours — shared across all themes */
+    --color-type-task: #64748B;     /* slate */
+    --color-type-note: #78716C;     /* stone */
+    --color-type-journal: #8B5CF6;  /* violet */
+    --color-type-bookmark: #0EA5E9; /* sky */
+    --color-type-learning: #10B981; /* emerald */
+    --color-type-project: #F97316;  /* orange */
+    --color-type-quote: #F43F5E;    /* rose */
+    --color-type-resource: #06B6D4; /* cyan */
+    --color-type-idea: #F59E0B;     /* amber */
 }
 
-/* Dark theme definition */
-html.dark {
+/* ---- DailyLOG Dark (primary, also the :root fallback to avoid flash) ---- */
+:root,
+html[data-theme="dark"] {
     --color-bg-app: #0B0B0C;
-    /* Linear Dark Background */
     --color-surface-app: #121214;
     --color-surface-2-app: #1C1C1F;
     --color-border-app: #222226;
@@ -59,32 +43,248 @@ html.dark {
     --color-text-subtle-app: #52525B;
 
     --color-accent-app: #5E6AD2;
-    /* Linear Indigo Accent */
     --color-accent-hover-app: #737FE4;
     --color-accent-subtle-bg-app: rgba(94, 106, 210, 0.12);
     --color-accent-fg-app: #FFFFFF;
 
     --color-success-app: #4ADE80;
-    /* green-400 */
     --color-warning-app: #FBBF24;
-    /* amber-400 */
     --color-danger-app: #F87171;
-    /* red-400 */
     --color-info-app: #60A5FA;
-    /* blue-400 */
+}
+
+/* ---- DailyLOG Paper (warm light, reading-first) ---- */
+html[data-theme="paper"] {
+    --color-bg-app: #FAF8F3;
+    --color-surface-app: #FFFFFF;
+    --color-surface-2-app: #F3EFE7;
+    --color-border-app: #E8E2D6;
+    --color-border-strong-app: #D8D0C0;
+    --color-text-app: #2B2A27;
+    --color-text-muted-app: #6B655B;
+    --color-text-subtle-app: #A9A192;
+
+    --color-accent-app: #5E6AD2;
+    --color-accent-hover-app: #4D5BC2;
+    --color-accent-subtle-bg-app: #EEEDFA;
+    --color-accent-fg-app: #FFFFFF;
+
+    --color-success-app: #15803D;
+    --color-warning-app: #B45309;
+    --color-danger-app: #B91C1C;
+    --color-info-app: #1D4ED8;
+}
+
+/* ---- Neo Brutalist OS (high-contrast, thick borders, hard shadows) ---- */
+html[data-theme="neo-brutalist"] {
+    --color-bg-app: #F5F4EF;
+    --color-surface-app: #FFFFFF;
+    --color-surface-2-app: #ECEAE2;
+    --color-border-app: #111111;
+    --color-border-strong-app: #000000;
+    --color-text-app: #111111;
+    --color-text-muted-app: #3A3A3A;
+    --color-text-subtle-app: #6B6B6B;
+
+    --color-accent-app: #7C3AED;
+    --color-accent-hover-app: #6D28D9;
+    --color-accent-subtle-bg-app: #EDE6FF;
+    --color-accent-fg-app: #FFFFFF;
+
+    --color-success-app: #15803D;
+    --color-warning-app: #B45309;
+    --color-danger-app: #DC2626;
+    --color-info-app: #1D4ED8;
+
+    /* Structural identity */
+    --radius-card: 0;
+    --border-width: 2px;
+    --shadow-card: 4px 4px 0 var(--color-border-strong-app);
+    --shadow-button: 3px 3px 0 var(--color-border-strong-app);
+}
+
+/* ---- Neon Grid (cyberpunk dark, neon purple + electric blue, glow) ---- */
+html[data-theme="neon-grid"] {
+    --color-bg-app: #070710;
+    --color-surface-app: #0D0D1A;
+    --color-surface-2-app: #15152A;
+    --color-border-app: #2A2A55;
+    --color-border-strong-app: #3D3D7A;
+    --color-text-app: #E8E8FF;
+    --color-text-muted-app: #9A9AD0;
+    --color-text-subtle-app: #5A5A8A;
+
+    --color-accent-app: #B026FF;
+    --color-accent-hover-app: #C44DFF;
+    --color-accent-subtle-bg-app: rgba(176, 38, 255, 0.16);
+    --color-accent-fg-app: #FFFFFF;
+
+    --color-success-app: #34D399;
+    --color-warning-app: #FBBF24;
+    --color-danger-app: #FF4D6D;
+    --color-info-app: #00E5FF;
+
+    --font-ui: 'Space Grotesk', 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    --shadow-card: 0 0 0 1px rgba(176, 38, 255, 0.18), 0 0 22px rgba(176, 38, 255, 0.08);
+    --shadow-button: 0 0 12px rgba(176, 38, 255, 0.45);
+}
+
+/* ---- Macintosh 1998 (classic Mac OS desktop, beveled chrome) ---- */
+html[data-theme="macintosh"] {
+    --color-bg-app: #A6A6A6;
+    --color-surface-app: #FFFFFF;
+    --color-surface-2-app: #DDDDDD;
+    --color-border-app: #000000;
+    --color-border-strong-app: #000000;
+    --color-text-app: #000000;
+    --color-text-muted-app: #333333;
+    --color-text-subtle-app: #666666;
+
+    --color-accent-app: #5E5CD6;
+    --color-accent-hover-app: #4A48BE;
+    --color-accent-subtle-bg-app: #C9C9F0;
+    --color-accent-fg-app: #FFFFFF;
+
+    --color-success-app: #0A7A2E;
+    --color-warning-app: #9A5B00;
+    --color-danger-app: #B00000;
+    --color-info-app: #000080;
+
+    --radius-card: 0;
+    --border-width: 1px;
+    --shadow-card: 2px 2px 0 rgba(0, 0, 0, 0.35);
+    --font-ui: 'Geneva', 'Chicago', 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ---- Mission Control (industrial ops centre, orange + teal) ---- */
+html[data-theme="mission-control"] {
+    --color-bg-app: #0A0E14;
+    --color-surface-app: #121820;
+    --color-surface-2-app: #1A222E;
+    --color-border-app: #2A3644;
+    --color-border-strong-app: #3A4A5C;
+    --color-text-app: #E2E8F0;
+    --color-text-muted-app: #94A3B8;
+    --color-text-subtle-app: #56657A;
+
+    --color-accent-app: #FF7A1A;
+    --color-accent-hover-app: #FF9240;
+    --color-accent-subtle-bg-app: rgba(255, 122, 26, 0.14);
+    --color-accent-fg-app: #0A0E14;
+
+    --color-success-app: #2DD4BF;
+    --color-warning-app: #FBBF24;
+    --color-danger-app: #F87171;
+    --color-info-app: #22D3EE;
+
+    --radius-card: 2px;
+}
+
+/* ---- Quest Mode (RPG journal, gold + purple) ---- */
+html[data-theme="quest"] {
+    --color-bg-app: #171221;
+    --color-surface-app: #211A33;
+    --color-surface-2-app: #2C2342;
+    --color-border-app: #3D3155;
+    --color-border-strong-app: #544470;
+    --color-text-app: #F5EEDC;
+    --color-text-muted-app: #BDA9C9;
+    --color-text-subtle-app: #7E6B92;
+
+    --color-accent-app: #E0B43C;
+    --color-accent-hover-app: #F0C95A;
+    --color-accent-subtle-bg-app: rgba(224, 180, 60, 0.16);
+    --color-accent-fg-app: #2A1E12;
+
+    --color-success-app: #7BC96F;
+    --color-warning-app: #E0B43C;
+    --color-danger-app: #E5604D;
+    --color-info-app: #8AB4F8;
+
+    --radius-card: 6px;
+    --shadow-card: 0 0 0 1px rgba(224, 180, 60, 0.14);
+    --shadow-button: 0 2px 0 rgba(224, 180, 60, 0.25);
+}
+
+/* =========================================================================
+   STRUCTURAL COMPONENT HOOKS
+   Components carry a stable .ui-* class so themes can restyle their *shape*
+   from one place. Imported after Tailwind, so equal-specificity overrides win.
+   Dark / Paper leave structural tokens at defaults (no visible change); bold
+   themes opt in via the tokens above.
+   ========================================================================= */
+.ui-card,
+.ui-modal {
+    border-radius: var(--radius-card);
+    border-width: var(--border-width);
+    box-shadow: var(--shadow-card);
+}
+
+/* ---- Neo Brutalist: square, thick, hard offset shadows ---- */
+html[data-theme="neo-brutalist"] .ui-button {
+    border-radius: 0;
+    border-width: var(--border-width);
+    box-shadow: var(--shadow-button);
+}
+html[data-theme="neo-brutalist"] .ui-button:active {
+    box-shadow: 1px 1px 0 var(--color-border-strong-app);
+}
+html[data-theme="neo-brutalist"] .ui-input {
+    border-radius: 0;
+    border-width: var(--border-width);
+}
+html[data-theme="neo-brutalist"] .ui-sidebar-item {
+    border-radius: 0;
+}
+
+/* ---- Neon Grid: glowing edges + scanline grid backdrop ---- */
+html[data-theme="neon-grid"] body {
+    background-image:
+        linear-gradient(rgba(176, 38, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(176, 38, 255, 0.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+}
+html[data-theme="neon-grid"] .ui-button {
+    box-shadow: var(--shadow-button);
+}
+
+/* ---- Macintosh 1998: beveled chrome on surfaces and buttons ---- */
+html[data-theme="macintosh"] .ui-button {
+    border-radius: 0;
+    border-width: 1px;
+    box-shadow: inset -1px -1px 0 #808080, inset 1px 1px 0 #FFFFFF;
+}
+html[data-theme="macintosh"] .ui-button:active {
+    box-shadow: inset 1px 1px 0 #808080, inset -1px -1px 0 #FFFFFF;
+}
+html[data-theme="macintosh"] .ui-input {
+    border-radius: 0;
+    box-shadow: inset 1px 1px 0 #808080, inset -1px -1px 0 #FFFFFF;
+}
+
+/* ---- Quest Mode: soft gilded panels ---- */
+html[data-theme="quest"] .ui-button {
+    box-shadow: var(--shadow-button);
 }
 
 /* Custom classes for typography selection */
 .font-sans-ui {
-    font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-family: var(--font-ui);
 }
 
 .font-serif-reading {
-    font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-family: var(--font-reading);
+}
+
+/* Code / technical spans inside reading surfaces use the technical typeface */
+.font-serif-reading code,
+.font-serif-reading pre,
+.font-serif-reading kbd {
+    font-family: var(--font-mono-code);
 }
 
 .font-mono-code {
-    font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-family: var(--font-mono-code);
 }
 
 /* text-xxs utility — fixed 11px, does not scale with rem base */

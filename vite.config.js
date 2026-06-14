@@ -15,6 +15,19 @@ export default defineConfig({
                 bunny('IBM Plex Mono', {
                     weights: [300, 400, 500, 600, 700],
                 }),
+                // Reading / editorial typeface for long-form content surfaces.
+                bunny('Newsreader', {
+                    weights: [400, 500, 600, 700],
+                    styles: ['normal', 'italic'],
+                }),
+                // Technical typeface for code blocks and technical content.
+                bunny('JetBrains Mono', {
+                    weights: [400, 500, 700],
+                }),
+                // Display typeface used by the Neon Grid theme.
+                bunny('Space Grotesk', {
+                    weights: [400, 500, 600, 700],
+                }),
             ],
         }),
         tailwindcss(),

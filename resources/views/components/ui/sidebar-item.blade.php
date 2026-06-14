@@ -2,12 +2,13 @@
     'href' => '#',
     'active' => false,
     'badge' => null,
+    'labelKey' => null,
 ])
 
 @php
     $classes = $active
-        ? 'flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-sm bg-accent-subtle-bg/40 text-text-main transition-all duration-75'
-        : 'flex items-center justify-between px-3 py-2 text-xs font-medium rounded-sm text-text-muted hover:bg-surface-2 hover:text-text-main transition-all duration-75';
+        ? 'ui-sidebar-item flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-sm bg-accent-subtle-bg/40 text-text-main transition-all duration-75'
+        : 'ui-sidebar-item flex items-center justify-between px-3 py-2 text-xs font-medium rounded-sm text-text-muted hover:bg-surface-2 hover:text-text-main transition-all duration-75';
 @endphp
 
 <a href="{{ $href }}" {{ $attributes->merge(['class' => $classes]) }}>
@@ -17,7 +18,7 @@
                 {{ $icon }}
             </span>
         @endif
-        <span x-show="!sidebarCollapsed" class="whitespace-nowrap transition-opacity duration-75 uppercase tracking-wide">{{ $slot }}</span>
+        <span x-show="!sidebarCollapsed" @if($labelKey) x-text="$store.themes.label(@js($labelKey))" @endif class="whitespace-nowrap transition-opacity duration-75 uppercase tracking-wide">{{ $slot }}</span>
     </div>
     
     @if($badge !== null)
