@@ -7,11 +7,14 @@
 
 @php
     $classes = $active
-        ? 'ui-sidebar-item flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-sm bg-accent-subtle-bg/40 text-text-main transition-all duration-75'
-        : 'ui-sidebar-item flex items-center justify-between px-3 py-2 text-xs font-medium rounded-sm text-text-muted hover:bg-surface-2 hover:text-text-main transition-all duration-75';
+        ? 'relative group ui-sidebar-item flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-sm bg-accent-subtle-bg/40 text-text-main transition-all duration-75'
+        : 'relative group ui-sidebar-item flex items-center justify-between px-3 py-2 text-xs font-medium rounded-sm text-text-muted hover:bg-surface-2 hover:text-text-main transition-all duration-75';
 @endphp
 
-<a href="{{ $href }}" {{ $attributes->merge(['class' => $classes]) }}>
+<a 
+    href="{{ $href }}" 
+    {{ $attributes->merge(['class' => $classes]) }}
+>
     <div class="flex items-center">
         @if(isset($icon))
             <span class="inline-flex items-center justify-center w-5 h-5 mr-2.5 flex-shrink-0 {{ $active ? 'text-text-main' : 'text-text-subtle' }}">
@@ -26,4 +29,11 @@
             {{ $badge }}
         </span>
     @endif
+
+    <!-- Custom Tooltip -->
+    <div 
+        x-show="sidebarCollapsed" 
+        class="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1 bg-surface-2 border border-border text-text-main text-[10px] font-bold uppercase tracking-wider font-mono rounded-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none whitespace-nowrap z-50"
+        x-text="@js($labelKey) ? $store.themes.label(@js($labelKey)) : '{{ trim(strip_tags($slot)) }}'"
+    ></div>
 </a>

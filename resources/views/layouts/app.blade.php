@@ -149,7 +149,10 @@
                 </div>
 
                 <!-- Navigation Groups -->
-                <nav class="p-2 space-y-3 overflow-y-auto max-h-[calc(100vh-180px)]">
+                <nav 
+                    :class="sidebarCollapsed ? 'overflow-visible' : 'overflow-y-auto'"
+                    class="p-2 space-y-3 max-h-[calc(100vh-180px)]"
+                >
                     <!-- Today Group -->
                     <div>
                         <div x-show="!sidebarCollapsed" class="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-text-subtle/70 font-mono">Today</div>

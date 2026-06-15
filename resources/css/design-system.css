@@ -251,11 +251,13 @@ html[data-theme="retro"] body {
         0deg, rgba(26, 20, 35, 0.05) 0 2px, transparent 2px 4px);
     font-size: 1.1rem;
 }
+/* VT323 has a small x-height, so bump the small UI text (folders, tags,
+   note-list meta) up a notch to stay legible. */
 html[data-theme="retro"] .text-xxs {
-    font-size: 13px;
+    font-size: 15px;
 }
 html[data-theme="retro"] .text-xs {
-    font-size: 14px;
+    font-size: 16px;
 }
 html[data-theme="retro"] .prose,
 html[data-theme="retro"] .prose * {
@@ -266,12 +268,25 @@ html[data-theme="retro"] textarea,
 html[data-theme="retro"] input {
     font-size: 1.1rem !important;
 }
+/* Press Start 2P is too chunky/wide for running headings (it blows up the
+   note title and wraps to 3+ lines). Use VT323 for content headings and keep
+   Press Start 2P for short chrome labels (buttons, topbar) only. Sizes are
+   fixed here so they stay consistent regardless of utility classes. */
 html[data-theme="retro"] h1,
 html[data-theme="retro"] h2,
 html[data-theme="retro"] h3 {
-    font-family: var(--font-display);
-    line-height: 1.4;
-    letter-spacing: 0;
+    font-family: var(--font-ui);
+    line-height: 1.35;
+    letter-spacing: 0.02em;
+}
+html[data-theme="retro"] h1 {
+    font-size: 1.6rem;
+}
+html[data-theme="retro"] h2 {
+    font-size: 1.3rem;
+}
+html[data-theme="retro"] h3 {
+    font-size: 1.1rem;
 }
 html[data-theme="retro"] .ui-button {
     border-radius: 0;

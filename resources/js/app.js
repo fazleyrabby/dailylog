@@ -93,4 +93,31 @@ window.panelResizer = function (opts = {}) {
     };
 };
 
+import { Editor } from '@tiptap/core';
+import StarterKit from '@tiptap/starter-kit';
+import { Markdown } from 'tiptap-markdown';
+
+window.createTiptapEditor = function (element, content, onUpdateCallback) {
+    return new Editor({
+        element: element,
+        extensions: [
+            StarterKit.configure({
+                codeBlock: false, // Turn off if we don't want conflicts, or keep default
+            }),
+            Markdown,
+        ],
+        content: content,
+        onUpdate({ editor }) {
+            const markdown = editor.storage.markdown.getMarkdown();
+            onUpdateCallback(markdown);
+        },
+        editorProps: {
+            attributes: {
+                class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[400px] h-full text-text-main font-mono text-sm leading-relaxed select-text',
+            },
+        },
+    });
+};
+
 Alpine.start();
+

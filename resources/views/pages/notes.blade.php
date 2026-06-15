@@ -276,20 +276,47 @@
 
         <!-- Note Canvas -->
         <div class="flex-grow flex flex-col overflow-hidden">
-            <!-- EDIT MODE (Plain Markdown textarea) -->
-            <div x-show="editMode" class="flex-grow p-6 flex flex-col">
-                <input 
-                    type="text" 
-                    x-model="activeNote.title" 
+            <!-- EDIT MODE (Tiptap Editor) -->
+            <div x-show="editMode" class="flex-grow p-6 flex flex-col overflow-hidden">
+                <input
+                    type="text"
+                    x-model="activeNote.title"
                     class="w-full text-xl font-bold bg-transparent border-0 border-b border-border pb-2 focus:ring-0 focus:border-accent focus:outline-none mb-3 text-text-main font-serif-reading"
                     placeholder="Note title"
                 />
-                <textarea 
-                    x-ref="noteBodyEditor"
-                    x-model="activeNote.body"
-                    class="w-full flex-grow bg-transparent border-0 focus:ring-0 focus:outline-none text-text-main font-mono text-sm leading-relaxed resize-none select-text"
-                    placeholder="Write in markdown... (supports bold, headings, links, lists, etc.)"
-                ></textarea>
+
+                <!-- TIPTAP FORMATTING TOOLBAR -->
+                <div class="flex flex-wrap items-center gap-0.5 mb-3 pb-2 border-b border-border select-none">
+                    <button type="button" @click="runCmd('toggleBold')" :class="toolbar.bold ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-main hover:bg-surface-2/40'" class="w-7 h-7 rounded-sm text-sm font-bold flex items-center justify-center cursor-pointer" title="Bold (Ctrl+B)">B</button>
+                    <button type="button" @click="runCmd('toggleItalic')" :class="toolbar.italic ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-main hover:bg-surface-2/40'" class="w-7 h-7 rounded-sm text-sm italic font-serif-reading flex items-center justify-center cursor-pointer" title="Italic (Ctrl+I)">I</button>
+                    <button type="button" @click="runCmd('toggleStrike')" :class="toolbar.strike ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-main hover:bg-surface-2/40'" class="w-7 h-7 rounded-sm text-sm line-through flex items-center justify-center cursor-pointer" title="Strikethrough">S</button>
+                    <button type="button" @click="runCmd('toggleCode')" :class="toolbar.code ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-main hover:bg-surface-2/40'" class="w-7 h-7 rounded-sm text-[11px] font-mono flex items-center justify-center cursor-pointer" title="Inline code">&lt;/&gt;</button>
+
+                    <span class="w-px h-5 bg-border mx-1"></span>
+
+                    <button type="button" @click="runCmd('toggleHeading', { level: 1 })" :class="toolbar.h1 ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-main hover:bg-surface-2/40'" class="px-1.5 h-7 rounded-sm text-xs font-bold flex items-center justify-center cursor-pointer" title="Heading 1">H1</button>
+                    <button type="button" @click="runCmd('toggleHeading', { level: 2 })" :class="toolbar.h2 ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-main hover:bg-surface-2/40'" class="px-1.5 h-7 rounded-sm text-xs font-bold flex items-center justify-center cursor-pointer" title="Heading 2">H2</button>
+                    <button type="button" @click="runCmd('toggleHeading', { level: 3 })" :class="toolbar.h3 ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-main hover:bg-surface-2/40'" class="px-1.5 h-7 rounded-sm text-xs font-bold flex items-center justify-center cursor-pointer" title="Heading 3">H3</button>
+
+                    <span class="w-px h-5 bg-border mx-1"></span>
+
+                    <button type="button" @click="runCmd('toggleBulletList')" :class="toolbar.bulletList ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-main hover:bg-surface-2/40'" class="w-7 h-7 rounded-sm text-sm flex items-center justify-center cursor-pointer" title="Bullet list">•</button>
+                    <button type="button" @click="runCmd('toggleOrderedList')" :class="toolbar.orderedList ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-main hover:bg-surface-2/40'" class="w-7 h-7 rounded-sm text-[11px] font-mono flex items-center justify-center cursor-pointer" title="Numbered list">1.</button>
+                    <button type="button" @click="runCmd('toggleBlockquote')" :class="toolbar.blockquote ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-main hover:bg-surface-2/40'" class="w-7 h-7 rounded-sm text-base flex items-center justify-center cursor-pointer" title="Quote">❝</button>
+                    <button type="button" @click="runCmd('toggleCodeBlock')" :class="toolbar.codeBlock ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-main hover:bg-surface-2/40'" class="w-7 h-7 rounded-sm text-[11px] font-mono flex items-center justify-center cursor-pointer" title="Code block">{ }</button>
+
+                    <span class="w-px h-5 bg-border mx-1"></span>
+
+                    <button type="button" @click="runCmd('undo')" class="w-7 h-7 rounded-sm text-sm text-text-muted hover:text-text-main hover:bg-surface-2/40 flex items-center justify-center cursor-pointer" title="Undo (Ctrl+Z)">↶</button>
+                    <button type="button" @click="runCmd('redo')" class="w-7 h-7 rounded-sm text-sm text-text-muted hover:text-text-main hover:bg-surface-2/40 flex items-center justify-center cursor-pointer" title="Redo (Ctrl+Y)">↷</button>
+                </div>
+
+                <div class="flex-grow overflow-y-auto min-h-0">
+                    <div 
+                        x-ref="tiptapEditor" 
+                        class="w-full h-full focus:outline-none text-text-main select-text"
+                    ></div>
+                </div>
             </div>
 
             <!-- PREVIEW MODE (Editorial read mode) -->
@@ -330,6 +357,12 @@
 
 <script>
 window.notesComponent = function(initialNotes, initialFolders) {
+    // Tiptap editor is kept in a closure variable, NOT on the Alpine reactive
+    // object. Storing it in x-data makes Alpine proxy ProseMirror's internal
+    // state, which breaks its transaction reference checks and throws
+    // "Applying a mismatched transaction".
+    let editor = null;
+
     return {
         searchQuery: '',
         selectedTag: '',
@@ -362,6 +395,65 @@ window.notesComponent = function(initialNotes, initialFolders) {
         // Mobile Responsive state
         isMobile: window.innerWidth < 768,
         mobileView: 'folders', // 'folders', 'notes', 'editor'
+
+        // Reactive active-state flags for the editor toolbar buttons.
+        // Only booleans live here — never the editor instance itself.
+        toolbar: {
+            bold: false, italic: false, strike: false, code: false,
+            h1: false, h2: false, h3: false,
+            bulletList: false, orderedList: false, blockquote: false, codeBlock: false,
+        },
+
+        initEditor() {
+            if (editor) return;
+            if (!this.$refs.tiptapEditor) return;
+
+            editor = window.createTiptapEditor(
+                this.$refs.tiptapEditor,
+                this.activeNote.body || '',
+                (newMarkdown) => {
+                    if (this.activeNote.body !== newMarkdown) {
+                        this.activeNote.body = newMarkdown;
+                    }
+                }
+            );
+
+            editor.on('selectionUpdate', () => this.refreshToolbar());
+            editor.on('transaction', () => this.refreshToolbar());
+            this.refreshToolbar();
+        },
+
+        setEditorContent(content) {
+            if (!editor) return;
+            const current = editor.storage.markdown.getMarkdown();
+            if (current !== content) {
+                editor.commands.setContent(content || '');
+            }
+        },
+
+        // Run a Tiptap command (focusing first) e.g. runCmd('toggleBold').
+        runCmd(name, ...args) {
+            if (!editor) return;
+            editor.chain().focus()[name](...args).run();
+        },
+
+        // Sync toolbar button highlight state with the current selection.
+        refreshToolbar() {
+            if (!editor) return;
+            this.toolbar = {
+                bold: editor.isActive('bold'),
+                italic: editor.isActive('italic'),
+                strike: editor.isActive('strike'),
+                code: editor.isActive('code'),
+                h1: editor.isActive('heading', { level: 1 }),
+                h2: editor.isActive('heading', { level: 2 }),
+                h3: editor.isActive('heading', { level: 3 }),
+                bulletList: editor.isActive('bulletList'),
+                orderedList: editor.isActive('orderedList'),
+                blockquote: editor.isActive('blockquote'),
+                codeBlock: editor.isActive('codeBlock'),
+            };
+        },
 
         startFolderResize(event) {
             if (this.isMobile) return;
@@ -450,15 +542,20 @@ window.notesComponent = function(initialNotes, initialFolders) {
                 this.selectedNoteId = this.notes[0].id;
             }
 
-            // Watch for editMode toggles to focus native textarea
+            // Watch for editMode toggles to focus Tiptap
             this.$watch('editMode', (val) => {
                 if (val) {
                     this.$nextTick(() => {
-                        this.$refs.noteBodyEditor && this.$refs.noteBodyEditor.focus();
+                        this.initEditor();
+                        if (editor) {
+                            editor.commands.setContent(this.activeNote.body || '');
+                            editor.commands.focus();
+                        }
                     });
                 }
             });
         },
+
 
         // HTML5 Drag & Drop handlers
         handleDragStart(e, type, id) {
@@ -665,6 +762,11 @@ window.notesComponent = function(initialNotes, initialFolders) {
                     this.selectedNoteId = data.note.id;
                     this.editMode = true;
                     if (this.isMobile) this.mobileView = 'editor';
+
+                    if (editor) {
+                        editor.commands.setContent(data.note.body || '');
+                        editor.commands.focus();
+                    }
                 }
             });
         },
