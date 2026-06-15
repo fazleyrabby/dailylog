@@ -111,6 +111,38 @@
             </template>
         </div>
 
+        <!-- Export & Import Controls -->
+        <div class="border-t border-border bg-surface-2/5 p-3 flex flex-col space-y-2 select-none">
+            <span class="text-[9px] font-bold uppercase tracking-wider text-text-subtle block font-mono">Backup Tools</span>
+            <div class="flex items-center space-x-2">
+                <!-- Bulk Export Button -->
+                <a 
+                    href="{{ route('notes.export.bulk') }}" 
+                    class="flex-grow text-center py-1 bg-surface border border-border rounded-sm text-[10px] font-mono font-bold text-text-main hover:bg-surface-2/50 transition-colors cursor-pointer"
+                    title="Export all notes and folders as a ZIP archive"
+                >
+                    Backup (ZIP)
+                </a>
+                
+                <!-- Import trigger button -->
+                <button 
+                    @click="$refs.importFileInput.click()" 
+                    class="flex-grow py-1 bg-surface border border-border rounded-sm text-[10px] font-mono font-bold text-accent hover:bg-surface-2/50 transition-colors cursor-pointer"
+                    title="Import Markdown files or a backup ZIP"
+                >
+                    Import (ZIP/MD)
+                </button>
+            </div>
+            <!-- Hidden file input for import -->
+            <input 
+                type="file" 
+                x-ref="importFileInput" 
+                class="hidden" 
+                accept=".md,.txt,.zip" 
+                @change="importNotes($event)"
+            />
+        </div>
+
         <!-- Tags list -->
         <div class="border-t border-border bg-surface-2/10 p-3">
             <span class="text-[9px] font-bold uppercase tracking-wider text-text-subtle block mb-2 font-mono">Tags</span>
@@ -259,6 +291,16 @@
                     <x-ui.button variant="danger" size="sm" @click="deleteNote(activeNote.id)">
                         Delete
                     </x-ui.button>
+                </template>
+
+                <template x-if="activeNote.id">
+                    <a 
+                        :href="'/notes/' + activeNote.id + '/export'" 
+                        class="ui-button inline-flex items-center justify-center font-bold rounded-md border border-b-[3px] transition-all hover:-translate-y-[0.5px] hover:border-b-[4px] hover:brightness-105 active:translate-y-[1px] active:border-b-[1px] active:brightness-95 focus:outline-none disabled:opacity-50 disabled:pointer-events-none cursor-pointer bg-surface border-border border-b-[color-mix(in_srgb,var(--color-border-app)_85%,black)] text-text-main h-7 px-3 text-xs"
+                        download
+                    >
+                        Export MD
+                    </a>
                 </template>
  
                 <!-- Mode Toggle -->
@@ -875,6 +917,48 @@ window.notesComponent = function(initialNotes, initialFolders) {
                     }));
                     if (this.isMobile) this.mobileView = 'notes';
                 }
+            });
+        },
+
+        importNotes(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            window.dispatchEvent(new CustomEvent('show-toast', {
+                detail: { message: 'Uploading and importing notes...' }
+            }));
+
+            fetch('/notes/import', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { message: data.message || 'Import successful' }
+                    }));
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { message: 'Import failed: ' + (data.message || 'Unknown error') }
+                    }));
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: { message: 'Import failed due to a network error.' }
+                }));
             });
         }
     };
