@@ -136,7 +136,12 @@ class NotesController extends Controller
 
     public function exportBulk(): BinaryFileResponse
     {
-        $zipPath = tempnam(sys_get_temp_dir(), 'notes_export').'.zip';
+        $tmpDir = storage_path('app/tmp');
+        if (! is_dir($tmpDir)) {
+            mkdir($tmpDir, 0755, true);
+        }
+
+        $zipPath = $tmpDir.'/notes_export_'.Str::random(16).'.zip';
         $zip = new ZipArchive;
 
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {

@@ -21,10 +21,13 @@
     </div>
 
     <!-- Main Workspace Grid (Bento Grid Layout) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 grid-flow-row-dense">
+    <!-- Main Workspace Grid (Two-Column Layout to prevent gaps) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <!-- DAILY FOCUS (2/3 width) -->
-        <div class="lg:col-span-2">
+        <!-- Left Column: Tasks, Focus, Horizon, Bookmarks & Resources (2/3 width) -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- DAILY FOCUS -->
             <x-ui.card>
                 <x-slot name="header">
                     <div class="flex items-center space-x-2">
@@ -60,42 +63,8 @@
                     </template>
                 </div>
             </x-ui.card>
-        </div>
 
-        <!-- SLIPPING ITEMS -->
-        <div class="lg:col-span-1">
-            <x-ui.card>
-                <x-slot name="header">
-                    <div class="flex items-center space-x-1.5">
-                        <span class="text-warning text-sm font-mono">⚠</span>
-                        <h4 class="font-bold text-xs uppercase tracking-wider text-text-main font-mono">Slipping ({{ count($slipping) }})</h4>
-                    </div>
-                    <a href="/slipping" class="text-xxs text-warning hover:underline font-mono">Triage &rarr;</a>
-                </x-slot>
-
-                <div class="space-y-2">
-                    @if(count($slipping) === 0)
-                        <div class="py-4 text-center text-xs text-text-muted border border-dashed border-border rounded-sm bg-surface">
-                            All items are active. Nothing is slipping!
-                        </div>
-                    @endif
-                    @foreach($slipping as $slip)
-                        <div class="p-2.5 border border-border hover:border-warning/30 bg-surface rounded-sm text-xs flex items-center justify-between group transition-all">
-                            <div class="min-w-0">
-                                <div class="font-bold text-text-main truncate text-[11px]">{{ $slip['title'] }}</div>
-                                <div class="text-[10px] text-text-muted mt-0.5">Untouched for <span class="font-mono text-warning font-bold">{{ $slip['days'] }} days</span></div>
-                            </div>
-                            <div class="flex items-center space-x-1 ml-2 flex-shrink-0">
-                                <span class="bg-surface-2 text-[9px] font-mono px-1.5 py-0.2 rounded-xs text-text-subtle uppercase border border-border" style="line-height: 1.25;">{{ $slip['type'] }}</span>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </x-ui.card>
-        </div>
-
-        <!-- TODAY'S AGENDA (2/3 width) -->
-        <div class="lg:col-span-2">
+            <!-- TODAY'S AGENDA -->
             <x-ui.card>
                 <x-slot name="header">
                     <div class="flex items-center space-x-2">
@@ -145,43 +114,8 @@
                     </template>
                 </div>
             </x-ui.card>
-        </div>
 
-        <!-- ACTIVE PROJECTS -->
-        <div class="lg:col-span-1">
-            <x-ui.card>
-                <x-slot name="header">
-                    <div class="flex items-center space-x-1.5">
-                        <span class="text-accent text-sm font-mono">❏</span>
-                        <h4 class="font-bold text-xs uppercase tracking-wider text-text-main font-mono">Active Projects</h4>
-                    </div>
-                    <a href="/projects" class="text-xxs text-accent hover:underline font-mono">Manage &rarr;</a>
-                </x-slot>
-
-                <div class="space-y-2">
-                    @if(count($projects) === 0)
-                        <div class="py-4 text-center text-xs text-text-muted border border-dashed border-border rounded-sm bg-surface">
-                            No active projects.
-                        </div>
-                    @endif
-                    @foreach($projects as $proj)
-                        <a href="/projects" class="block p-2.5 border border-border bg-surface-2/10 hover:bg-surface-2/30 rounded-sm text-xs transition-colors">
-                            <div class="flex items-center justify-between">
-                                <span class="font-bold text-text-main flex items-center">
-                                    <span class="h-2 w-2 rounded-full mr-2" style="background-color: var(--color-type-{{ strtolower($proj['name']) }}, #EA580C)"></span>
-                                    {{ $proj['name'] }}
-                                </span>
-                                <span class="text-[10px] text-text-subtle font-mono bg-surface px-1.5 py-0.2 border border-border rounded-xs">{{ $proj['tasks_count'] }} tasks</span>
-                            </div>
-                            <p class="text-[10px] text-text-muted mt-1.5 truncate">{{ $proj['desc'] }}</p>
-                        </a>
-                    @endforeach
-                </div>
-            </x-ui.card>
-        </div>
-
-        <!-- UPCOMING HORIZON (2/3 width) -->
-        <div class="lg:col-span-2">
+            <!-- UPCOMING HORIZON -->
             <x-ui.card>
                 <x-slot name="header">
                     <div class="flex items-center space-x-2">
@@ -211,10 +145,183 @@
                     </template>
                 </div>
             </x-ui.card>
+
+            <!-- Bookmarks & Resources Sub-Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- RECENT BOOKMARKS -->
+                <x-ui.card>
+                    <x-slot name="header">
+                        <div class="flex items-center space-x-1.5">
+                            <span class="text-type-bookmark text-sm font-mono">⚲</span>
+                            <h4 class="font-bold text-xs uppercase tracking-wider text-text-main font-mono">Recent Bookmarks</h4>
+                        </div>
+                        <a href="/bookmarks" class="text-xxs text-accent hover:underline font-mono">All Bookmarks &rarr;</a>
+                    </x-slot>
+
+                    <div class="space-y-3">
+                        @if(count($recentBookmarksList) === 0)
+                            <div class="py-6 text-center text-xs text-text-muted border border-dashed border-border rounded-sm bg-surface">
+                                No bookmarks captured yet.
+                            </div>
+                        @endif
+                        @foreach($recentBookmarksList as $b)
+                            <div class="p-2 border-b border-border last:border-b-0 text-xs space-y-1">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="min-w-0 flex-grow">
+                                        <a href="{{ $b['url'] }}" target="_blank" class="font-bold text-accent hover:underline truncate block" title="{{ $b['title'] }}">
+                                            {{ $b['title'] }}
+                                        </a>
+                                        @if($b['site'])
+                                            <span class="text-[10px] text-text-subtle font-mono block">{{ $b['site'] }}</span>
+                                        @endif
+                                    </div>
+                                    <span class="text-[9px] text-text-subtle font-mono whitespace-nowrap">{{ $b['added'] }}</span>
+                                </div>
+                                @if($b['desc'])
+                                    <p class="text-[10px] text-text-muted line-clamp-2">{{ $b['desc'] }}</p>
+                                @endif
+                                @if(!empty($b['tags']))
+                                    <div class="flex flex-wrap gap-1 pt-1">
+                                        @foreach($b['tags'] as $tag)
+                                            <span class="bg-surface-2 border border-border px-1.5 py-0.2 rounded-full text-[9px] text-accent font-mono">#{{ $tag }}</span>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </x-ui.card>
+
+                <!-- RECENT RESOURCES -->
+                <x-ui.card>
+                    <x-slot name="header">
+                        <div class="flex items-center space-x-1.5">
+                            <span class="text-accent text-sm font-mono font-bold">❏</span>
+                            <h4 class="font-bold text-xs uppercase tracking-wider text-text-main font-mono">Recent Resources</h4>
+                        </div>
+                        <a href="/resources" class="text-xxs text-accent hover:underline font-mono">All Resources &rarr;</a>
+                    </x-slot>
+
+                    <div class="space-y-3">
+                        @if(count($recentResourcesList) === 0)
+                            <div class="py-6 text-center text-xs text-text-muted border border-dashed border-border rounded-sm bg-surface">
+                                No reference resources added yet.
+                            </div>
+                        @endif
+                        @foreach($recentResourcesList as $r)
+                            <div class="p-2 border-b border-border last:border-b-0 text-xs space-y-1">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="min-w-0 flex-grow">
+                                        <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+                                            <span class="bg-surface-2 border border-border px-1.5 py-0.2 rounded-sm text-[8px] uppercase font-mono text-text-muted font-bold">{{ $r['type'] }}</span>
+                                            @if($r['url'])
+                                                <a href="{{ $r['url'] }}" target="_blank" class="font-bold text-text-main hover:text-accent truncate block" title="{{ $r['title'] }}">
+                                                    {{ $r['title'] }}
+                                                </a>
+                                            @else
+                                                <span class="font-bold text-text-main truncate" title="{{ $r['title'] }}">{{ $r['title'] }}</span>
+                                            @endif
+                                        </div>
+                                        @if($r['author'])
+                                            <span class="text-[10px] text-text-muted">by <span class="font-semibold">{{ $r['author'] }}</span></span>
+                                        @endif
+                                    </div>
+                                    <span class="text-[9px] text-text-subtle font-mono whitespace-nowrap">{{ $r['added'] }}</span>
+                                </div>
+                                <div class="flex items-center justify-between pt-1 flex-wrap gap-y-1">
+                                    <div class="flex items-center space-x-1">
+                                        @if(!empty($r['tags']))
+                                            @foreach($r['tags'] as $tag)
+                                                <span class="bg-surface-2 border border-border px-1.5 py-0.2 rounded-full text-[9px] text-accent font-mono">#{{ $tag }}</span>
+                                            @endforeach
+                                        @endif
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        @if($r['rating'] > 0)
+                                            <div class="flex items-center space-x-0.5 text-warning text-sm leading-none">
+                                                @for($i = 0; $i < $r['rating']; $i++)
+                                                    <span>★</span>
+                                                @endfor
+                                            </div>
+                                        @endif
+                                        <span class="border text-[8px] px-1.5 py-0.2 rounded-full font-mono font-bold uppercase tracking-wider bg-accent/5 text-accent border-accent/20">
+                                            {{ str_replace('_', ' ', $r['state']) }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </x-ui.card>
+            </div>
+
         </div>
 
-        <!-- RECENT NOTES -->
-        <div class="lg:col-span-1">
+        <!-- Right Column: Slipping, Projects, Notes, Network (1/3 width) -->
+        <div class="lg:col-span-1 space-y-6">
+
+            <!-- SLIPPING ITEMS -->
+            <x-ui.card>
+                <x-slot name="header">
+                    <div class="flex items-center space-x-1.5">
+                        <span class="text-warning text-sm font-mono">⚠</span>
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-text-main font-mono">Slipping ({{ count($slipping) }})</h4>
+                    </div>
+                    <a href="/slipping" class="text-xxs text-warning hover:underline font-mono">Triage &rarr;</a>
+                </x-slot>
+
+                <div class="space-y-2">
+                    @if(count($slipping) === 0)
+                        <div class="py-4 text-center text-xs text-text-muted border border-dashed border-border rounded-sm bg-surface">
+                            All items are active. Nothing is slipping!
+                        </div>
+                    @endif
+                    @foreach($slipping as $slip)
+                        <div class="p-2.5 border border-border hover:border-warning/30 bg-surface rounded-sm text-xs flex items-center justify-between group transition-all">
+                            <div class="min-w-0">
+                                <div class="font-bold text-text-main truncate text-[11px]">{{ $slip['title'] }}</div>
+                                <div class="text-[10px] text-text-muted mt-0.5">Untouched for <span class="font-mono text-warning font-bold">{{ $slip['days'] }} days</span></div>
+                            </div>
+                            <div class="flex items-center space-x-1 ml-2 flex-shrink-0">
+                                <span class="bg-surface-2 text-[9px] font-mono px-1.5 py-0.2 rounded-xs text-text-subtle uppercase border border-border" style="line-height: 1.25;">{{ $slip['type'] }}</span>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </x-ui.card>
+
+            <!-- ACTIVE PROJECTS -->
+            <x-ui.card>
+                <x-slot name="header">
+                    <div class="flex items-center space-x-1.5">
+                        <span class="text-accent text-sm font-mono">❏</span>
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-text-main font-mono">Active Projects</h4>
+                    </div>
+                    <a href="/projects" class="text-xxs text-accent hover:underline font-mono">Manage &rarr;</a>
+                </x-slot>
+
+                <div class="space-y-2">
+                    @if(count($projects) === 0)
+                        <div class="py-4 text-center text-xs text-text-muted border border-dashed border-border rounded-sm bg-surface">
+                            No active projects.
+                        </div>
+                    @endif
+                    @foreach($projects as $proj)
+                        <a href="/projects" class="block p-2.5 border border-border bg-surface-2/10 hover:bg-surface-2/30 rounded-sm text-xs transition-colors">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-text-main flex items-center">
+                                    <span class="h-2 w-2 rounded-full mr-2" style="background-color: var(--color-type-{{ strtolower($proj['name']) }}, #EA580C)"></span>
+                                    {{ $proj['name'] }}
+                                </span>
+                                <span class="text-[10px] text-text-subtle font-mono bg-surface px-1.5 py-0.2 border border-border rounded-xs">{{ $proj['tasks_count'] }} tasks</span>
+                            </div>
+                            <p class="text-[10px] text-text-muted mt-1.5 truncate">{{ $proj['desc'] }}</p>
+                        </a>
+                    @endforeach
+                </div>
+            </x-ui.card>
+
+            <!-- RECENT NOTES -->
             <x-ui.card>
                 <x-slot name="header">
                     <div class="flex items-center space-x-1.5">
@@ -241,120 +348,8 @@
                     @endforeach
                 </div>
             </x-ui.card>
-        </div>
 
-        <!-- RECENT BOOKMARKS -->
-        <div class="lg:col-span-1">
-            <x-ui.card>
-                <x-slot name="header">
-                    <div class="flex items-center space-x-1.5">
-                        <span class="text-type-bookmark text-sm font-mono">⚲</span>
-                        <h4 class="font-bold text-xs uppercase tracking-wider text-text-main font-mono">Recent Bookmarks</h4>
-                    </div>
-                    <a href="/bookmarks" class="text-xxs text-accent hover:underline font-mono">All Bookmarks &rarr;</a>
-                </x-slot>
-
-                <div class="space-y-3">
-                    @if(count($recentBookmarksList) === 0)
-                        <div class="py-6 text-center text-xs text-text-muted border border-dashed border-border rounded-sm bg-surface">
-                            No bookmarks captured yet.
-                        </div>
-                    @endif
-                    @foreach($recentBookmarksList as $b)
-                        <div class="p-2 border-b border-border last:border-b-0 text-xs space-y-1">
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="min-w-0 flex-grow">
-                                    <a href="{{ $b['url'] }}" target="_blank" class="font-bold text-accent hover:underline truncate block" title="{{ $b['title'] }}">
-                                        {{ $b['title'] }}
-                                    </a>
-                                    @if($b['site'])
-                                        <span class="text-[10px] text-text-subtle font-mono block">{{ $b['site'] }}</span>
-                                    @endif
-                                </div>
-                                <span class="text-[9px] text-text-subtle font-mono whitespace-nowrap">{{ $b['added'] }}</span>
-                            </div>
-                            @if($b['desc'])
-                                <p class="text-[10px] text-text-muted line-clamp-2">{{ $b['desc'] }}</p>
-                            @endif
-                            @if(!empty($b['tags']))
-                                <div class="flex flex-wrap gap-1 pt-1">
-                                    @foreach($b['tags'] as $tag)
-                                        <span class="bg-surface-2 border border-border px-1.5 py-0.2 rounded-full text-[9px] text-accent font-mono">#{{ $tag }}</span>
-                                    @endforeach
-                                </div>
-                            @endif
-                        </div>
-                    @endforeach
-                </div>
-            </x-ui.card>
-        </div>
-
-        <!-- RECENT RESOURCES -->
-        <div class="lg:col-span-1">
-            <x-ui.card>
-                <x-slot name="header">
-                    <div class="flex items-center space-x-1.5">
-                        <span class="text-accent text-sm font-mono font-bold">❏</span>
-                        <h4 class="font-bold text-xs uppercase tracking-wider text-text-main font-mono">Recent Resources</h4>
-                    </div>
-                    <a href="/resources" class="text-xxs text-accent hover:underline font-mono">All Resources &rarr;</a>
-                </x-slot>
-
-                <div class="space-y-3">
-                    @if(count($recentResourcesList) === 0)
-                        <div class="py-6 text-center text-xs text-text-muted border border-dashed border-border rounded-sm bg-surface">
-                            No reference resources added yet.
-                        </div>
-                    @endif
-                    @foreach($recentResourcesList as $r)
-                        <div class="p-2 border-b border-border last:border-b-0 text-xs space-y-1">
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="min-w-0 flex-grow">
-                                    <div class="flex items-center space-x-2 flex-wrap gap-y-1">
-                                        <span class="bg-surface-2 border border-border px-1.5 py-0.2 rounded-sm text-[8px] uppercase font-mono text-text-muted font-bold">{{ $r['type'] }}</span>
-                                        @if($r['url'])
-                                            <a href="{{ $r['url'] }}" target="_blank" class="font-bold text-text-main hover:text-accent truncate block" title="{{ $r['title'] }}">
-                                                {{ $r['title'] }}
-                                            </a>
-                                        @else
-                                            <span class="font-bold text-text-main truncate" title="{{ $r['title'] }}">{{ $r['title'] }}</span>
-                                        @endif
-                                    </div>
-                                    @if($r['author'])
-                                        <span class="text-[10px] text-text-muted">by <span class="font-semibold">{{ $r['author'] }}</span></span>
-                                    @endif
-                                </div>
-                                <span class="text-[9px] text-text-subtle font-mono whitespace-nowrap">{{ $r['added'] }}</span>
-                            </div>
-                            <div class="flex items-center justify-between pt-1 flex-wrap gap-y-1">
-                                <div class="flex items-center space-x-1">
-                                    @if(!empty($r['tags']))
-                                        @foreach($r['tags'] as $tag)
-                                            <span class="bg-surface-2 border border-border px-1.5 py-0.2 rounded-full text-[9px] text-accent font-mono">#{{ $tag }}</span>
-                                        @endforeach
-                                    @endif
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    @if($r['rating'] > 0)
-                                        <div class="flex items-center space-x-0.5 text-warning text-sm leading-none">
-                                            @for($i = 0; $i < $r['rating']; $i++)
-                                                <span>★</span>
-                                            @endfor
-                                        </div>
-                                    @endif
-                                    <span class="border text-[8px] px-1.5 py-0.2 rounded-full font-mono font-bold uppercase tracking-wider bg-accent/5 text-accent border-accent/20">
-                                        {{ str_replace('_', ' ', $r['state']) }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </x-ui.card>
-        </div>
-
-        <!-- SPEED TEST DIAGNOSTICS (NETWORK HEALTH) -->
-        <div class="lg:col-span-1">
+            <!-- SPEED TEST DIAGNOSTICS (NETWORK HEALTH) -->
             <x-ui.card>
                 <x-slot name="header">
                     <div class="flex items-center space-x-1.5">
@@ -398,6 +393,7 @@
                     </a>
                 </div>
             </x-ui.card>
+
         </div>
 
     </div>
