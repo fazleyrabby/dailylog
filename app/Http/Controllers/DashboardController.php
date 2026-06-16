@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Entry;
 use App\Models\Project;
 use App\Models\SlippingSnapshot;
+use App\Models\SpeedtestLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -111,12 +112,12 @@ class DashboardController extends Controller
             ->get();
 
         $recentNotes = $recentNotesRaw->map(fn (Entry $entry) => [
-                'type' => 'note',
-                'title' => $entry->title ?? 'Untitled Note',
-                'timestamp' => $entry->updated_at,
-                'time_ago' => $entry->updated_at ? $entry->updated_at->diffForHumans() : 'Just now',
-                'desc' => strip_tags(str_replace("\n", " ", $entry->body ?? '')),
-            ]);
+            'type' => 'note',
+            'title' => $entry->title ?? 'Untitled Note',
+            'timestamp' => $entry->updated_at,
+            'time_ago' => $entry->updated_at ? $entry->updated_at->diffForHumans() : 'Just now',
+            'desc' => strip_tags(str_replace("\n", ' ', $entry->body ?? '')),
+        ]);
 
         $recentTasks = Entry::query()
             ->tasks()
@@ -163,7 +164,7 @@ class DashboardController extends Controller
             ->active()
             ->orderByDesc('occurred_on')
             ->pluck('occurred_on')
-            ->map(fn($date) => $date->format('Y-m-d'))
+            ->map(fn ($date) => $date->format('Y-m-d'))
             ->unique()
             ->values();
 
@@ -189,10 +190,47 @@ class DashboardController extends Controller
             }
         }
 
-        $lastSpeedtest = \App\Models\SpeedtestLog::query()
+        $lastSpeedtest = SpeedtestLog::query()
             ->where('user_id', auth()->id())
             ->orderByDesc('created_at')
             ->first();
+
+        $recentBookmarksList = Entry::query()
+            ->bookmarks()
+            ->active()
+            ->with(['bookmarkDetails', 'tags'])
+            ->orderByDesc('created_at')
+            ->take(7)
+            ->get()
+            ->map(fn (Entry $entry) => [
+                'id' => $entry->id,
+                'title' => $entry->title ?? 'Untitled Bookmark',
+                'url' => $entry->bookmarkDetails?->url ?? '',
+                'site' => $entry->bookmarkDetails?->site ?? '',
+                'desc' => $entry->bookmarkDetails?->description ?? '',
+                'tags' => $entry->tags->pluck('name')->toArray(),
+                'added' => $entry->created_at ? $entry->created_at->diffForHumans() : 'Just now',
+                'state' => $entry->bookmarkDetails?->review_state ?? 'unread',
+            ])->toArray();
+
+        $recentResourcesList = Entry::query()
+            ->resources()
+            ->active()
+            ->with(['resourceDetails', 'tags'])
+            ->orderByDesc('created_at')
+            ->take(7)
+            ->get()
+            ->map(fn (Entry $entry) => [
+                'id' => $entry->id,
+                'title' => $entry->title ?? 'Untitled Resource',
+                'type' => $entry->resourceDetails?->resource_type ?? 'article',
+                'author' => $entry->resourceDetails?->author ?? '',
+                'url' => $entry->resourceDetails?->url ?? '',
+                'state' => $entry->resourceDetails?->consume_state ?? 'to_consume',
+                'rating' => $entry->resourceDetails?->rating ?? 0,
+                'tags' => $entry->tags->pluck('name')->toArray(),
+                'added' => $entry->created_at ? $entry->created_at->diffForHumans() : 'Just now',
+            ])->toArray();
 
         return view('pages.dashboard', [
             'greetingDate' => now()->format('l, F j'),
@@ -207,6 +245,8 @@ class DashboardController extends Controller
             'streak' => $streak,
             'recentNotes' => $recentNotesRaw,
             'lastSpeedtest' => $lastSpeedtest,
+            'recentBookmarksList' => $recentBookmarksList,
+            'recentResourcesList' => $recentResourcesList,
         ]);
     }
 
@@ -214,14 +254,15 @@ class DashboardController extends Controller
     {
         DB::beginTransaction();
         try {
-            $entry->update(['pinned' => !$entry->pinned]);
+            $entry->update(['pinned' => ! $entry->pinned]);
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Failed to toggle pin for entry {$entry->id}: " . $e->getMessage(), [
+            Log::error("Failed to toggle pin for entry {$entry->id}: ".$e->getMessage(), [
                 'entry_id' => $entry->id,
-                'exception' => $e
+                'exception' => $e,
             ]);
+
             return response()->json(['message' => 'Failed to update focus status.'], 500);
         }
 

@@ -1,93 +1,109 @@
 <?php
 
-namespace Tests\Feature\Http;
-
 use App\Enums\EntryType;
 use App\Models\Entry;
 use App\Models\Project;
 use App\Models\SlippingSnapshot;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 
-class DashboardControllerTest extends TestCase
-{
-    use RefreshDatabase;
+uses(RefreshDatabase::class);
 
-    public function test_guest_cannot_access_dashboard(): void
-    {
-        $this->get(route('dashboard.index'))
-            ->assertRedirect(route('auth.login'));
-    }
+test('guest cannot access dashboard', function () {
+    $this->get(route('dashboard.index'))
+        ->assertRedirect(route('auth.login'));
+});
 
-    public function test_index_shows_aggregated_dashboard_data(): void
-    {
-        $user = User::factory()->create();
+test('index shows aggregated dashboard data', function () {
+    $user = User::factory()->create();
 
-        // Pinned note
-        Entry::factory()->for($user)->type(EntryType::Note)->create([
-            'title' => 'Pinned Note Test',
-            'pinned' => true,
-        ]);
+    // Pinned note
+    Entry::factory()->for($user)->type(EntryType::Note)->create([
+        'title' => 'Pinned Note Test',
+        'pinned' => true,
+    ]);
 
-        // Active task due today
-        $task = Entry::factory()->for($user)->type(EntryType::Task)->create([
-            'title' => 'Active Task Test',
-        ]);
-        $task->taskDetails()->create([
-            'due_at' => now(),
-            'priority' => 3,
-        ]);
+    // Active task due today
+    $task = Entry::factory()->for($user)->type(EntryType::Task)->create([
+        'title' => 'Active Task Test',
+    ]);
+    $task->taskDetails()->create([
+        'due_at' => now(),
+        'priority' => 3,
+    ]);
 
-        // Slipping snapshot
-        SlippingSnapshot::create([
-            'user_id' => $user->id,
-            'subject_type' => Entry::class,
-            'subject_id' => $task->id,
-            'slipping_since' => now()->subDays(31),
-            'severity' => 3,
-            'rule' => 'test_rule',
-        ]);
+    // Slipping snapshot
+    SlippingSnapshot::create([
+        'user_id' => $user->id,
+        'subject_type' => Entry::class,
+        'subject_id' => $task->id,
+        'slipping_since' => now()->subDays(31),
+        'severity' => 3,
+        'rule' => 'test_rule',
+    ]);
 
-        // Active Project
-        Project::create([
-            'user_id' => $user->id,
-            'name' => 'Test Project',
-            'slug' => 'test-project',
-            'status' => 'active',
-        ]);
+    // Active Project
+    Project::create([
+        'user_id' => $user->id,
+        'name' => 'Test Project',
+        'slug' => 'test-project',
+        'status' => 'active',
+    ]);
 
-        $this->actingAs($user)
-            ->get(route('dashboard.index'))
-            ->assertOk()
-            ->assertViewHas('todayTasksCount', 1)
-            ->assertViewHas('slippingCount', 1)
-            ->assertViewHas('focusItems', function ($focus) {
-                return count($focus) === 1 && $focus[0]['title'] === 'Pinned Note Test';
-            })
-            ->assertViewHas('timeline')
-            ->assertViewHas('streak', 0);
-    }
+    // Bookmarks
+    $bookmark = Entry::factory()->for($user)->type(EntryType::Bookmark)->create([
+        'title' => 'Test Bookmark',
+    ]);
+    $bookmark->bookmarkDetails()->create([
+        'url' => 'https://example.com/test',
+        'site' => 'example.com',
+        'review_state' => 'unread',
+    ]);
 
-    public function test_toggle_pin_updates_entry_pin_status(): void
-    {
-        $user = User::factory()->create();
-        $entry = Entry::factory()->for($user)->type(EntryType::Note)->create([
-            'pinned' => false,
-        ]);
+    // Resources
+    $resource = Entry::factory()->for($user)->type(EntryType::Resource)->create([
+        'title' => 'Test Resource',
+    ]);
+    $resource->resourceDetails()->create([
+        'resource_type' => 'book',
+        'consume_state' => 'to_consume',
+    ]);
 
-        $this->actingAs($user)
-            ->patchJson(route('entries.toggle-pin', $entry))
-            ->assertOk()
-            ->assertJsonPath('pinned', true);
+    $this->actingAs($user)
+        ->get(route('dashboard.index'))
+        ->assertOk()
+        ->assertViewHas('todayTasksCount', 1)
+        ->assertViewHas('slippingCount', 1)
+        ->assertViewHas('focusItems', function ($focus) {
+            return count($focus) === 1 && $focus[0]['title'] === 'Pinned Note Test';
+        })
+        ->assertViewHas('timeline')
+        ->assertViewHas('streak', 0)
+        ->assertViewHas('recentBookmarksList', function ($list) {
+            return count($list) === 1 && $list[0]['title'] === 'Test Bookmark';
+        })
+        ->assertViewHas('recentResourcesList', function ($list) {
+            return count($list) === 1 && $list[0]['title'] === 'Test Resource';
+        });
+});
 
-        $this->assertTrue($entry->fresh()->pinned);
+test('toggle pin updates entry pin status', function () {
+    $user = User::factory()->create();
+    $entry = Entry::factory()->for($user)->type(EntryType::Note)->create([
+        'pinned' => false,
+    ]);
 
-        $this->actingAs($user)
-            ->patchJson(route('entries.toggle-pin', $entry))
-            ->assertOk()
-            ->assertJsonPath('pinned', false);
+    $this->actingAs($user)
+        ->patchJson(route('entries.toggle-pin', $entry))
+        ->assertOk()
+        ->assertJsonPath('pinned', true);
 
-        $this->assertFalse($entry->fresh()->pinned);
-    }
-}
+    expect($entry->fresh()->pinned)->toBeTrue();
+
+    $this->actingAs($user)
+        ->patchJson(route('entries.toggle-pin', $entry))
+        ->assertOk()
+        ->assertJsonPath('pinned', false);
+
+    expect($entry->fresh()->pinned)->toBeFalse();
+});

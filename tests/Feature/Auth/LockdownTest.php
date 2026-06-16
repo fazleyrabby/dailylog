@@ -1,44 +1,35 @@
 <?php
 
-namespace Tests\Feature\Auth;
-
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 
-class LockdownTest extends TestCase
-{
-    use RefreshDatabase;
+uses(RefreshDatabase::class);
 
-    public function test_create_owner_command_creates_first_user(): void
-    {
-        $this->assertDatabaseCount('users', 0);
+test('create owner command creates first user', function () {
+    $this->assertDatabaseCount('users', 0);
 
-        $this->artisan('app:create-owner', [
-            '--name' => 'Owner',
-            '--email' => 'owner@example.com',
-            '--password' => 'lockdown-pass',
-        ])->assertSuccessful();
+    $this->artisan('app:create-owner', [
+        '--name' => 'Owner',
+        '--email' => 'owner@example.com',
+        '--password' => 'lockdown-pass',
+    ])->assertSuccessful();
 
-        $this->assertDatabaseCount('users', 1);
-        $this->assertDatabaseHas('users', ['email' => 'owner@example.com']);
-    }
+    $this->assertDatabaseCount('users', 1);
+    $this->assertDatabaseHas('users', ['email' => 'owner@example.com']);
+});
 
-    public function test_create_owner_refused_when_owner_already_exists(): void
-    {
-        User::factory()->create();
+test('create owner refused when owner already exists', function () {
+    User::factory()->create();
 
-        $this->artisan('app:create-owner', [
-            '--name' => 'Second',
-            '--email' => 'second@example.com',
-            '--password' => 'lockdown-pass',
-        ])->assertFailed();
+    $this->artisan('app:create-owner', [
+        '--name' => 'Second',
+        '--email' => 'second@example.com',
+        '--password' => 'lockdown-pass',
+    ])->assertFailed();
 
-        $this->assertDatabaseCount('users', 1);
-    }
+    $this->assertDatabaseCount('users', 1);
+});
 
-    public function test_register_route_does_not_exist(): void
-    {
-        $this->get('/register')->assertNotFound();
-    }
-}
+test('register route does not exist', function () {
+    $this->get('/register')->assertNotFound();
+});

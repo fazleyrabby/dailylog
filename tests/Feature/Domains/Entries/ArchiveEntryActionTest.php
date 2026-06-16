@@ -1,37 +1,29 @@
 <?php
 
-namespace Tests\Feature\Domains\Entries;
-
 use App\Domains\Entries\Actions\ArchiveEntry;
 use App\Domains\Entries\Actions\RestoreEntry;
 use App\Models\Entry;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 
-class ArchiveEntryActionTest extends TestCase
-{
-    use RefreshDatabase;
+uses(RefreshDatabase::class);
 
-    public function test_archive_sets_archived_at(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        $entry = Entry::factory()->for($user)->create();
+test('archive sets archived at', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+    $entry = Entry::factory()->for($user)->create();
 
-        app(ArchiveEntry::class)->execute($entry);
+    app(ArchiveEntry::class)->execute($entry);
 
-        $this->assertNotNull($entry->fresh()->archived_at);
-    }
+    expect($entry->fresh()->archived_at)->not->toBeNull();
+});
 
-    public function test_restore_clears_archived_at(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        $entry = Entry::factory()->for($user)->archived()->create();
+test('restore clears archived at', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+    $entry = Entry::factory()->for($user)->archived()->create();
 
-        app(RestoreEntry::class)->execute($entry);
+    app(RestoreEntry::class)->execute($entry);
 
-        $this->assertNull($entry->fresh()->archived_at);
-    }
-}
+    expect($entry->fresh()->archived_at)->toBeNull();
+});

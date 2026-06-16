@@ -1,48 +1,40 @@
 <?php
 
-namespace Tests\Feature\Domains\Linking;
-
 use App\Domains\Linking\Queries\BacklinksQuery;
 use App\Domains\Linking\Queries\OutboundLinksQuery;
 use App\Domains\Linking\Services\LinkService;
 use App\Models\Entry;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 
-class BacklinksQueryTest extends TestCase
-{
-    use RefreshDatabase;
+uses(RefreshDatabase::class);
 
-    public function test_backlinks_returns_sources_pointing_at_entry(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        $hub = Entry::factory()->for($user)->create(['title' => 'Hub']);
-        $a = Entry::factory()->for($user)->create(['title' => 'A', 'body' => '[[Hub]]']);
-        $b = Entry::factory()->for($user)->create(['title' => 'B', 'body' => 'no link']);
+test('backlinks returns sources pointing at entry', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+    $hub = Entry::factory()->for($user)->create(['title' => 'Hub']);
+    $a = Entry::factory()->for($user)->create(['title' => 'A', 'body' => '[[Hub]]']);
+    $b = Entry::factory()->for($user)->create(['title' => 'B', 'body' => 'no link']);
 
-        app(LinkService::class)->resolveBody($a);
-        app(LinkService::class)->resolveBody($b);
+    app(LinkService::class)->resolveBody($a);
+    app(LinkService::class)->resolveBody($b);
 
-        $bls = app(BacklinksQuery::class)->run($hub);
+    $bls = app(BacklinksQuery::class)->run($hub);
 
-        $this->assertCount(1, $bls);
-        $this->assertSame($a->id, $bls->first()->id);
-    }
+    expect($bls)->toHaveCount(1);
+    expect($bls->first()->id)->toBe($a->id);
+});
 
-    public function test_outbound_returns_targets_pointed_at_by_entry(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        $a = Entry::factory()->for($user)->create(['title' => 'A']);
-        $b = Entry::factory()->for($user)->create(['title' => 'B']);
-        $source = Entry::factory()->for($user)->create(['title' => 'S', 'body' => '[[A]] [[B]]']);
+test('outbound returns targets pointed at by entry', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+    $a = Entry::factory()->for($user)->create(['title' => 'A']);
+    $b = Entry::factory()->for($user)->create(['title' => 'B']);
+    $source = Entry::factory()->for($user)->create(['title' => 'S', 'body' => '[[A]] [[B]]']);
 
-        app(LinkService::class)->resolveBody($source);
+    app(LinkService::class)->resolveBody($source);
 
-        $out = app(OutboundLinksQuery::class)->run($source);
+    $out = app(OutboundLinksQuery::class)->run($source);
 
-        $this->assertCount(2, $out);
-    }
-}
+    expect($out)->toHaveCount(2);
+});

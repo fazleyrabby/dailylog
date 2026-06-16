@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BookmarksController;
@@ -45,6 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/', fn () => redirect()->route('dashboard.index'));
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
     Route::patch('/entries/{entry}/toggle-pin', [DashboardController::class, 'togglePin'])->name('entries.toggle-pin');
     Route::get('/inbox', [InboxController::class, 'index'])->name('inbox.index');
     Route::patch('/inbox/{entry}/triage', [InboxController::class, 'triage'])->name('inbox.triage');

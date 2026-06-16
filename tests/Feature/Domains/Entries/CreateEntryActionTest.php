@@ -1,61 +1,52 @@
 <?php
 
-namespace Tests\Feature\Domains\Entries;
-
 use App\Domains\Entries\Actions\CreateEntry;
 use App\Domains\Entries\DTOs\EntryAttributes;
 use App\Enums\CapturedVia;
 use App\Enums\EntryType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 
-class CreateEntryActionTest extends TestCase
-{
-    use RefreshDatabase;
+uses(RefreshDatabase::class);
 
-    public function test_creates_a_task_with_default_status(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
+test('creates a task with default status', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
 
-        $entry = app(CreateEntry::class)->execute(new EntryAttributes(
-            type: EntryType::Task,
-            title: 'Wire up auth',
-            body: 'Use Laravel Breeze',
-            capturedVia: CapturedVia::Palette,
-        ));
+    $entry = app(CreateEntry::class)->execute(new EntryAttributes(
+        type: EntryType::Task,
+        title: 'Wire up auth',
+        body: 'Use Laravel Breeze',
+        capturedVia: CapturedVia::Palette,
+    ));
 
-        $this->assertSame('task', $entry->type->value);
-        $this->assertSame('open', $entry->status);
-        $this->assertSame($user->id, $entry->user_id);
-        $this->assertNotNull($entry->last_activity_at);
-        $this->assertSame('palette', $entry->captured_via);
-    }
+    expect($entry->type->value)->toBe('task');
+    expect($entry->status)->toBe('open');
+    expect($entry->user_id)->toBe($user->id);
+    expect($entry->last_activity_at)->not->toBeNull();
+    expect($entry->captured_via)->toBe('palette');
+});
 
-    public function test_creates_an_idea_with_spark_status(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
+test('creates an idea with spark status', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
 
-        $entry = app(CreateEntry::class)->execute(new EntryAttributes(
-            type: EntryType::Idea,
-            title: 'Personal LLM index',
-        ));
+    $entry = app(CreateEntry::class)->execute(new EntryAttributes(
+        type: EntryType::Idea,
+        title: 'Personal LLM index',
+    ));
 
-        $this->assertSame('spark', $entry->status);
-    }
+    expect($entry->status)->toBe('spark');
+});
 
-    public function test_user_id_resolves_from_auth(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
+test('user id resolves from auth', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
 
-        $entry = app(CreateEntry::class)->execute(new EntryAttributes(
-            type: EntryType::Note,
-            title: 'A note',
-        ));
+    $entry = app(CreateEntry::class)->execute(new EntryAttributes(
+        type: EntryType::Note,
+        title: 'A note',
+    ));
 
-        $this->assertSame($user->id, $entry->user_id);
-    }
-}
+    expect($entry->user_id)->toBe($user->id);
+});

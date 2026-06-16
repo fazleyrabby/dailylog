@@ -1,146 +1,134 @@
 <?php
 
-namespace Tests\Feature\Http;
-
 use App\Enums\EntryType;
 use App\Models\Entry;
 use App\Models\Project;
 use App\Models\SlippingSnapshot;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 
-class SlippingControllerTest extends TestCase
-{
-    use RefreshDatabase;
+uses(RefreshDatabase::class);
 
-    public function test_guest_cannot_access_slipping(): void
-    {
-        $this->get(route('slipping.index'))
-            ->assertRedirect(route('auth.login'));
-    }
+test('guest cannot access slipping', function () {
+    $this->get(route('slipping.index'))
+        ->assertRedirect(route('auth.login'));
+});
 
-    public function test_index_shows_database_slipping_alerts(): void
-    {
-        $user = User::factory()->create();
-        $project = Project::create([
-            'user_id' => $user->id,
-            'name' => 'Failing Project',
-            'slug' => 'failing-project',
-            'status' => 'active',
-        ]);
+test('index shows database slipping alerts', function () {
+    $user = User::factory()->create();
+    $project = Project::create([
+        'user_id' => $user->id,
+        'name' => 'Failing Project',
+        'slug' => 'failing-project',
+        'status' => 'active',
+    ]);
 
-        $snap = SlippingSnapshot::create([
-            'user_id' => $user->id,
-            'subject_type' => Project::class,
-            'subject_id' => $project->id,
-            'rule' => 'project-inactive',
-            'slipping_since' => now()->subDays(25),
-            'severity' => 2,
-        ]);
+    $snap = SlippingSnapshot::create([
+        'user_id' => $user->id,
+        'subject_type' => Project::class,
+        'subject_id' => $project->id,
+        'rule' => 'project-inactive',
+        'slipping_since' => now()->subDays(25),
+        'severity' => 2,
+    ]);
 
-        $this->actingAs($user)
-            ->get(route('slipping.index'))
-            ->assertOk()
-            ->assertViewHas('slippingItems', function ($items) {
-                return count($items) === 1 && $items[0]['title'] === 'Failing Project' && $items[0]['severity'] === 'medium';
-            });
-    }
+    $this->actingAs($user)
+        ->get(route('slipping.index'))
+        ->assertOk()
+        ->assertViewHas('slippingItems', function ($items) {
+            return count($items) === 1 && $items[0]['title'] === 'Failing Project' && $items[0]['severity'] === 'medium';
+        });
+});
 
-    public function test_resume_updates_subject_heartbeat(): void
-    {
-        $user = User::factory()->create();
-        $entry = Entry::factory()->for($user)->type(EntryType::Note)->create([
-            'last_activity_at' => now()->subDays(40),
-        ]);
+test('resume updates subject heartbeat', function () {
+    $user = User::factory()->create();
+    $entry = Entry::factory()->for($user)->type(EntryType::Note)->create([
+        'last_activity_at' => now()->subDays(40),
+    ]);
 
-        $snap = SlippingSnapshot::create([
-            'user_id' => $user->id,
-            'subject_type' => Entry::class,
-            'subject_id' => $entry->id,
-            'rule' => 'note-inactive',
-            'slipping_since' => now()->subDays(40),
-            'severity' => 3,
-        ]);
+    $snap = SlippingSnapshot::create([
+        'user_id' => $user->id,
+        'subject_type' => Entry::class,
+        'subject_id' => $entry->id,
+        'rule' => 'note-inactive',
+        'slipping_since' => now()->subDays(40),
+        'severity' => 3,
+    ]);
 
-        $this->actingAs($user)
-            ->postJson(route('slipping.resume', $snap))
-            ->assertOk();
+    $this->actingAs($user)
+        ->postJson(route('slipping.resume', $snap))
+        ->assertOk();
 
-        $this->assertNotNull($snap->fresh()->resolved_at);
-        $this->assertTrue($entry->fresh()->last_activity_at->isToday());
-    }
+    expect($snap->fresh()->resolved_at)->not->toBeNull();
+    expect($entry->fresh()->last_activity_at->isToday())->toBeTrue();
+});
 
-    public function test_schedule_creates_follow_up_task(): void
-    {
-        $user = User::factory()->create();
-        $project = Project::create([
-            'user_id' => $user->id,
-            'name' => 'Idle Project',
-            'slug' => 'idle-project',
-            'status' => 'active',
-        ]);
+test('schedule creates follow up task', function () {
+    $user = User::factory()->create();
+    $project = Project::create([
+        'user_id' => $user->id,
+        'name' => 'Idle Project',
+        'slug' => 'idle-project',
+        'status' => 'active',
+    ]);
 
-        $snap = SlippingSnapshot::create([
-            'user_id' => $user->id,
-            'subject_type' => Project::class,
-            'subject_id' => $project->id,
-            'rule' => 'project-inactive',
-            'slipping_since' => now()->subDays(25),
-        ]);
+    $snap = SlippingSnapshot::create([
+        'user_id' => $user->id,
+        'subject_type' => Project::class,
+        'subject_id' => $project->id,
+        'rule' => 'project-inactive',
+        'slipping_since' => now()->subDays(25),
+    ]);
 
-        $this->actingAs($user)
-            ->postJson(route('slipping.schedule', $snap))
-            ->assertOk();
+    $this->actingAs($user)
+        ->postJson(route('slipping.schedule', $snap))
+        ->assertOk();
 
-        $this->assertNotNull($snap->fresh()->resolved_at);
-        
-        $this->assertDatabaseHas('entries', [
-            'user_id' => $user->id,
-            'type' => 'task',
-            'title' => 'Resume work on: Idle Project',
-            'project_id' => $project->id,
-        ]);
-    }
+    expect($snap->fresh()->resolved_at)->not->toBeNull();
 
-    public function test_snooze_postpones_slipping_alert(): void
-    {
-        $user = User::factory()->create();
-        $entry = Entry::factory()->for($user)->type(EntryType::Note)->create();
+    $this->assertDatabaseHas('entries', [
+        'user_id' => $user->id,
+        'type' => 'task',
+        'title' => 'Resume work on: Idle Project',
+        'project_id' => $project->id,
+    ]);
+});
 
-        $snap = SlippingSnapshot::create([
-            'user_id' => $user->id,
-            'subject_type' => Entry::class,
-            'subject_id' => $entry->id,
-            'rule' => 'note-inactive',
-            'slipping_since' => now()->subDays(40),
-        ]);
+test('snooze postpones slipping alert', function () {
+    $user = User::factory()->create();
+    $entry = Entry::factory()->for($user)->type(EntryType::Note)->create();
 
-        $this->actingAs($user)
-            ->postJson(route('slipping.snooze', $snap))
-            ->assertOk();
+    $snap = SlippingSnapshot::create([
+        'user_id' => $user->id,
+        'subject_type' => Entry::class,
+        'subject_id' => $entry->id,
+        'rule' => 'note-inactive',
+        'slipping_since' => now()->subDays(40),
+    ]);
 
-        $this->assertNotNull($snap->fresh()->snoozed_until);
-    }
+    $this->actingAs($user)
+        ->postJson(route('slipping.snooze', $snap))
+        ->assertOk();
 
-    public function test_let_go_archives_subject(): void
-    {
-        $user = User::factory()->create();
-        $entry = Entry::factory()->for($user)->type(EntryType::Note)->create();
+    expect($snap->fresh()->snoozed_until)->not->toBeNull();
+});
 
-        $snap = SlippingSnapshot::create([
-            'user_id' => $user->id,
-            'subject_type' => Entry::class,
-            'subject_id' => $entry->id,
-            'rule' => 'note-inactive',
-            'slipping_since' => now()->subDays(40),
-        ]);
+test('let go archives subject', function () {
+    $user = User::factory()->create();
+    $entry = Entry::factory()->for($user)->type(EntryType::Note)->create();
 
-        $this->actingAs($user)
-            ->postJson(route('slipping.let-go', $snap))
-            ->assertOk();
+    $snap = SlippingSnapshot::create([
+        'user_id' => $user->id,
+        'subject_type' => Entry::class,
+        'subject_id' => $entry->id,
+        'rule' => 'note-inactive',
+        'slipping_since' => now()->subDays(40),
+    ]);
 
-        $this->assertNotNull($snap->fresh()->resolved_at);
-        $this->assertNotNull($entry->fresh()->archived_at);
-    }
-}
+    $this->actingAs($user)
+        ->postJson(route('slipping.let-go', $snap))
+        ->assertOk();
+
+    expect($snap->fresh()->resolved_at)->not->toBeNull();
+    expect($entry->fresh()->archived_at)->not->toBeNull();
+});

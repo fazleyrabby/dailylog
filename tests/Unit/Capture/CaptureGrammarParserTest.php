@@ -1,76 +1,60 @@
 <?php
 
-namespace Tests\Unit\Capture;
-
 use App\Domains\Capture\Parsers\CaptureGrammarParser;
 use App\Domains\Capture\Parsers\NaturalDateParser;
 use App\Enums\EntryType;
-use PHPUnit\Framework\TestCase;
 
-class CaptureGrammarParserTest extends TestCase
-{
-    private CaptureGrammarParser $parser;
+beforeEach(function () {
+    $this->parser = new CaptureGrammarParser(new NaturalDateParser);
+});
 
-    protected function setUp(): void
-    {
-        $this->parser = new CaptureGrammarParser(new NaturalDateParser);
-    }
+test('full task line', function () {
+    $p = $this->parser->parse('task review auth PR due:tomorrow !high #security #auth @sideproject');
 
-    public function test_full_task_line(): void
-    {
-        $p = $this->parser->parse('task review auth PR due:tomorrow !high #security #auth @sideproject');
+    expect($p->type)->toBe(EntryType::Task);
+    expect($p->title)->toBe('review auth PR');
+    expect($p->tags)->toBe(['security', 'auth']);
+    expect($p->projectSlug)->toBe('sideproject');
+    expect($p->priority)->toBe(3);
+    expect($p->dueAt)->not->toBeNull();
+});
 
-        $this->assertSame(EntryType::Task, $p->type);
-        $this->assertSame('review auth PR', $p->title);
-        $this->assertSame(['security', 'auth'], $p->tags);
-        $this->assertSame('sideproject', $p->projectSlug);
-        $this->assertSame(3, $p->priority);
-        $this->assertNotNull($p->dueAt);
-    }
+test('bare url becomes bookmark', function () {
+    $p = $this->parser->parse('https://laravel.com/docs');
 
-    public function test_bare_url_becomes_bookmark(): void
-    {
-        $p = $this->parser->parse('https://laravel.com/docs');
+    expect($p->type)->toBe(EntryType::Bookmark);
+    expect($p->url)->toBe('https://laravel.com/docs');
+});
 
-        $this->assertSame(EntryType::Bookmark, $p->type);
-        $this->assertSame('https://laravel.com/docs', $p->url);
-    }
+test('url with tags', function () {
+    $p = $this->parser->parse('https://redis.io/streams #redis @research');
 
-    public function test_url_with_tags(): void
-    {
-        $p = $this->parser->parse('https://redis.io/streams #redis @research');
+    expect($p->type)->toBe(EntryType::Bookmark);
+    expect($p->url)->toBe('https://redis.io/streams');
+    expect($p->tags)->toBe(['redis']);
+    expect($p->projectSlug)->toBe('research');
+});
 
-        $this->assertSame(EntryType::Bookmark, $p->type);
-        $this->assertSame('https://redis.io/streams', $p->url);
-        $this->assertSame(['redis'], $p->tags);
-        $this->assertSame('research', $p->projectSlug);
-    }
+test('no verb defaults to note', function () {
+    $p = $this->parser->parse('quick thought about indexes');
 
-    public function test_no_verb_defaults_to_note(): void
-    {
-        $p = $this->parser->parse('quick thought about indexes');
+    expect($p->type)->toBe(EntryType::Note);
+    expect($p->title)->toBe('quick thought about indexes');
+});
 
-        $this->assertSame(EntryType::Note, $p->type);
-        $this->assertSame('quick thought about indexes', $p->title);
-    }
+test('priority numeric and word', function () {
+    expect($this->parser->parse('task x !2')->priority)->toBe(2);
+    expect($this->parser->parse('task x !low')->priority)->toBe(1);
+    expect($this->parser->parse('task x !high')->priority)->toBe(3);
+});
 
-    public function test_priority_numeric_and_word(): void
-    {
-        $this->assertSame(2, $this->parser->parse('task x !2')->priority);
-        $this->assertSame(1, $this->parser->parse('task x !low')->priority);
-        $this->assertSame(3, $this->parser->parse('task x !high')->priority);
-    }
+test('tag dedup', function () {
+    $p = $this->parser->parse('task x #db #db #DB');
+    expect($p->tags)->toBe(['db']);
+});
 
-    public function test_tag_dedup(): void
-    {
-        $p = $this->parser->parse('task x #db #db #DB');
-        $this->assertSame(['db'], $p->tags);
-    }
-
-    public function test_idea_verb(): void
-    {
-        $p = $this->parser->parse('idea personal LLM index');
-        $this->assertSame(EntryType::Idea, $p->type);
-        $this->assertSame('personal LLM index', $p->title);
-    }
-}
+test('idea verb', function () {
+    $p = $this->parser->parse('idea personal LLM index');
+    expect($p->type)->toBe(EntryType::Idea);
+    expect($p->title)->toBe('personal LLM index');
+});

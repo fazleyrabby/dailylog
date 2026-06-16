@@ -1,45 +1,33 @@
 <?php
 
-namespace Tests\Feature;
-
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PHPUnit\Framework\Attributes\DataProvider;
-use Tests\TestCase;
 
-class RouteSmokeTest extends TestCase
-{
-    use RefreshDatabase;
+uses(RefreshDatabase::class);
 
-    public static function authedRoutes(): array
-    {
-        return [
-            ['dashboard.index'],
-            ['inbox.index'],
-            ['search.index'],
-            ['tasks.index'],
-            ['notes.index'],
-            ['journal.index'],
-            ['bookmarks.index'],
-            ['learning.index'],
-            ['projects.index'],
-            ['quotes.index'],
-            ['resources.index'],
-            ['slipping.index'],
-            ['settings.profile'],
-        ];
-    }
+dataset('authedRoutes', function () {
+    return [
+        ['dashboard.index'],
+        ['inbox.index'],
+        ['search.index'],
+        ['tasks.index'],
+        ['notes.index'],
+        ['journal.index'],
+        ['bookmarks.index'],
+        ['learning.index'],
+        ['projects.index'],
+        ['quotes.index'],
+        ['resources.index'],
+        ['slipping.index'],
+        ['settings.profile'],
+    ];
+});
 
-    #[DataProvider('authedRoutes')]
-    public function test_guest_redirected_to_login(string $name): void
-    {
-        $this->get(route($name))->assertRedirect(route('auth.login'));
-    }
+test('guest redirected to login', function (string $name) {
+    $this->get(route($name))->assertRedirect(route('auth.login'));
+})->with('authedRoutes');
 
-    #[DataProvider('authedRoutes')]
-    public function test_authed_user_sees_page(string $name): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user)->get(route($name))->assertOk();
-    }
-}
+test('authed user sees page', function (string $name) {
+    $user = User::factory()->create();
+    $this->actingAs($user)->get(route($name))->assertOk();
+})->with('authedRoutes');

@@ -1,70 +1,60 @@
 <?php
 
-namespace Tests\Feature\Domains\Capture;
-
 use App\Domains\Capture\Services\CaptureService;
 use App\Models\Project;
 use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 
-class CaptureServiceTest extends TestCase
-{
-    use RefreshDatabase;
+uses(RefreshDatabase::class);
 
-    public function test_captures_a_task_with_tags_project_priority_due(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
+test('captures a task with tags project priority due', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
 
-        $entry = app(CaptureService::class)->capture('task review auth PR due:tomorrow !high #security @sideproject');
+    $entry = app(CaptureService::class)->capture('task review auth PR due:tomorrow !high #security @sideproject');
 
-        $this->assertSame('task', $entry->type->value);
-        $this->assertSame('review auth PR', $entry->title);
-        $this->assertSame('open', $entry->status);
-        $this->assertNotNull($entry->project_id);
-        $this->assertSame('sideproject', Project::query()->find($entry->project_id)->slug);
-        $this->assertSame(['security'], $entry->tags()->pluck('name')->all());
-        $this->assertNotNull($entry->taskDetails);
-        $this->assertSame(3, $entry->taskDetails->priority);
-        $this->assertNotNull($entry->taskDetails->due_at);
-    }
+    expect($entry->type->value)->toBe('task');
+    expect($entry->title)->toBe('review auth PR');
+    expect($entry->status)->toBe('open');
+    expect($entry->project_id)->not->toBeNull();
+    expect(Project::query()->find($entry->project_id)->slug)->toBe('sideproject');
+    expect($entry->tags()->pluck('name')->all())->toBe(['security']);
+    expect($entry->taskDetails)->not->toBeNull();
+    expect($entry->taskDetails->priority)->toBe(3);
+    expect($entry->taskDetails->due_at)->not->toBeNull();
+});
 
-    public function test_captures_a_bookmark_from_bare_url(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
+test('captures a bookmark from bare url', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
 
-        $entry = app(CaptureService::class)->capture('https://redis.io/streams #redis');
+    $entry = app(CaptureService::class)->capture('https://redis.io/streams #redis');
 
-        $this->assertSame('bookmark', $entry->type->value);
-        $this->assertNotNull($entry->bookmarkDetails);
-        $this->assertSame('https://redis.io/streams', $entry->bookmarkDetails->url);
-        $this->assertSame('redis.io', $entry->bookmarkDetails->site);
-        $this->assertSame('unread', $entry->bookmarkDetails->review_state);
-        $this->assertSame(['redis'], $entry->tags()->pluck('name')->all());
-    }
+    expect($entry->type->value)->toBe('bookmark');
+    expect($entry->bookmarkDetails)->not->toBeNull();
+    expect($entry->bookmarkDetails->url)->toBe('https://redis.io/streams');
+    expect($entry->bookmarkDetails->site)->toBe('redis.io');
+    expect($entry->bookmarkDetails->review_state)->toBe('unread');
+    expect($entry->tags()->pluck('name')->all())->toBe(['redis']);
+});
 
-    public function test_reuses_existing_tag(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        Tag::factory()->for($user)->create(['name' => 'redis', 'slug' => 'redis']);
+test('reuses existing tag', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+    Tag::factory()->for($user)->create(['name' => 'redis', 'slug' => 'redis']);
 
-        app(CaptureService::class)->capture('note pubsub thoughts #redis');
+    app(CaptureService::class)->capture('note pubsub thoughts #redis');
 
-        $this->assertSame(1, Tag::query()->where('name', 'redis')->count());
-    }
+    expect(Tag::query()->where('name', 'redis')->count())->toBe(1);
+});
 
-    public function test_no_verb_defaults_to_note(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
+test('no verb defaults to note', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
 
-        $entry = app(CaptureService::class)->capture('a random thought');
+    $entry = app(CaptureService::class)->capture('a random thought');
 
-        $this->assertSame('note', $entry->type->value);
-        $this->assertSame('a random thought', $entry->title);
-    }
-}
+    expect($entry->type->value)->toBe('note');
+    expect($entry->title)->toBe('a random thought');
+});

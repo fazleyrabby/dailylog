@@ -1,43 +1,35 @@
 <?php
 
-namespace Tests\Feature\Domains\Entries;
-
 use App\Domains\Entries\Actions\UpdateEntry;
 use App\Models\Entry;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 
-class UpdateEntryActionTest extends TestCase
-{
-    use RefreshDatabase;
+uses(RefreshDatabase::class);
 
-    public function test_meaningful_change_bumps_last_activity_at(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        $entry = Entry::factory()->for($user)->create([
-            'last_activity_at' => now()->subDays(10),
-        ]);
-        $previous = $entry->last_activity_at;
+test('meaningful change bumps last activity at', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+    $entry = Entry::factory()->for($user)->create([
+        'last_activity_at' => now()->subDays(10),
+    ]);
+    $previous = $entry->last_activity_at;
 
-        $updated = app(UpdateEntry::class)->execute($entry, ['title' => 'Renamed']);
+    $updated = app(UpdateEntry::class)->execute($entry, ['title' => 'Renamed']);
 
-        $this->assertSame('Renamed', $updated->title);
-        $this->assertTrue($updated->last_activity_at->gt($previous));
-    }
+    expect($updated->title)->toBe('Renamed');
+    expect($updated->last_activity_at->gt($previous))->toBeTrue();
+});
 
-    public function test_no_op_change_does_not_bump_activity(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        $entry = Entry::factory()->for($user)->create([
-            'last_activity_at' => now()->subDays(10),
-        ]);
-        $previous = $entry->last_activity_at;
+test('no op change does not bump activity', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+    $entry = Entry::factory()->for($user)->create([
+        'last_activity_at' => now()->subDays(10),
+    ]);
+    $previous = $entry->last_activity_at;
 
-        $updated = app(UpdateEntry::class)->execute($entry, ['title' => $entry->title]);
+    $updated = app(UpdateEntry::class)->execute($entry, ['title' => $entry->title]);
 
-        $this->assertEquals($previous->timestamp, $updated->last_activity_at->timestamp);
-    }
-}
+    expect($updated->last_activity_at->timestamp)->toEqual($previous->timestamp);
+});
