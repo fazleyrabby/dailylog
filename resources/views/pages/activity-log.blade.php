@@ -93,7 +93,7 @@
                         @foreach($group['items'] as $item)
                             <div class="relative group">
                                 <!-- Event Action Badge / Dotted Indicator -->
-                                <span class="absolute -left-[30px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-surface border border-border text-[9px] font-bold shadow-xs select-none">
+                                <span class="absolute -left-[32px] top-3.5 flex h-4 w-4 items-center justify-center rounded-full bg-surface border border-border text-[9px] font-bold shadow-xs select-none">
                                     @if($item['action'] === 'created')
                                         <span class="text-success" title="Created">+</span>
                                     @elseif($item['action'] === 'updated')
