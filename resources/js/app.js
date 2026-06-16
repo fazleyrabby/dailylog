@@ -38,6 +38,7 @@ window.panelResizer = function (opts = {}) {
     const max        = opts.max     ?? 640;
     const initial    = opts.initial ?? 320;
     const storageKey = 'panel-w-' + key;
+    const visibleKey = 'panel-visible-' + key;
 
     const stored     = parseInt(localStorage.getItem(storageKey), 10);
     const savedWidth = !isNaN(stored) ? Math.max(min, Math.min(max, stored)) : initial;
@@ -49,6 +50,12 @@ window.panelResizer = function (opts = {}) {
         panelKey:    storageKey,
         resizing:    false,
         isMobile:    typeof window !== 'undefined' && window.innerWidth < 768,
+        showLeftPanel: typeof window !== 'undefined' && (window.innerWidth >= 768 ? localStorage.getItem(visibleKey) !== 'false' : false),
+
+        toggleLeftPanel() {
+            this.showLeftPanel = !this.showLeftPanel;
+            try { localStorage.setItem(visibleKey, this.showLeftPanel); } catch (_) {}
+        },
 
         initPanelResizer() {
             this.isMobile    = window.innerWidth < 768;

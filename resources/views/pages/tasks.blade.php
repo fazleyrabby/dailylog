@@ -12,10 +12,23 @@
     class="h-[calc(100vh-48px)] flex flex-col md:flex-row overflow-hidden bg-surface select-none"
     :class="resizing ? 'cursor-col-resize' : ''"
 >
+    <!-- BACKDROP FOR MOBILE SIDEBAR -->
+    <div 
+        x-show="isMobile && showLeftPanel" 
+        x-transition.opacity 
+        @click="showLeftPanel = false" 
+        class="fixed inset-0 bg-black/50 z-20"
+        style="display: none;"
+    ></div>
+
     <!-- MIDDLE COLUMN: Tasks List & Search (Pane 2) -->
     <div
-        :style="isMobile ? '' : 'width:' + panelWidth + 'px'"
-        class="w-full md:flex-shrink-0 flex flex-col border-b md:border-b-0 bg-surface-2/10 select-text max-h-[40vh] md:max-h-full"
+        :class="[
+            isMobile ? 'fixed inset-y-0 left-0 z-30 w-72 bg-surface shadow-2xl transform transition-transform duration-200 ease-in-out' : 'relative md:translate-x-0 md:shadow-none md:flex-shrink-0 border-r border-border md:max-h-full transition-all duration-200 ease-in-out',
+            isMobile && (showLeftPanel ? 'translate-x-0' : '-translate-x-full')
+        ]"
+        :style="isMobile ? '' : 'width:' + (showLeftPanel ? panelWidth + 'px' : '0px')" 
+        class="flex flex-col bg-surface md:bg-surface-2/10 h-full overflow-hidden"
     >
         <!-- Search & Quick Add Header -->
         <div class="p-3 border-b border-border bg-surface space-y-3">
@@ -66,7 +79,7 @@
             
             <template x-for="task in filteredTasks" :key="task.id">
                 <div 
-                    @click="selectedTaskId = task.id"
+                    @click="selectedTaskId = task.id; if (isMobile) { showLeftPanel = false; }"
                     :class="selectedTaskId === task.id ? 'bg-accent-subtle-bg/30 text-text-main border-l-2 border-l-accent' : 'text-text-muted hover:bg-surface-2/30 border-l-2 border-l-transparent'"
                     class="pl-2.5 pr-3 py-3 cursor-pointer flex flex-col transition-all border-b border-border/40"
                 >
@@ -117,6 +130,7 @@
 
     <!-- DRAG HANDLE RESIZER -->
     <div
+        x-show="showLeftPanel"
         @mousedown="startPanelResize($event)"
         class="hidden md:flex w-2.5 flex-shrink-0 h-full z-10 cursor-col-resize items-center justify-center group relative"
     >
@@ -127,10 +141,18 @@
     <!-- RIGHT COLUMN: Task Workspace & Detail Inspector (Pane 3) -->
     <div class="flex-grow flex flex-col h-full bg-surface overflow-hidden select-text min-w-0">
         <template x-if="activeTask.id">
-            <div class="flex flex-col h-full">
+            <div class="flex flex-col h-full overflow-hidden">
                 <!-- Header Actions -->
                 <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between flex-shrink-0">
                     <div class="flex items-center space-x-2">
+                        <button 
+                            @click="toggleLeftPanel()" 
+                            class="mr-1.5 p-1 bg-surface hover:bg-surface-2 border border-border rounded-xs cursor-pointer select-none text-[10px] font-mono leading-none flex items-center space-x-1 text-text-muted hover:text-text-main"
+                            title="Toggle Tasks Panel"
+                        >
+                            <span x-text="showLeftPanel ? '◂' : '▸'"></span>
+                            <span x-text="showLeftPanel ? 'Hide Tasks' : 'Tasks'"></span>
+                        </button>
                         <span class="text-xs font-mono font-bold uppercase tracking-wider text-text-subtle">Task Details</span>
                         <span class="text-xs font-mono bg-surface border border-border text-text-muted px-1.5 py-0.5 rounded-sm" x-text="activeTask.project ? '@' + activeTask.project : '@None'"></span>
                     </div>
@@ -221,10 +243,25 @@
         </template>
         
         <template x-if="!activeTask.id">
-            <div class="flex-grow flex flex-col items-center justify-center p-6 text-center">
-                <span class="text-2xl mb-2 text-text-muted">☑</span>
-                <h3 class="text-xs font-bold text-text-main uppercase tracking-wider">No Task Selected</h3>
-                <p class="text-xs text-text-subtle mt-1">Select a task from the list or add a new one.</p>
+            <div class="flex-grow flex flex-col h-full">
+                <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between flex-shrink-0">
+                    <div class="flex items-center space-x-2">
+                        <button 
+                            @click="toggleLeftPanel()" 
+                            class="mr-1.5 p-1 bg-surface hover:bg-surface-2 border border-border rounded-xs cursor-pointer select-none text-[10px] font-mono leading-none flex items-center space-x-1 text-text-muted hover:text-text-main"
+                            title="Toggle Tasks Panel"
+                        >
+                            <span x-text="showLeftPanel ? '◂' : '▸'"></span>
+                            <span x-text="showLeftPanel ? 'Hide Tasks' : 'Tasks'"></span>
+                        </button>
+                        <span class="text-xs font-mono font-bold uppercase tracking-wider text-text-subtle">Task Workspace</span>
+                    </div>
+                </div>
+                <div class="flex-grow flex flex-col items-center justify-center p-6 text-center">
+                    <span class="text-2xl mb-2 text-text-muted">☑</span>
+                    <h3 class="text-xs font-bold text-text-main uppercase tracking-wider">No Task Selected</h3>
+                    <p class="text-xs text-text-subtle mt-1">Select a task from the list or add a new one.</p>
+                </div>
             </div>
         </template>
     </div>

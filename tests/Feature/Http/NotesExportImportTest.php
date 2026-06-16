@@ -90,7 +90,7 @@ test('import zip file recreates folders and notes', function () {
     $user = User::factory()->create();
 
     // Create a temporary zip file
-    $zipPath = tempnam(sys_get_temp_dir(), 'test_zip').'.zip';
+    $zipPath = sys_get_temp_dir().DIRECTORY_SEPARATOR.'test_zip_'.uniqid().'.zip';
     $zip = new ZipArchive;
     $zip->open($zipPath, ZipArchive::CREATE);
     $zip->addEmptyDir('Personal');

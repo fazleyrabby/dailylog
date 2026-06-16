@@ -9,11 +9,27 @@
 <div
     x-data="Object.assign(learningComponent({{ json_encode($learningPaths) }}), panelResizer({key:'learning', initial:380, min:280, max:600}))"
     x-init="initPanelResizer()"
-    class="h-[calc(100vh-48px)] flex flex-row overflow-hidden bg-surface"
+    class="h-[calc(100vh-48px)] flex flex-col md:flex-row overflow-hidden bg-surface"
     :class="resizing ? 'cursor-col-resize' : ''"
 >
+    <!-- BACKDROP FOR MOBILE SIDEBAR -->
+    <div 
+        x-show="isMobile && showLeftPanel" 
+        x-transition.opacity 
+        @click="showLeftPanel = false" 
+        class="fixed inset-0 bg-black/50 z-20"
+        style="display: none;"
+    ></div>
+
     <!-- LEFT COLUMN: Learning list -->
-    <div :style="isMobile ? '' : 'width:' + panelWidth + 'px'" class="w-full md:flex-shrink-0 border-b md:border-b-0 flex flex-col bg-surface-2/10 max-h-[45vh] md:max-h-full">
+    <div 
+        :class="[
+            isMobile ? 'fixed inset-y-0 left-0 z-30 w-72 bg-surface shadow-2xl transform transition-transform duration-200 ease-in-out' : 'relative md:translate-x-0 md:shadow-none md:flex-shrink-0 border-r border-border md:max-h-full transition-all duration-200 ease-in-out',
+            isMobile && (showLeftPanel ? 'translate-x-0' : '-translate-x-full')
+        ]"
+        :style="isMobile ? '' : 'width:' + (showLeftPanel ? panelWidth + 'px' : '0px')" 
+        class="flex flex-col bg-surface md:bg-surface-2/10 h-full overflow-hidden"
+    >
         <div class="p-3 border-b border-border bg-surface">
             <h3 class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Active Paths</h3>
         </div>
@@ -26,7 +42,7 @@
             </template>
             <template x-for="p in paths" :key="p.id">
                 <div 
-                    @click="selectedPathId = p.id"
+                    @click="selectedPathId = p.id; if (isMobile) { showLeftPanel = false; }"
                     :class="selectedPathId === p.id ? 'bg-accent-subtle-bg/30 text-text-main border-l-2 border-accent' : 'text-text-muted hover:bg-surface-2/30 border-l-2 border-transparent'"
                     class="p-4 cursor-pointer flex flex-col transition-colors"
                 >
@@ -53,6 +69,7 @@
  
     <!-- DRAG HANDLE RESIZER -->
     <div
+        x-show="showLeftPanel"
         @mousedown="startPanelResize($event)"
         class="hidden md:flex w-2.5 flex-shrink-0 h-full z-10 cursor-col-resize items-center justify-center group relative"
     >
@@ -61,9 +78,19 @@
     </div>
 
     <!-- RIGHT COLUMN: Detail & Progress Controls -->
-    <div class="flex-grow flex flex-col h-full bg-surface min-w-0">
-        <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between">
-            <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-text-subtle">Path Dashboard</span>
+    <div class="flex-grow flex flex-col h-full bg-surface overflow-hidden min-w-0">
+        <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between font-mono">
+            <div class="flex items-center space-x-2">
+                <button 
+                    @click="toggleLeftPanel()" 
+                    class="mr-1.5 p-1 bg-surface hover:bg-surface-2 border border-border rounded-xs cursor-pointer select-none text-[10px] font-mono leading-none flex items-center space-x-1 text-text-muted hover:text-text-main"
+                    title="Toggle Learning Panel"
+                >
+                    <span x-text="showLeftPanel ? '◂' : '▸'"></span>
+                    <span x-text="showLeftPanel ? 'Hide Paths' : 'Paths'"></span>
+                </button>
+                <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-text-subtle">Path Dashboard</span>
+            </div>
             <span class="text-[10px] text-text-subtle font-mono uppercase tracking-wider" x-text="'Last activity: ' + activePath.lastActive"></span>
         </div>
  

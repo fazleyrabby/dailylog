@@ -12,10 +12,23 @@
     class="h-[calc(100vh-48px)] flex flex-col md:flex-row overflow-hidden bg-surface select-none"
     :class="resizing ? 'cursor-col-resize' : ''"
 >
+    <!-- BACKDROP FOR MOBILE SIDEBAR -->
+    <div 
+        x-show="isMobile && showLeftPanel" 
+        x-transition.opacity 
+        @click="showLeftPanel = false" 
+        class="fixed inset-0 bg-black/50 z-20"
+        style="display: none;"
+    ></div>
+
     <!-- MIDDLE COLUMN: Projects List & Search (Pane 2) -->
     <div
-         :style="isMobile ? '' : 'width:' + panelWidth + 'px'"
-         class="w-full md:flex-shrink-0 flex flex-col border-b md:border-b-0 bg-surface-2/10 select-text max-h-[40vh] md:max-h-full"
+        :class="[
+            isMobile ? 'fixed inset-y-0 left-0 z-30 w-72 bg-surface shadow-2xl transform transition-transform duration-200 ease-in-out' : 'relative md:translate-x-0 md:shadow-none md:flex-shrink-0 border-r border-border md:max-h-full transition-all duration-200 ease-in-out',
+            isMobile && (showLeftPanel ? 'translate-x-0' : '-translate-x-full')
+        ]"
+        :style="isMobile ? '' : 'width:' + (showLeftPanel ? panelWidth + 'px' : '0px')" 
+        class="flex flex-col bg-surface md:bg-surface-2/10 h-full overflow-hidden"
     >
         <!-- Search & New Project Header -->
         <div class="p-3 border-b border-border bg-surface space-y-3">
@@ -53,7 +66,7 @@
             
             <template x-for="p in filteredProjects" :key="p.id">
                 <div 
-                    @click="selectedProjId = p.id"
+                    @click="selectedProjId = p.id; if (isMobile) { showLeftPanel = false; }"
                     :class="selectedProjId === p.id ? 'bg-accent-subtle-bg/30 text-text-main border-l-2 border-l-accent' : 'text-text-muted hover:bg-surface-2/30 border-l-2 border-l-transparent'"
                     class="p-3.5 cursor-pointer flex flex-col transition-all"
                 >
@@ -85,6 +98,7 @@
 
     <!-- DRAG HANDLE RESIZER -->
     <div
+        x-show="showLeftPanel"
         @mousedown="startPanelResize($event)"
         class="hidden md:flex w-2.5 flex-shrink-0 h-full z-10 cursor-col-resize items-center justify-center group relative"
     >
@@ -95,10 +109,18 @@
     <!-- RIGHT COLUMN: Project Hub / Workspace (Pane 3) -->
     <div class="flex-grow flex flex-col h-full bg-surface overflow-hidden select-text min-w-0">
         <template x-if="activeProj.id">
-            <div class="flex flex-col h-full">
+            <div class="flex flex-col h-full overflow-hidden">
                 <!-- Header Actions -->
                 <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between flex-shrink-0">
                     <div class="flex items-center space-x-2">
+                        <button 
+                            @click="toggleLeftPanel()" 
+                            class="mr-1.5 p-1 bg-surface hover:bg-surface-2 border border-border rounded-xs cursor-pointer select-none text-[10px] font-mono leading-none flex items-center space-x-1 text-text-muted hover:text-text-main"
+                            title="Toggle Projects Panel"
+                        >
+                            <span x-text="showLeftPanel ? '◂' : '▸'"></span>
+                            <span x-text="showLeftPanel ? 'Hide Projects' : 'Projects'"></span>
+                        </button>
                         <span class="text-xs font-mono font-bold uppercase tracking-wider text-text-subtle">Project Inspector</span>
                         <span :class="{
                             'bg-accent/15 text-accent border-accent/25': activeProj.status === 'active',
@@ -305,8 +327,23 @@
             </div>
         </template>
         <template x-if="!activeProj.id">
-            <div class="flex-grow flex items-center justify-center text-xs text-text-muted">
-                Select a project from the list to view its workspace.
+            <div class="flex-grow flex flex-col h-full">
+                <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between flex-shrink-0">
+                    <div class="flex items-center space-x-2">
+                        <button 
+                            @click="toggleLeftPanel()" 
+                            class="mr-1.5 p-1 bg-surface hover:bg-surface-2 border border-border rounded-xs cursor-pointer select-none text-[10px] font-mono leading-none flex items-center space-x-1 text-text-muted hover:text-text-main"
+                            title="Toggle Projects Panel"
+                        >
+                            <span x-text="showLeftPanel ? '◂' : '▸'"></span>
+                            <span x-text="showLeftPanel ? 'Hide Projects' : 'Projects'"></span>
+                        </button>
+                        <span class="text-xs font-mono font-bold uppercase tracking-wider text-text-subtle">Project Workspace</span>
+                    </div>
+                </div>
+                <div class="flex-grow flex items-center justify-center text-xs text-text-muted">
+                    Select a project from the list to view its workspace.
+                </div>
             </div>
         </template>
     </div>

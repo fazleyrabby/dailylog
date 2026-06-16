@@ -9,11 +9,27 @@
 <div
     x-data="Object.assign(journalComponent({{ json_encode($journalEntries) }}), panelResizer({key:'journal', initial:360, min:280, max:560}))"
     x-init="initPanelResizer()"
-    class="h-[calc(100vh-48px)] flex flex-row overflow-hidden bg-surface"
+    class="h-[calc(100vh-48px)] flex flex-col md:flex-row overflow-hidden bg-surface"
     :class="resizing ? 'cursor-col-resize' : ''"
 >
+    <!-- BACKDROP FOR MOBILE SIDEBAR -->
+    <div 
+        x-show="isMobile && showLeftPanel" 
+        x-transition.opacity 
+        @click="showLeftPanel = false" 
+        class="fixed inset-0 bg-black/50 z-20"
+        style="display: none;"
+    ></div>
+
     <!-- LEFT SIDEBAR: Calendar & History -->
-    <div :style="isMobile ? '' : 'width:' + panelWidth + 'px'" class="w-full md:flex-shrink-0 border-b md:border-b-0 flex flex-col bg-surface-2/10 max-h-[45vh] md:max-h-full">
+    <div 
+        :class="[
+            isMobile ? 'fixed inset-y-0 left-0 z-30 w-72 bg-surface shadow-2xl transform transition-transform duration-200 ease-in-out' : 'relative md:translate-x-0 md:shadow-none md:flex-shrink-0 border-r border-border md:max-h-full transition-all duration-200 ease-in-out',
+            isMobile && (showLeftPanel ? 'translate-x-0' : '-translate-x-full')
+        ]"
+        :style="isMobile ? '' : 'width:' + (showLeftPanel ? panelWidth + 'px' : '0px')" 
+        class="flex flex-col bg-surface md:bg-surface-2/10 h-full overflow-hidden"
+    >
         <!-- Calendar Grid Header -->
         <div class="p-3 border-b border-border bg-surface">
             <div class="flex items-center justify-between mb-3">
@@ -75,6 +91,7 @@
 
     <!-- DRAG HANDLE RESIZER -->
     <div
+        x-show="showLeftPanel"
         @mousedown="startPanelResize($event)"
         class="hidden md:flex w-2.5 flex-shrink-0 h-full z-10 cursor-col-resize items-center justify-center group relative"
     >
@@ -83,11 +100,19 @@
     </div>
 
     <!-- RIGHT SECTION: Journal Content Editor -->
-    <div class="flex-grow flex flex-col h-full bg-surface min-w-0">
+    <div class="flex-grow flex flex-col h-full bg-surface overflow-hidden min-w-0">
         
         <!-- Controls Header -->
         <div class="px-4 py-2.5 border-b border-border bg-surface-2/10 flex items-center justify-between">
             <div class="flex items-center space-x-2">
+                <button 
+                    @click="toggleLeftPanel()" 
+                    class="mr-1.5 p-1 bg-surface hover:bg-surface-2 border border-border rounded-xs cursor-pointer select-none text-[10px] font-mono leading-none flex items-center space-x-1 text-text-muted hover:text-text-main"
+                    title="Toggle Calendar Panel"
+                >
+                    <span x-text="showLeftPanel ? '◂' : '▸'"></span>
+                    <span x-text="showLeftPanel ? 'Hide Calendar' : 'Calendar'"></span>
+                </button>
                 <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-text-subtle" x-text="getFormattedDateHeader()"></span>
             </div>
             <div class="flex items-center space-x-2">
@@ -243,6 +268,9 @@ window.journalComponent = function(initialEntries) {
         selectDate(day) {
             this.selectedDate = this.getDateString(day);
             this.editing = false;
+            if (this.isMobile) {
+                this.showLeftPanel = false;
+            }
         },
 
         selectDateFromString(occurredOn) {
@@ -253,6 +281,9 @@ window.journalComponent = function(initialEntries) {
             if (parts.length === 3) {
                 this.currentYear = parseInt(parts[0]);
                 this.currentMonth = parseInt(parts[1]) - 1;
+            }
+            if (this.isMobile) {
+                this.showLeftPanel = false;
             }
         },
 
@@ -325,6 +356,9 @@ window.journalComponent = function(initialEntries) {
                 if (data.entry) {
                     this.entries[this.selectedDate] = data.entry;
                     this.editing = true;
+                    if (this.isMobile) {
+                        this.showLeftPanel = false;
+                    }
                 }
             });
         }
