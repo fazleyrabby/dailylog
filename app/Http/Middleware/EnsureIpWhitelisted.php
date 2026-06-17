@@ -27,11 +27,28 @@ class EnsureIpWhitelisted
 
         $allowedIps = $this->resolveAllowedIps();
 
-        if ($allowedIps === [] || $this->isAllowed($request->ip(), $allowedIps)) {
+        if ($allowedIps === [] || $this->isAllowed($this->resolveClientIp($request), $allowedIps)) {
             return $next($request);
         }
 
         abort(403, 'Your IP address is not whitelisted.');
+    }
+
+    /**
+     * Resolve the real client IP. Behind Cloudflare (Tunnel/proxy) the immediate
+     * peer is Cloudflare, so $request->ip() returns the proxy address. Cloudflare
+     * forwards the true visitor IP in the Cf-Connecting-Ip header; since the
+     * origin is only reachable through the tunnel, that header is trustworthy.
+     */
+    private function resolveClientIp(Request $request): string
+    {
+        $cfIp = $request->headers->get('Cf-Connecting-Ip');
+
+        if (is_string($cfIp) && $cfIp !== '') {
+            return trim($cfIp);
+        }
+
+        return (string) $request->ip();
     }
 
     /**

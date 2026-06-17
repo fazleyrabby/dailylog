@@ -18,7 +18,7 @@
 
     <div class="bg-surface-2 border border-border rounded-sm px-4 py-3">
         <span class="text-[10px] text-text-subtle uppercase tracking-wider block mb-1">Your IP Address</span>
-        <span class="text-xs font-mono text-text-main font-semibold">{{ $exception->getMessage() ?: request()->ip() }}</span>
+        <span class="text-xs font-mono text-text-main font-semibold">{{ request()->headers->get('Cf-Connecting-Ip') ?: request()->ip() }}</span>
     </div>
 
     <p class="text-[10px] text-text-subtle leading-relaxed">

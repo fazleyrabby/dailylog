@@ -145,6 +145,36 @@ class EnsureIpWhitelistedTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_cloudflare_connecting_ip_header_is_used_over_proxy_ip(): void
+    {
+        config(['ip-whitelist.enabled' => true]);
+        config(['ip-whitelist.ips' => ['103.153.171.96']]);
+
+        $user = User::factory()->create();
+
+        // Proxy/peer IP is not whitelisted, but the real client IP in the
+        // Cloudflare header is — the header must win.
+        $this->actingAs($user)
+            ->withServerVariables(['REMOTE_ADDR' => '172.22.0.4'])
+            ->withHeaders(['Cf-Connecting-Ip' => '103.153.171.96'])
+            ->get(route('dashboard.index'))
+            ->assertOk();
+    }
+
+    public function test_cloudflare_connecting_ip_not_whitelisted_is_blocked(): void
+    {
+        config(['ip-whitelist.enabled' => true]);
+        config(['ip-whitelist.ips' => ['103.153.171.96']]);
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->withServerVariables(['REMOTE_ADDR' => '172.22.0.4'])
+            ->withHeaders(['Cf-Connecting-Ip' => '8.8.8.8'])
+            ->get(route('dashboard.index'))
+            ->assertForbidden();
+    }
+
     public function test_login_page_is_blocked_when_ip_not_whitelisted(): void
     {
         config(['ip-whitelist.enabled' => true]);
