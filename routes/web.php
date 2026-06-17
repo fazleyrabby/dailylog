@@ -19,11 +19,11 @@ use App\Http\Controllers\ProjectsController;
 use App\Http\Controllers\QuotesController;
 use App\Http\Controllers\ResourcesController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SlippingController;
 use App\Http\Controllers\SpeedtestController;
 use App\Http\Controllers\TasksController;
 use App\Http\Controllers\WalletController;
-use App\Support\MockData;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class)->name('health.check');
@@ -99,10 +99,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/slipping/{snapshot}/schedule', [SlippingController::class, 'schedule'])->name('slipping.schedule');
     Route::post('/slipping/{snapshot}/snooze', [SlippingController::class, 'snooze'])->name('slipping.snooze');
     Route::post('/slipping/{snapshot}/let-go', [SlippingController::class, 'letGo'])->name('slipping.let-go');
-    Route::get('/settings', fn () => view('pages.settings', [
-        'data' => MockData::all(),
-        'lastBackupAt' => cache('supabase_backup_last_at'),
-    ]))->name('settings.profile');
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.profile');
+    Route::post('/settings/ip-whitelist', [SettingsController::class, 'updateIpWhitelist'])->name('settings.ip-whitelist.update');
     Route::post('/settings/backup-supabase', [BackupController::class, 'toSupabase'])->name('settings.backup.supabase');
 
     // Lab Routes
