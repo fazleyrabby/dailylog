@@ -4,6 +4,8 @@ use App\Enums\EntryType;
 use App\Models\Entry;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -81,4 +83,38 @@ test('destroy archives note', function () {
         ->assertJson(['success' => true]);
 
     expect($entry->fresh()->archived_at)->not->toBeNull();
+});
+
+test('upload image stores file and returns public url', function () {
+    Storage::fake('public');
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->postJson(route('notes.images.upload'), [
+            'image' => UploadedFile::fake()->image('screenshot.png', 800, 600),
+        ])
+        ->assertStatus(201)
+        ->assertJsonStructure(['url']);
+
+    expect(Storage::disk('public')->files('notes-images'))->toHaveCount(1);
+});
+
+test('upload image rejects non-image files', function () {
+    Storage::fake('public');
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->postJson(route('notes.images.upload'), [
+            'image' => UploadedFile::fake()->create('evil.php', 16, 'application/x-php'),
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('image');
+
+    expect(Storage::disk('public')->files('notes-images'))->toHaveCount(0);
+});
+
+test('guest cannot upload image', function () {
+    $this->postJson(route('notes.images.upload'), [
+        'image' => UploadedFile::fake()->image('screenshot.png'),
+    ])->assertUnauthorized();
 });

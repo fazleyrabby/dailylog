@@ -62,6 +62,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/notes', [NotesController::class, 'store'])->name('notes.store');
     Route::get('/notes/export/bulk', [NotesController::class, 'exportBulk'])->name('notes.export.bulk');
     Route::post('/notes/import', [NotesController::class, 'import'])->name('notes.import');
+    Route::post('/notes/images', [NotesController::class, 'uploadImage'])->name('notes.images.upload');
     Route::get('/notes/{entry}/export', [NotesController::class, 'exportSingle'])->name('notes.export.single');
     Route::put('/notes/{entry}', [NotesController::class, 'update'])->name('notes.update');
     Route::patch('/notes/{entry}/move', [NotesController::class, 'move'])->name('notes.move');

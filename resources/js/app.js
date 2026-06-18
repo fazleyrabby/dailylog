@@ -1,8 +1,24 @@
 import Alpine from 'alpinejs';
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 import { THEMES, THEME_MAP, normalizeThemeId, themeFamily } from './themes';
 
+marked.setOptions({
+    gfm: true,
+    breaks: true,
+});
+
 window.marked = marked;
+
+// Render markdown to sanitized HTML. marked does NOT strip dangerous markup,
+// so any note body could carry an XSS payload (e.g. <img onerror>, <script>,
+// javascript: hrefs). Always pipe parsed output through DOMPurify before it
+// reaches x-html. Use window.renderMarkdown(body) instead of marked.parse().
+window.renderMarkdown = function (markdown) {
+    return DOMPurify.sanitize(marked.parse(markdown || ''), {
+        ADD_ATTR: ['target'],
+    });
+};
 window.Alpine = Alpine;
 
 // Expose the theme registry so the inline theme engine (layouts/app.blade.php)
@@ -102,16 +118,57 @@ window.panelResizer = function (opts = {}) {
 
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
+import Image from '@tiptap/extension-image';
 import { Markdown } from 'tiptap-markdown';
 
+/**
+ * Upload an image File to the backend and return its public URL.
+ * Used by both the toolbar picker and the paste/drop handlers.
+ */
+window.uploadNoteImage = async function (file) {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const res = await fetch('/notes/images', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json',
+        },
+        body: formData,
+    });
+
+    if (!res.ok) {
+        throw new Error('Image upload failed');
+    }
+
+    const data = await res.json();
+    return data.url;
+};
+
 window.createTiptapEditor = function (element, content, onUpdateCallback) {
+    // Upload a dropped/pasted image then insert it at the current selection.
+    const insertUploadedImage = (editor, file) => {
+        window.uploadNoteImage(file)
+            .then((url) => {
+                editor.chain().focus().setImage({ src: url }).run();
+            })
+            .catch(() => {
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: { message: 'Image upload failed' },
+                }));
+            });
+    };
+
     return new Editor({
         element: element,
         extensions: [
-            StarterKit.configure({
-                codeBlock: false, // Turn off if we don't want conflicts, or keep default
+            StarterKit,
+            Image.configure({ inline: false }),
+            Markdown.configure({
+                transformCopiedText: true,
+                transformPastedText: true,
             }),
-            Markdown,
         ],
         content: content,
         onUpdate({ editor }) {
@@ -121,6 +178,32 @@ window.createTiptapEditor = function (element, content, onUpdateCallback) {
         editorProps: {
             attributes: {
                 class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[400px] h-full text-text-main font-mono text-sm leading-relaxed select-text',
+            },
+            // Intercept pasted screenshots (clipboard image data).
+            handlePaste(view, event) {
+                const items = Array.from(event.clipboardData?.items || []);
+                const imageItem = items.find((item) => item.type.startsWith('image/'));
+                if (!imageItem) {
+                    return false;
+                }
+                const file = imageItem.getAsFile();
+                if (file) {
+                    event.preventDefault();
+                    insertUploadedImage(view.editor, file);
+                    return true;
+                }
+                return false;
+            },
+            // Intercept dragged-in image files.
+            handleDrop(view, event) {
+                const file = Array.from(event.dataTransfer?.files || [])
+                    .find((f) => f.type.startsWith('image/'));
+                if (!file) {
+                    return false;
+                }
+                event.preventDefault();
+                insertUploadedImage(view.editor, file);
+                return true;
             },
         },
     });

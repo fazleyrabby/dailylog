@@ -11,6 +11,49 @@
     user-select: text !important;
     -webkit-user-select: text !important;
 }
+
+/* Fenced code blocks in markdown preview */
+.prose pre {
+    background: var(--color-surface-2-app);
+    border: 1px solid var(--color-border-app);
+    border-radius: 0.375rem;
+    padding: 1rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+.prose pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--color-text-app);
+    font-family: var(--font-mono-code);
+    white-space: pre;
+}
+
+/* Images in editor & preview */
+.prose img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.375rem;
+    border: 1px solid var(--color-border-app);
+    margin: 1rem 0;
+}
+.prose img.ProseMirror-selectednode {
+    outline: 2px solid var(--color-accent-app);
+}
+
+/* Inline code */
+.prose :not(pre) > code {
+    background: var(--color-surface-2-app);
+    border: 1px solid var(--color-border-app);
+    border-radius: 0.25rem;
+    padding: 0.125rem 0.375rem;
+    font-size: 0.8125rem;
+    font-family: var(--font-mono-code);
+    color: var(--color-accent-app);
+}
 </style>
 <div
     x-data="notesComponent({{ json_encode($notes) }}, {{ json_encode($folders) }})"
@@ -349,6 +392,15 @@
 
                     <span class="w-px h-5 bg-border mx-1"></span>
 
+                    <button type="button" @click="$refs.imageFileInput.click()" class="w-7 h-7 rounded-sm text-text-muted hover:text-text-main hover:bg-surface-2/40 flex items-center justify-center cursor-pointer" title="Insert image">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </button>
+                    <input type="file" x-ref="imageFileInput" class="hidden" accept="image/png,image/jpeg,image/gif,image/webp" @change="insertImage($event)" />
+
+                    <span class="w-px h-5 bg-border mx-1"></span>
+
                     <button type="button" @click="runCmd('undo')" class="w-7 h-7 rounded-sm text-sm text-text-muted hover:text-text-main hover:bg-surface-2/40 flex items-center justify-center cursor-pointer" title="Undo (Ctrl+Z)">↶</button>
                     <button type="button" @click="runCmd('redo')" class="w-7 h-7 rounded-sm text-sm text-text-muted hover:text-text-main hover:bg-surface-2/40 flex items-center justify-center cursor-pointer" title="Redo (Ctrl+Y)">↷</button>
                 </div>
@@ -373,7 +425,7 @@
                                 prose-li:text-base prose-li:leading-relaxed
                                 prose-code:font-mono prose-code:text-xs prose-pre:text-xs
                                 prose-a:text-accent" 
-                         x-html="window.marked.parse(activeNote.body || '')"></div>
+                         x-html="window.renderMarkdown(activeNote.body)"></div>
                     
                     <!-- BACKLINKS DRAWER PANEL -->
                     <div class="mt-8 border-t border-border pt-4 select-none font-sans">
@@ -477,6 +529,23 @@ window.notesComponent = function(initialNotes, initialFolders) {
         runCmd(name, ...args) {
             if (!editor) return;
             editor.chain().focus()[name](...args).run();
+        },
+
+        // Upload the picked image file and insert it at the cursor.
+        insertImage(event) {
+            const file = event.target.files[0];
+            event.target.value = '';
+            if (!file || !editor) return;
+
+            window.uploadNoteImage(file)
+                .then((url) => {
+                    editor.chain().focus().setImage({ src: url }).run();
+                })
+                .catch(() => {
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { message: 'Image upload failed' }
+                    }));
+                });
         },
 
         // Sync toolbar button highlight state with the current selection.

@@ -10,6 +10,7 @@ use App\Models\Folder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -81,6 +82,21 @@ class NotesController extends Controller
         return response()->json([
             'note' => $this->formatNote($entry->load(['tags', 'project', 'backlinks'])),
         ]);
+    }
+
+    public function uploadImage(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'image' => ['required', 'image', 'mimes:png,jpg,jpeg,gif,webp', 'max:8192'],
+        ]);
+
+        $file = $validated['image'];
+        $filename = Str::random(24).'.'.strtolower($file->getClientOriginalExtension());
+        $path = $file->storeAs('notes-images', $filename, 'public');
+
+        return response()->json([
+            'url' => Storage::disk('public')->url($path),
+        ], 201);
     }
 
     public function move(Request $request, Entry $entry): JsonResponse
