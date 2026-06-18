@@ -25,6 +25,9 @@ RUN install-php-extensions \
     gd \
     apcu
 
+# Raise PHP upload limits for note image uploads
+COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/zz-uploads.ini
+
 # Install Composer
 COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
 

@@ -139,7 +139,12 @@ window.uploadNoteImage = async function (file) {
     });
 
     if (!res.ok) {
-        throw new Error('Image upload failed');
+        let message = 'Image upload failed';
+        try {
+            const err = await res.json();
+            message = err.message || Object.values(err.errors || {})[0]?.[0] || message;
+        } catch (_) {}
+        throw new Error(message);
     }
 
     const data = await res.json();
@@ -153,9 +158,9 @@ window.createTiptapEditor = function (element, content, onUpdateCallback) {
             .then((url) => {
                 editor.chain().focus().setImage({ src: url }).run();
             })
-            .catch(() => {
+            .catch((e) => {
                 window.dispatchEvent(new CustomEvent('show-toast', {
-                    detail: { message: 'Image upload failed' },
+                    detail: { message: e.message || 'Image upload failed' },
                 }));
             });
     };

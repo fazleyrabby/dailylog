@@ -541,9 +541,9 @@ window.notesComponent = function(initialNotes, initialFolders) {
                 .then((url) => {
                     editor.chain().focus().setImage({ src: url }).run();
                 })
-                .catch(() => {
+                .catch((e) => {
                     window.dispatchEvent(new CustomEvent('show-toast', {
-                        detail: { message: 'Image upload failed' }
+                        detail: { message: e.message || 'Image upload failed' }
                     }));
                 });
         },
