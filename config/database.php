@@ -97,6 +97,12 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+            // Supabase PgBouncer (transaction-mode pooler on port 6543) drops
+            // server-side prepared statements between transactions. Emulating
+            // them client-side via PDO keeps everything working transparently.
+            'options' => [
+                PDO::ATTR_EMULATE_PREPARES => true,
+            ],
         ],
 
         // Remote Supabase database, used only as a periodic backup target
