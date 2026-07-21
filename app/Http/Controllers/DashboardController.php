@@ -32,7 +32,7 @@ class DashboardController extends Controller
 
         // 2. Pinned focus items
         $focusItems = Entry::query()
-            ->where('pinned', true)
+            ->whereRaw('"pinned" = true')
             ->whereIn('type', ['task', 'note'])
             ->active()
             ->with(['project'])

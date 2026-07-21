@@ -146,7 +146,7 @@ class WalletController extends Controller
             ->get();
 
         $recurring = \App\Models\RecurringTransaction::where('user_id', auth()->id())
-            ->where('active', true)
+            ->whereRaw('"active" = true')
             ->with('wallet')
             ->orderBy('next_due_date')
             ->get();

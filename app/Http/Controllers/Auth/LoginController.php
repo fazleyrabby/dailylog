@@ -21,26 +21,38 @@ class LoginController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
+            'token' => ['required', 'string'],
         ]);
 
-        $key = 'login:' . Str::lower($data['email']) . '|' . $request->ip();
+        $key = 'login:' . $request->ip();
 
         if (RateLimiter::tooManyAttempts($key, 5)) {
             throw ValidationException::withMessages([
-                'email' => 'Too many attempts. Try again in ' . RateLimiter::availableIn($key) . 's.',
+                'token' => 'Too many attempts. Try again in ' . RateLimiter::availableIn($key) . 's.',
             ]);
         }
 
-        if (! Auth::attempt(['email' => $data['email'], 'password' => $data['password']], $request->boolean('remember'))) {
+        $validToken = config('dailylog.login_token') ?? env('LOGIN_TOKEN', '');
+
+        if ($data['token'] !== $validToken) {
             RateLimiter::hit($key, 60);
             throw ValidationException::withMessages([
-                'email' => 'Invalid credentials.',
+                'token' => 'Invalid token.',
             ]);
         }
 
         RateLimiter::clear($key);
+
+        // Log in the first user (single-user app)
+        $user = \App\Models\User::query()->first();
+
+        if (! $user) {
+            throw ValidationException::withMessages([
+                'token' => 'No user found.',
+            ]);
+        }
+
+        Auth::login($user, true);
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard.index'));

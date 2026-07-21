@@ -10,9 +10,7 @@ services:
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
-      # IP whitelist floor (always allowed, not removable via UI). CIDRs cover
-      # the dynamic ISP pool + the Tailscale v4/v6 ranges.
-      - IP_WHITELIST=103.153.171.0/24,100.64.0.0/10,fd7a:115c:a1e0::/48
+      - LOGIN_TOKEN=***.env
       - REDIS_HOST=redis
       - SERVER_NAME=:80
       - FRANKENPHP_WORKER=public/index.php
@@ -22,7 +20,7 @@ services:
       - DB_PORT=6543
       - DB_DATABASE=postgres
       - DB_USERNAME=postgres.kwnittytkysgncapkghw
-      - DB_PASSWORD=EvKa4GkZx!4$*qd
+      - DB_PASSWORD=***
     env_file:
       - .env
     depends_on:
@@ -42,7 +40,7 @@ services:
     restart: unless-stopped
     command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
     environment:
-      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+      - TUNNEL_TOKEN=***
     depends_on:
       - app
 
